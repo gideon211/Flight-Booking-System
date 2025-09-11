@@ -47,7 +47,7 @@ const Signup = () => {
         <div className='w-full h-screen flex justify-center items-center bg-[url("https://images.unsplash.com/photo-1524592714635-d77511a4834d?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")] bg-cover bg-center'>
                 <div className='lg:w-1/3 2xl:w-1/4 p-10 bg-white'>
                         <h1 className='text-center text-3xl font-bold py-5'>
-                        Welcome to <span className='text-purple-500'>AFA Airlines</span>
+                        Welcome to <span className='text-purple-500'>TravelWings</span>
                         </h1>
 
                         <div className='space-y-5'>

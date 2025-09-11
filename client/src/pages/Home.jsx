@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Car from "../assets/car-solid-full.svg";
 import Umbrella from "../assets/umbrella-beach-solid-full.svg";
 import Boat from "../assets/sailboat-solid-full.svg";
@@ -6,73 +6,122 @@ import Cart from "../assets/cart-flatbed-suitcase-solid-full (1).svg";
 import Build from "../assets/building-solid-full.svg";
 import House from "../assets/house-solid-full.svg";
 
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
+
+import { useTranslation } from "react-i18next";
+import { Link, useNavigate } from "react-router-dom";
+
 const Home = () => {
+  const { t, i18n } = useTranslation();
   const [language, setLanguage] = useState("en");
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // check login state when page loads
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
+
   const handleLanguageChange = (e) => {
-    setLanguage(e.target.value);
-    // Later you can call i18n.changeLanguage(e.target.value)
-    console.log("Language switched to:", e.target.value);
+    const selectedLang = e.target.value;
+    setLanguage(selectedLang);
+    i18n.changeLanguage(selectedLang);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    navigate("/Login");
   };
 
   return (
-        <div>
-                <nav className="flex justify-between px-8 items-center h-[5rem] bg-white shadow-md">
-                        {/* Logo */}
-                        <div className="h-6 flex items-center">
-                                <img
-                                src="https://cdn.travelwings.com/web-assets/images/travelwings-logo.svg"
-                                alt="logo"
-                                className="w-64"
-                                />
-                        </div>
-
-                
-                        <ul className="flex gap-6 items-center">
-                                <li className="w-7 cursor-pointer">
-                                <img src={House} alt="Home" />
-                                </li>
-                                <li className="w-7 cursor-pointer">
-                                <img src={Build} alt="Building" />
-                                </li>
-                                <li className="w-7 cursor-pointer">
-                                <img src={Cart} alt="Cart" />
-                                </li>
-                                <li className="w-7 cursor-pointer">
-                                <img src={Boat} alt="Boat" />
-                                </li>
-                                <li className="w-7 cursor-pointer">
-                                <img src={Umbrella} alt="Umbrella" />
-                                </li>
-                                <li className="w-7 cursor-pointer">
-                                <img src={Car} alt="Car" />
-                                </li>
-
-                                
-                                <li>
-                                <select
-                                value={language}
-                                onChange={handleLanguageChange}
-                                className="border-none px-2 py-1 rounded cursor-pointer"
-                                >
-                                        <option value="en">
-                                        <span className="fi fi-gb mr-2"></span> English
-                                        </option>
-                                        <option value="fr">
-                                        <span className="fi fi-fr mr-2"></span> Français
-                                        </option>
-                                        <option value="es">
-                                        <span className="fi fi-es mr-2"></span> Español
-                                        </option>
-                                        <option value="de">
-                                        <span className="fi fi-de mr-2"></span> Deutsch
-                                        </option>
-                                </select>
-
-                                </li>
-                        </ul>
-                </nav>
+    <div>
+      <nav className="flex justify-between px-8 items-center h-[5rem] bg-white shadow-md">
+        {/* Logo */}
+        <div className="h-6 flex items-center">
+          <img
+            src="https://cdn.travelwings.com/web-assets/images/travelwings-logo.svg"
+            alt="logo"
+            className="w-64"
+          />
         </div>
+
+        {/* Icons */}
+        <ul className="flex gap-6 items-center">
+          <li className="w-7 cursor-pointer">
+            <img src={House} alt="Home" />
+          </li>
+          <li className="w-7 cursor-pointer">
+            <img src={Build} alt="Building" />
+          </li>
+          <li className="w-7 cursor-pointer">
+            <img src={Cart} alt="Cart" />
+          </li>
+          <li className="w-7 cursor-pointer">
+            <img src={Boat} alt="Boat" />
+          </li>
+          <li className="w-7 cursor-pointer">
+            <img src={Umbrella} alt="Umbrella" />
+          </li>
+          <li className="w-7 cursor-pointer">
+            <img src={Car} alt="Car" />
+          </li>
+        </ul>
+
+        {/* Right side (Language + Profile) */}
+        <div className="flex items-center gap-6">
+          {/* Language Selector */}
+          <select
+            value={language}
+            onChange={handleLanguageChange}
+            className="border-none px-2 py-1 rounded cursor-pointer outline-0"
+          >
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+            <option value="de">Deutsch</option>
+          </select>
+
+          {/* Profile Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="focus:outline-none"
+            >
+              <FontAwesomeIcon
+                icon={faUserCircle}
+                size="2x"
+                className="text-gray-700"
+              />
+            </button>
+
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-40 bg-white border shadow-md rounded-md">
+                {!isLoggedIn ? (
+                  <Link
+                    to="/Login"
+                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                  >
+                    Login
+                  </Link>
+                ) : (
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </nav>
+    </div>
   );
 };
 
