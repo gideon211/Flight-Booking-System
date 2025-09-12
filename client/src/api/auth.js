@@ -1,25 +1,21 @@
-import axios from "axios";
-
-const API_URL = "https://q0smnp61-5000.uks1.devtunnels.ms"; 
+import api from "./axios";
 
 export const loginUser = async (credentials) => {
-  const res = await axios.post(`${API_URL}/`, credentials, {
-    withCredentials: true, 
-  });
+  const res = await api.post("/", credentials);
   return res.data;
 };
 
 export const signup = async (userData) => {
-  const res = await axios.post(`${API_URL}/signup`, userData);
+  const res = await api.post("/signup", userData);
   return res.data;
 };
 
 export const getProfile = async () => {
-  const res = await axios.get(`${API_URL}/profile`, { withCredentials: true });
+  const res = await api.get("/profile");
   return res.data;
 };
 
-export const logout = async () => {
-  const res = await axios.post(`${API_URL}/logout`, {}, { withCredentials: true });
+export const logoutUser = async () => {
+  const res = await api.post("/logout");
   return res.data;
 };

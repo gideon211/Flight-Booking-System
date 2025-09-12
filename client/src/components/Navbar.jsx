@@ -5,12 +5,16 @@ import Boat from "../assets/sailboat-solid-full.svg";
 import Cart from "../assets/cart-flatbed-suitcase-solid-full (1).svg";
 import Build from "../assets/building-solid-full.svg";
 import House from "../assets/house-solid-full.svg";
+import { AuthContext } from '../context/AuthContext';
+import { Link } from "react-router-dom";
+
 
 import { useTranslation } from "react-i18next";
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 
 
 const Navbar = () => {
+  const { user, logout } = useContext(AuthContext);
 
   const { t, i18n } = useTranslation();
   const [language, setLanguage] = useState("en");
@@ -69,34 +73,43 @@ const Navbar = () => {
                                 <option value="de">Deutsch</option>
                         </select>
 
-                        
+                        <div>
+
+
+
                         <div className="relative">
                                 <button
                                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                                className="focus:outline-none"
+                                className="focus:outline-none px-3 py-2 bg-red-400 rounded-md text-white font-medium  cursor-pointer"
                                 >
-
+                                Account
                                 </button>
 
                                 {dropdownOpen && (
-                                <div className="absolute right-0 mt-2 w-40 bg-white border shadow-md rounded-md">
-                                        {!isLoggedIn ? (
-                                        <Link
-                                        to="/Login"
-                                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                                        >
-                                        Login
-                                        </Link>
+                                <div className="absolute right-0 mt-2 w-40 bg-white border-none rounded-md z-50 outline-0 shadow-2xl py-2">
+                                        {!user ? (
+                                                <Link
+                                                to="/Login"
+                                                className="block px-4 py-2 text-gray-700 hover:bg-red-100 font-medium"
+                                                >
+                                                Login
+                                                </Link>
                                         ) : (
-                                        <button
-                                        onClick={handleLogout}
-                                        className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                                        >
-                                        Logout
-                                        </button>
+                                                <button
+                                                onClick={logout}
+                                                className="w-full text-left px-4 py-2 text-gray-700 hover:bg-red-100"
+                                                >
+                                                Logout
+                                                </button>
+                                        )}
+                                        </div>
                                         )}
                                 </div>
-                                )}
+
+
+
+
+
                         </div>
                 </div>
 

@@ -1,0 +1,482 @@
+[
+  {
+    "flightId": "FL1000",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "KMS",
+      "city": "Kumasi"
+    },
+    "destination": {
+      "code": "TKD",
+      "city": "Takoradi"
+    },
+    "departureTime": "2025-10-08 15:00",
+    "arrivalTime": "2025-10-08 17:00",
+    "price": 505.09,
+    "seatsAvailable": 31
+  },
+  {
+    "flightId": "FL1001",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "KMS",
+      "city": "Kumasi"
+    },
+    "destination": {
+      "code": "TML",
+      "city": "Tamale"
+    },
+    "departureTime": "2025-10-02 17:00",
+    "arrivalTime": "2025-10-02 18:00",
+    "price": 317.66,
+    "seatsAvailable": 91
+  },
+  {
+    "flightId": "FL1002",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "KMS",
+      "city": "Kumasi"
+    },
+    "destination": {
+      "code": "NYI",
+      "city": "Sunyani"
+    },
+    "departureTime": "2025-09-30 20:00",
+    "arrivalTime": "2025-09-30 22:00",
+    "price": 786.44,
+    "seatsAvailable": 66
+  },
+  {
+    "flightId": "FL1003",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "ACC",
+      "city": "Accra"
+    },
+    "destination": {
+      "code": "NYI",
+      "city": "Sunyani"
+    },
+    "departureTime": "2025-09-30 06:00",
+    "arrivalTime": "2025-09-30 08:00",
+    "price": 792.86,
+    "seatsAvailable": 53
+  },
+  {
+    "flightId": "FL1004",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "NYI",
+      "city": "Sunyani"
+    },
+    "destination": {
+      "code": "ACC",
+      "city": "Accra"
+    },
+    "departureTime": "2025-09-16 08:00",
+    "arrivalTime": "2025-09-16 10:00",
+    "price": 762.67,
+    "seatsAvailable": 97
+  },
+  {
+    "flightId": "FL1005",
+    "airline": "Africa World Airlines",
+    "origin": {
+      "code": "TML",
+      "city": "Tamale"
+    },
+    "destination": {
+      "code": "KMS",
+      "city": "Kumasi"
+    },
+    "departureTime": "2025-09-18 16:00",
+    "arrivalTime": "2025-09-18 17:00",
+    "price": 512.93,
+    "seatsAvailable": 45
+  },
+  {
+    "flightId": "FL1006",
+    "airline": "Africa World Airlines",
+    "origin": {
+      "code": "TKD",
+      "city": "Takoradi"
+    },
+    "destination": {
+      "code": "KMS",
+      "city": "Kumasi"
+    },
+    "departureTime": "2025-10-04 07:00",
+    "arrivalTime": "2025-10-04 08:00",
+    "price": 639.81,
+    "seatsAvailable": 58
+  },
+  {
+    "flightId": "FL1007",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "ACC",
+      "city": "Accra"
+    },
+    "destination": {
+      "code": "TKD",
+      "city": "Takoradi"
+    },
+    "departureTime": "2025-09-27 17:00",
+    "arrivalTime": "2025-09-27 18:00",
+    "price": 432.38,
+    "seatsAvailable": 58
+  },
+  {
+    "flightId": "FL1008",
+    "airline": "Africa World Airlines",
+    "origin": {
+      "code": "HZO",
+      "city": "Ho"
+    },
+    "destination": {
+      "code": "TML",
+      "city": "Tamale"
+    },
+    "departureTime": "2025-09-23 11:00",
+    "arrivalTime": "2025-09-23 13:00",
+    "price": 425.88,
+    "seatsAvailable": 26
+  },
+  {
+    "flightId": "FL1009",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "NYI",
+      "city": "Sunyani"
+    },
+    "destination": {
+      "code": "TKD",
+      "city": "Takoradi"
+    },
+    "departureTime": "2025-09-30 11:00",
+    "arrivalTime": "2025-09-30 13:00",
+    "price": 567.62,
+    "seatsAvailable": 48
+  },
+  {
+    "flightId": "FL1010",
+    "airline": "Africa World Airlines",
+    "origin": {
+      "code": "NYI",
+      "city": "Sunyani"
+    },
+    "destination": {
+      "code": "KMS",
+      "city": "Kumasi"
+    },
+    "departureTime": "2025-09-14 06:00",
+    "arrivalTime": "2025-09-14 07:00",
+    "price": 750.88,
+    "seatsAvailable": 89
+  },
+  {
+    "flightId": "FL1011",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "TKD",
+      "city": "Takoradi"
+    },
+    "destination": {
+      "code": "ACC",
+      "city": "Accra"
+    },
+    "departureTime": "2025-10-12 14:00",
+    "arrivalTime": "2025-10-12 16:00",
+    "price": 420.59,
+    "seatsAvailable": 96
+  },
+  {
+    "flightId": "FL1012",
+    "airline": "Africa World Airlines",
+    "origin": {
+      "code": "NYI",
+      "city": "Sunyani"
+    },
+    "destination": {
+      "code": "TML",
+      "city": "Tamale"
+    },
+    "departureTime": "2025-09-21 08:00",
+    "arrivalTime": "2025-09-21 09:00",
+    "price": 481.53,
+    "seatsAvailable": 40
+  },
+  {
+    "flightId": "FL1013",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "TML",
+      "city": "Tamale"
+    },
+    "destination": {
+      "code": "KMS",
+      "city": "Kumasi"
+    },
+    "departureTime": "2025-09-18 18:00",
+    "arrivalTime": "2025-09-18 20:00",
+    "price": 413.86,
+    "seatsAvailable": 74
+  },
+  {
+    "flightId": "FL1014",
+    "airline": "Africa World Airlines",
+    "origin": {
+      "code": "TKD",
+      "city": "Takoradi"
+    },
+    "destination": {
+      "code": "KMS",
+      "city": "Kumasi"
+    },
+    "departureTime": "2025-10-07 12:00",
+    "arrivalTime": "2025-10-07 14:00",
+    "price": 641.84,
+    "seatsAvailable": 60
+  },
+  {
+    "flightId": "FL1015",
+    "airline": "Africa World Airlines",
+    "origin": {
+      "code": "TKD",
+      "city": "Takoradi"
+    },
+    "destination": {
+      "code": "ACC",
+      "city": "Accra"
+    },
+    "departureTime": "2025-09-28 16:00",
+    "arrivalTime": "2025-09-28 17:00",
+    "price": 704.67,
+    "seatsAvailable": 66
+  },
+  {
+    "flightId": "FL1016",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "KMS",
+      "city": "Kumasi"
+    },
+    "destination": {
+      "code": "HZO",
+      "city": "Ho"
+    },
+    "departureTime": "2025-10-11 06:00",
+    "arrivalTime": "2025-10-11 07:00",
+    "price": 627.79,
+    "seatsAvailable": 81
+  },
+  {
+    "flightId": "FL1017",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "HZO",
+      "city": "Ho"
+    },
+    "destination": {
+      "code": "ACC",
+      "city": "Accra"
+    },
+    "departureTime": "2025-09-30 07:00",
+    "arrivalTime": "2025-09-30 09:00",
+    "price": 598.9,
+    "seatsAvailable": 95
+  },
+  {
+    "flightId": "FL1018",
+    "airline": "Africa World Airlines",
+    "origin": {
+      "code": "NYI",
+      "city": "Sunyani"
+    },
+    "destination": {
+      "code": "KMS",
+      "city": "Kumasi"
+    },
+    "departureTime": "2025-09-27 12:00",
+    "arrivalTime": "2025-09-27 14:00",
+    "price": 401.39,
+    "seatsAvailable": 25
+  },
+  {
+    "flightId": "FL1019",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "HZO",
+      "city": "Ho"
+    },
+    "destination": {
+      "code": "NYI",
+      "city": "Sunyani"
+    },
+    "departureTime": "2025-10-06 06:00",
+    "arrivalTime": "2025-10-06 07:00",
+    "price": 790.49,
+    "seatsAvailable": 53
+  },
+  {
+    "flightId": "FL1020",
+    "airline": "Africa World Airlines",
+    "origin": {
+      "code": "TML",
+      "city": "Tamale"
+    },
+    "destination": {
+      "code": "NYI",
+      "city": "Sunyani"
+    },
+    "departureTime": "2025-10-01 12:00",
+    "arrivalTime": "2025-10-01 13:00",
+    "price": 571.41,
+    "seatsAvailable": 94
+  },
+  {
+    "flightId": "FL1021",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "TML",
+      "city": "Tamale"
+    },
+    "destination": {
+      "code": "NYI",
+      "city": "Sunyani"
+    },
+    "departureTime": "2025-09-21 17:00",
+    "arrivalTime": "2025-09-21 19:00",
+    "price": 309.91,
+    "seatsAvailable": 47
+  },
+  {
+    "flightId": "FL1022",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "TML",
+      "city": "Tamale"
+    },
+    "destination": {
+      "code": "KMS",
+      "city": "Kumasi"
+    },
+    "departureTime": "2025-10-07 08:00",
+    "arrivalTime": "2025-10-07 10:00",
+    "price": 781.07,
+    "seatsAvailable": 34
+  },
+  {
+    "flightId": "FL1023",
+    "airline": "Africa World Airlines",
+    "origin": {
+      "code": "KMS",
+      "city": "Kumasi"
+    },
+    "destination": {
+      "code": "NYI",
+      "city": "Sunyani"
+    },
+    "departureTime": "2025-09-26 13:00",
+    "arrivalTime": "2025-09-26 15:00",
+    "price": 624.17,
+    "seatsAvailable": 58
+  },
+  {
+    "flightId": "FL1024",
+    "airline": "Africa World Airlines",
+    "origin": {
+      "code": "TKD",
+      "city": "Takoradi"
+    },
+    "destination": {
+      "code": "TML",
+      "city": "Tamale"
+    },
+    "departureTime": "2025-09-28 06:00",
+    "arrivalTime": "2025-09-28 07:00",
+    "price": 446.26,
+    "seatsAvailable": 88
+  },
+  {
+    "flightId": "FL1025",
+    "airline": "Africa World Airlines",
+    "origin": {
+      "code": "ACC",
+      "city": "Accra"
+    },
+    "destination": {
+      "code": "HZO",
+      "city": "Ho"
+    },
+    "departureTime": "2025-10-03 18:00",
+    "arrivalTime": "2025-10-03 20:00",
+    "price": 513.63,
+    "seatsAvailable": 100
+  },
+  {
+    "flightId": "FL1026",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "TKD",
+      "city": "Takoradi"
+    },
+    "destination": {
+      "code": "ACC",
+      "city": "Accra"
+    },
+    "departureTime": "2025-09-27 11:00",
+    "arrivalTime": "2025-09-27 13:00",
+    "price": 748.06,
+    "seatsAvailable": 50
+  },
+  {
+    "flightId": "FL1027",
+    "airline": "Africa World Airlines",
+    "origin": {
+      "code": "NYI",
+      "city": "Sunyani"
+    },
+    "destination": {
+      "code": "TKD",
+      "city": "Takoradi"
+    },
+    "departureTime": "2025-10-11 07:00",
+    "arrivalTime": "2025-10-11 08:00",
+    "price": 538.34,
+    "seatsAvailable": 79
+  },
+  {
+    "flightId": "FL1028",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "NYI",
+      "city": "Sunyani"
+    },
+    "destination": {
+      "code": "ACC",
+      "city": "Accra"
+    },
+    "departureTime": "2025-09-15 17:00",
+    "arrivalTime": "2025-09-15 19:00",
+    "price": 318.32,
+    "seatsAvailable": 49
+  },
+  {
+    "flightId": "FL1029",
+    "airline": "Passion Air",
+    "origin": {
+      "code": "NYI",
+      "city": "Sunyani"
+    },
+    "destination": {
+      "code": "TML",
+      "city": "Tamale"
+    },
+    "departureTime": "2025-10-07 07:00",
+    "arrivalTime": "2025-10-07 09:00",
+    "price": 539.82,
+    "seatsAvailable": 88
+  }
+]
