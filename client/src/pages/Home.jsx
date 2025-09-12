@@ -1,122 +1,29 @@
 import React, { useState, useEffect } from "react";
-import Car from "../assets/car-solid-full.svg";
-import Umbrella from "../assets/umbrella-beach-solid-full.svg";
-import Boat from "../assets/sailboat-solid-full.svg";
-import Cart from "../assets/cart-flatbed-suitcase-solid-full (1).svg";
-import Build from "../assets/building-solid-full.svg";
-import House from "../assets/house-solid-full.svg";
-
-
-
-import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 const Home = () => {
-  const { t, i18n } = useTranslation();
-  const [language, setLanguage] = useState("en");
+        const [isLoggedIn, setIsLoggedIn] = useState(false);       
+        const navigate = useNavigate();
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const navigate = useNavigate();
+        
+        useEffect(() => {
+        const token = localStorage.getItem("token");
+        setIsLoggedIn(!!token);
+        }, []);
 
-  // check login state when page loads
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
-  }, []);
 
-  const handleLanguageChange = (e) => {
-    const selectedLang = e.target.value;
-    setLanguage(selectedLang);
-    i18n.changeLanguage(selectedLang);
-  };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
-    navigate("/Login");
-  };
+        const handleLogout = () => {
+        localStorage.removeItem("token");
+        setIsLoggedIn(false);
+        navigate("/Login");
+        };
 
   return (
     <div>
-        <nav className="flex justify-between px-8 items-center h-[5rem] bg-white shadow-md">
-                <div className="h-6 flex items-center">
-                        <img
-                        src="https://cdn.travelwings.com/web-assets/images/travelwings-logo.svg"
-                        alt="logo"
-                        className="w-64"
-                        />
-                </div>
-
-        
-                <ul className="flex gap-6 items-center">
-                        <li className="w-7 cursor-pointer">
-                        <img src={House} alt="Home" />
-                        </li>
-                        <li className="w-7 cursor-pointer">
-                        <img src={Build} alt="Building" />
-                        </li>
-                        <li className="w-7 cursor-pointer">
-                        <img src={Cart} alt="Cart" />
-                        </li>
-                        <li className="w-7 cursor-pointer">
-                        <img src={Boat} alt="Boat" />
-                        </li>
-                        <li className="w-7 cursor-pointer">
-                        <img src={Umbrella} alt="Umbrella" />
-                        </li>
-                        <li className="w-7 cursor-pointer">
-                        <img src={Car} alt="Car" />
-                        </li>
-                </ul>
-
-        
-                <div className="flex items-center gap-6">
-                        
-                        <select
-                        value={language}
-                        onChange={handleLanguageChange}
-                        className="border-none px-2 py-1 rounded cursor-pointer outline-0"
-                        >
-                                <option value="en">English</option>
-                                <option value="fr">Français</option>
-                                <option value="es">Español</option>
-                                <option value="de">Deutsch</option>
-                        </select>
-
-                        
-                        <div className="relative">
-                                <button
-                                onClick={() => setDropdownOpen(!dropdownOpen)}
-                                className="focus:outline-none"
-                                >
-
-                                </button>
-
-                                {dropdownOpen && (
-                                <div className="absolute right-0 mt-2 w-40 bg-white border shadow-md rounded-md">
-                                        {!isLoggedIn ? (
-                                        <Link
-                                        to="/Login"
-                                        className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                                        >
-                                        Login
-                                        </Link>
-                                        ) : (
-                                        <button
-                                        onClick={handleLogout}
-                                        className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                                        >
-                                        Logout
-                                        </button>
-                                        )}
-                                </div>
-                                )}
-                        </div>
-                </div>
-
-
-        </nav>
+        <Navbar />
+    
 
 
         <section>
@@ -134,12 +41,12 @@ const Home = () => {
                         e.preventDefault();
                         // handle booking submission here
                         }}
-                        className="w-[]  mx-auto bg-white p-[54px] rounded-xl shadow-md  top-[33rem] absolute right-[20rem]"
+                        className="w-[]  mx-auto bg-white p-[34px] rounded-xl shadow-md  top-[33rem] absolute right-[20rem]"
                         >
                         {/* Trip Type */}
                         <div className="mb-4 flex gap-2">
  
-                                <label className="flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer bg-red-50 peer-checked:bg-red-100">
+                                <label className="flex items-center gap-2 px-6 py-2 rounded-full cursor-pointer bg-red-50 peer-checked:bg-red-100">
                                 <input
                                 type="radio"
                                 name="tripType"
@@ -164,7 +71,7 @@ const Home = () => {
                                 Roundtrip
                                 </span>
                                 </label>
-                                
+
                         </div>
 
 
@@ -250,7 +157,7 @@ const Home = () => {
                                         id="passengers"
                                         min="1"
                                         defaultValue="1"
-                                        className="py-[25px] px-[15px] border-2 border-gray-300 p-2 outline-0 rounded-md"
+                                        className="py-[25px] px-[15px] border-2 border-gray-300 p-2 outline-0 rounded-md Y"
                                         />
                                 </div>
 

@@ -17,7 +17,7 @@ const Signup = () => {
         });
 
         const handleChange = (e) => {
-                setFormData({...formData, [e.target.name]:version.target.value})
+                setFormData({...formData, [e.target.name]: e.target.value})
         };
 
 
@@ -56,6 +56,7 @@ const Signup = () => {
                                 <form className='flex flex-col space-y-5' onSubmit={handleSubmit}>
                                         {/* Full Name */}
                                         <input
+                                        name='name'
                                         onChange={handleChange}
                                         value={formData.name}
                                         type="text"
@@ -67,7 +68,7 @@ const Signup = () => {
                                         <input
                                         onChange={handleChange}
                                         value={formData.email}                                        
-                                        
+                                        name='email'
                                         type="email"
                                         placeholder='Email'
                                         className='outline-0 px-5 py-2 bg-gray-100 placeholder:text-sm'
@@ -75,6 +76,7 @@ const Signup = () => {
 
                                         {/* Password */}
                                         <input
+                                        name='password'
                                         onChange={handleChange}
                                         value={formData.password}
                                         type="password"
@@ -85,6 +87,7 @@ const Signup = () => {
 
                                         {/* Confirm Password */}
                                         <input
+                                        name='confirmPassword'
                                         onChange={handleChange}
                                         value={formData.confirmPassword}
                                         required

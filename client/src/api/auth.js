@@ -1,9 +1,9 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/auth"; 
+const API_URL = "https://q0smnp61-5000.uks1.devtunnels.ms"; 
 
 export const loginUser = async (credentials) => {
-  const res = await axios.post(`${API_URL}/login`, credentials, {
+  const res = await axios.post(`${API_URL}/`, credentials, {
     withCredentials: true, 
   });
   return res.data;
