@@ -2,6 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import List from "../components/HomeFlight"
+import  Footer  from "../components/Footer";
+import About from "../components/About";
+import Story from "../components/Story";
+import Airlines from "../components/Airlines";
+import Flights from "../flights.json"
+
+
+
 
 const Home = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -18,6 +26,55 @@ const Home = () => {
     setIsLoggedIn(false);
     navigate("/Login");
   };
+
+
+  const [flights, setFlights] = useState([]);
+
+    useEffect(() => {
+        fetch("/flights.json")
+        .then(res => res.json())
+        .then(data => setFlights(data));
+    }, []);
+
+    const [formData, setFormData] = useState({
+        tripType: "",
+        from: "",
+        to: "",
+        departureDate: "",
+        returnDate: "",
+        passengers: 1,
+        cabin: "",
+    });
+
+    const [results, setResults] = useState([]);
+
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = (e) => {
+    e.preventDefault();
+
+    
+    const filtered = flights.filter((flight) => {
+      return (
+        flight.tripType === formData.tripType &&
+        flight.origin.city.toLowerCase().includes(formData.from.toLowerCase()) &&
+        flight.destination.city.toLowerCase().includes(formData.to.toLowerCase()) &&
+        flight.departureDate === formData.departureDate &&
+        (formData.tripType === "OneWay" || flight.returnDate === formData.returnDate) &&
+        flight.cabin === formData.cabin &&
+        flight.seatsAvailable >= formData.passengers
+      );
+    });
+
+    setResults(filtered);
+
+    navigate("/results", { state: { results: filtered } });
+  };
+  
 
   return (
     <div>
@@ -38,9 +95,7 @@ const Home = () => {
 
                <div>
                     <form
-                    onSubmit={(e) => {
-                    e.preventDefault();
-                    }}
+                    onSubmit={handleSubmit}
                     className="  mx-auto bg-white p-[34px] rounded-xl shadow-md  top-[33rem] absolute right-[20rem]"
                     >
                     {/* Trip Type */}
@@ -85,6 +140,8 @@ const Home = () => {
                                 </label>
                                 <input
                                     type="text"
+                                    value={formData.from}
+                                    onChange={handleChange}
                                     id="from"
                                     placeholder="From (city or airport)"
                                     className="py-[25px] px-[15px] border-2 border-gray-300 p-2 outline-0 rounded-md"
@@ -101,6 +158,8 @@ const Home = () => {
                                     <input
                                     type="text"
                                     id="to"
+                                    value={formData.to}
+                                    onChange={handleChange}
                                     placeholder="To (city or airport)"
                                     className="py-[25px] px-[15px] border-2 border-gray-300 p-2 outline-0 rounded-md"
                                     />
@@ -119,6 +178,8 @@ const Home = () => {
                                     <input
                                     type="date"
                                     id="departure"
+                                    value={formData.departureDate}
+                                    onChange={handleChange}
                                     className="py-[25px] border-2 border-gray-300 p-2 outline-0 rounded-md"
                                     />
                                 </div>
@@ -133,6 +194,8 @@ const Home = () => {
                                     <input
                                     type="date"
                                     id="return"
+                                    value={formData.returnDate}
+                                    onChange={handleChange}
                                     className="py-[25px] border-2 border-gray-300 p-2 outline-0 rounded-md"
                                     />
                                 </div>
@@ -149,6 +212,8 @@ const Home = () => {
                                    <input
                                    type="number"
                                    id="passengers"
+                                    value={formData.passengers}
+                                    onChange={handleChange}
                                    min="1"
                                    defaultValue="1"
                                    className="py-[25px] px-[15px] border-2 border-gray-300 p-2 outline-0 rounded-md Y"
@@ -165,6 +230,9 @@ const Home = () => {
                                    </label>
                                    <select
                                    id="cabin"
+                                   name="cabin"
+                                    value={formData.cabin}
+                                    onChange={handleChange}
                                    className="py-[25px] border-2 border-gray-300 p-2 rounded-md"
                                    >
                                         <option>Economy</option>
@@ -235,8 +303,24 @@ const Home = () => {
        </div>
 
 
+        <div>
+        <About />
+       </div>
+
+       <div>
+        <Story />
+       </div>
 
 
+        <div className="mb-[10rem] mt-[5rem]">
+            <Airlines />
+        </div>
+
+
+
+        <div>
+            <Footer />
+        </div>            
 
 
 

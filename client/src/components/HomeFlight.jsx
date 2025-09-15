@@ -22,7 +22,7 @@ const HomeFlight = () => {
         <div className='bg-gray-200 p-8'>
             <div className='items-center w-full justify-center py-4 mb-8'>
                 <h1 className='text-3xl text-center py-2'>Popular Africa World Airlines Flights</h1>
-                <p className='text-md text-center'>Book your Africa World Airlines flights and enjoy a wide network of routes and a commitment to excellence. <br /> <span className=''>Africa World Airlines is the perfect choice for your next trip.</span></p>
+                <p className='text-md text-center text-gray-800'>Book your Africa World Airlines flights and enjoy a wide network of routes and a commitment to excellence. <br /> <span className=''>Africa World Airlines is the perfect choice for your next trip.</span></p>
             </div>
 
             <div className="grid grid-cols-2 gap-8 ml-[13rem] max-w-6xl">
