@@ -77,7 +77,16 @@ const Home = () => {
             setResults(filtered);
             setLoading(false);
 
-            navigate("/Availableflights", { state: { results: filtered } });
+            navigate("/Availableflights", {
+                state: {
+                    results: filtered,
+                    from: formData.from,
+                    to: formData.to,
+                    date: formData.departureDate,
+                    passengers: formData.passengers,
+                    cabin: formData.cabin,
+                },
+            });
         }, 5000); 
     };
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import Car from "../assets/car-solid-full.svg";
 import Umbrella from "../assets/umbrella-beach-solid-full.svg";
 import Boat from "../assets/sailboat-solid-full.svg";
@@ -10,13 +10,18 @@ import Flight from "../assets/flights.svg";
 const AvailableFlights = () => {
   const location = useLocation();
   const results = location.state?.results || [];
+  const navigate = useNavigate();
 
   // Extract the search details
-const from = location.state?.from || "ACCRA";
-const to = location.state?.to || "KUMASI";
-const date = location.state?.date || "—";
-const passengers = location.state?.passengers || "1 Adult";
-const cabin = location.state?.cabin || "Economy";
+    const from = location.state?.from ?? "ACCRA";
+    const to = location.state?.to ?? "KUMASI";
+    const date = location.state?.date || "—";
+    const passengers = location.state?.passengers || "1 Adult";
+    const cabin = location.state?.cabin || "Economy";
+
+    const handleSelect = (flight) => {
+        navigate(`/itinerary/${flight.flightId}`, { state: { flight } });
+    };
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -124,7 +129,7 @@ const cabin = location.state?.cabin || "Economy";
           <div className="bg-gradient-to-r from-red-400 to-red-200 text-white shadow rounded p-4 mb-4 flex justify-between">
             <div className="h-30 justify-center ">
               <p className="font-medium  text-2xl mt-10 text-white ">{from.toUpperCase()} → {to.toUpperCase()}</p>
-              <p>{date} | {passengers} | {cabin}</p>
+              <p className="text-sm"> Available Flights</p>
             </div>
             <button className="border px-12 py-1 rounded border-none bg-red-400 text-xl text-white cursor-pointer hover:bg-red-500">Modify</button>
           </div>
@@ -173,7 +178,9 @@ const cabin = location.state?.cabin || "Economy";
                     <p className="text-xl font-medium text-gray-600">
                       GHS {flight.price}
                     </p>
-                    <button className="mt-2 bg-red-500 text-white px-4 py-2 rounded shadow-2xl">
+                    <button
+                     onClick={() => handleSelect(flight)}
+                     className="mt-2 bg-red-500 text-white px-4 py-2 rounded shadow-2xl cursor-pointer">
                       Select
                     </button>
                   </div>

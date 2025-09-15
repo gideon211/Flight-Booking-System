@@ -7,11 +7,13 @@ import Build from "../assets/building-solid-full.svg";
 import House from "../assets/house-solid-full.svg";
 import { AuthContext } from '../context/AuthContext';
 import { Link } from "react-router-dom";
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
 
 
 import { useTranslation } from "react-i18next";
 import { useState, useContext } from 'react';
-import { signup } from '../api/auth';
+import { signupUser } from '../api/auth';
 
 
 const Navbar = () => {

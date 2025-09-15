@@ -2,8 +2,8 @@ import React, { useState, useContext } from 'react'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import { Link, useNavigate } from 'react-router-dom';
-import { signup } from "../api/auth";
-import Loader from "../components/Loader"
+import { signupUser } from "../api/auth";
+
 
 
 const Signup = () => {
@@ -19,34 +19,38 @@ const Signup = () => {
 
         const handleChange = (e) => {
             setFormData({ ...formData, [e.target.name]: e.target.value });
-            console.log("signup response:", formData); 
+  
         };
 
 
 
 
         const handleSubmit = async (e) => {
-            e.preventDefault();
+        e.preventDefault();
 
-            if(formData.password !== formData.confirmPassword){
-                setError("Passwords do not match")
-                return;
-            }
+        if (formData.password !== formData.confirmPassword) {
+            setError("Passwords do not match");
+            return;
+        }
 
-            setLoading(true)
-            try {
-                const data = await signup({
-                    name:formData.name,
-                    email:formData.email,
-                    password:formData.password,
-                });
+        setLoading(true);
+        try {
+            const data = await signupUser({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            });
 
-                localStorage.setItem("token", data.token);
-                navigate("/Home");
-            }catch(err){
-                setError(err.response?.data.message || "Signup failed")
-            }
+            localStorage.setItem("token", data.token);
+            navigate("/Home");
+        } catch (err) {
+            console.error("Signup error:", err);
+            setError(err.response?.data?.message || "Signup failed");
+        } finally {
+            setLoading(false); // always reset
+        }
         };
+
   return (
         <div className='w-full h-screen flex justify-center items-center bg-[url("https://images.unsplash.com/photo-1524592714635-d77511a4834d?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")] bg-cover bg-center'>
             <div className='lg:w-1/3 2xl:w-1/4 p-10 bg-white'>

@@ -1,8 +1,13 @@
 import React from 'react'
 import { useState, useEffect } from 'react';
 import Arrow from "../assets/arrow-right-solid-full.svg"
+import { useNavigate } from 'react-router-dom';
+
+
+
 const HomeFlight = () => {
     const [flights, setFlights] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetch("/flights.json")
@@ -17,6 +22,15 @@ const HomeFlight = () => {
             console.error("Error loading flights:", err);
             });
     }, []);
+
+
+        const handleBook = (flight) => {
+            navigate("/Availableflights", {
+                state: { flight },
+                
+      
+            });
+        };
 
   return (
         <div className='bg-gray-200 p-8'>
@@ -54,7 +68,9 @@ const HomeFlight = () => {
                             <span className="font-medium text-red-500 block mb-2">
                                 GHS {flight.price}
                             </span>
-                            <button className="bg-red-500 text-white font-medium py-2 px-6 rounded-sm hover:bg-red-600 cursor-pointer">
+                            <button 
+                            onClick={() => handleBook(flight)}
+                            className="bg-red-500 text-white font-medium py-2 px-6 rounded-sm hover:bg-red-600 cursor-pointer">
                                 Book
                             </button>
                         </div>
