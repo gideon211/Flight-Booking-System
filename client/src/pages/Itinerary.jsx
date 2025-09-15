@@ -141,7 +141,7 @@ const ItineraryPage = () => {
 
                         <button
                             onClick={() => navigate("/email", { state: { flight } })}
-                            className="bg-yellow-400 hover:bg-yellow-500 px-8 py-3 rounded font-medium text-black"
+                            className="bg-yellow-400 hover:bg-yellow-500 px-8 py-3 rounded font-medium text-black cursor-pointer"
                         >
                             CONTINUE
                         </button>
