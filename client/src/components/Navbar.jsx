@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 
 import { useTranslation } from "react-i18next";
 import { useState, useContext } from 'react';
+import { signup } from '../api/auth';
 
 
 const Navbar = () => {
@@ -80,7 +81,7 @@ const Navbar = () => {
                         <div className="relative">
                                 <button
                                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                                className="focus:outline-none px-3 py-2 bg-red-400 rounded-md text-white font-medium  cursor-pointer"
+                                className="focus:outline-none px-3 py-2 bg-red-400 rounded-md hover:bg-red-500 text-white font-medium  cursor-pointer"
                                 >
                                 Account
                                 </button>
@@ -88,23 +89,36 @@ const Navbar = () => {
                                 {dropdownOpen && (
                                 <div className="absolute right-0 mt-2 w-40 bg-white border-none rounded-md z-50 outline-0 shadow-2xl py-2">
                                         {!user ? (
+                                            <div className=''>
                                                 <Link
                                                 to="/Login"
                                                 className="block px-4 py-2 text-gray-700 hover:bg-red-100 font-medium"
                                                 >
                                                 Login
                                                 </Link>
+
+                                                <Link
+                                                to="/SignUp"
+                                                className="block px-4 py-2 text-gray-700 hover:bg-red-100 font-medium"
+                                                >
+                                                Register    
+                                                </Link>
+                                            </div>    
                                         ) : (
+                                            
                                                 <button
                                                 onClick={logout}
                                                 className="w-full text-left px-4 py-2 text-gray-700 hover:bg-red-100"
                                                 >
                                                 Logout
                                                 </button>
+
+
+                                                
                                         )}
-                                        </div>
-                                        )}
-                                </div>
+                                   </div>
+                                )}
+                            </div>
 
 
 
