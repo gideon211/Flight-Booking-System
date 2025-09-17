@@ -11,7 +11,8 @@ const Signup = () => {
         const navigate = useNavigate();
         const [error, setError] = useState("");
         const [formData, setFormData] = useState({
-            name: "",
+            firstname: "",
+            lastname:"",
             email: "",
             password: "",
             confirmPassword: "",
@@ -36,7 +37,8 @@ const Signup = () => {
         setLoading(true);
         try {
             const data = await signupUser({
-            name: formData.name,
+            firstname: formData.firstname,
+            lastname: formData.lastname,
             email: formData.email,
             password: formData.password,
             });
@@ -62,13 +64,23 @@ const Signup = () => {
                     <h1 className='text-xl font-semibold text-center'>SIGN UP</h1>
 
                     <form className='flex flex-col space-y-5' onSubmit={handleSubmit}>
-                        {/* Full Name */}
+                        {/* First Name */}
                         <input
-                        name='name'
+                        name='firstname'
                         onChange={handleChange}
-                        value={formData.name}
+                        value={formData.firstname}
                         type="text"
-                        placeholder='Full Name'
+                        placeholder='First Name'
+                        className='outline-0 px-5 py-2 bg-gray-100 placeholder:text-sm' 
+                        />
+
+                        {/* Last Name */}
+                        <input
+                        name='secondname'
+                        onChange={handleChange}
+                        value={formData.secondname}
+                        type="text"
+                        placeholder='Last Name'
                         className='outline-0 px-5 py-2 bg-gray-100 placeholder:text-sm' 
                         />
 
