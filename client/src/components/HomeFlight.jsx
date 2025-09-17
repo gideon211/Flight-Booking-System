@@ -44,7 +44,7 @@ const HomeFlight = () => {
         {flights.slice(0, 10).map((flight) => (
           <div
             key={flight.flightId}
-            className="flex w-full h-40 bg-yellow-50 shadow-sm rounded-sm hover:shadow-2xl"
+            className="flex w-full h-40 bg-white shadow-sm rounded-sm hover:shadow-2xl"
           >
             {/* Left image */}
             <div className="w-40 h-full">

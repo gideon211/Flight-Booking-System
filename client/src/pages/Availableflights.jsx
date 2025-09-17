@@ -8,8 +8,8 @@ const AvailableFlights = () => {
   const results = location.state?.results || [];
   const navigate = useNavigate();
 
-  const from = location.state?.from ?? "ACCRA";
-  const to = location.state?.to ?? "KUMASI";
+  const from = location.state?.from ?? "";
+  const to = location.state?.to ?? "";
   const passengers = location.state?.passengers || "1";
   const cabin = location.state?.cabin || "Economy";
 
@@ -31,7 +31,7 @@ const AvailableFlights = () => {
           <p className="text-sm">Available Flights</p>
         </div>
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/Home")}
           className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-2 rounded-md font-semibold shadow cursor-pointer"
         >
           Modify Search
@@ -76,11 +76,11 @@ const AvailableFlights = () => {
         {/* Flight Results */}
         <main className="flex-1">
           {results.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-4 max-w-2/3">
               {results.map((flight) => (
                 <div
                   key={flight.flightId}
-                  className="flex justify-between items-center bg-white p-4  rounded-md"
+                  className="flex justify-between items-center bg-white p-4"
                 >
                   {/* Airline */}
                   <div className="flex items-center gap-3">

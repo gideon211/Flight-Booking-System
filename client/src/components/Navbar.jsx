@@ -81,7 +81,7 @@ const Navbar = () => {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition"
+            className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition cursor-pointer"
           >
             <span className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center font-bold text-black">
               {user ? user.name?.[0] || "U" : "?"}
@@ -92,7 +92,7 @@ const Navbar = () => {
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 mt-3 w-72 bg-white text-gray-800 rounded-xl shadow-xl overflow-hidden z-50">
+            <div className="absolute right-0 mt-3 w-72 bg-white text-gray-800 rounded-xl shadow-xl overflow-hidden z-50 cursor-pointer">
               {!user ? (
                 <div className="flex flex-col">
                   <Link

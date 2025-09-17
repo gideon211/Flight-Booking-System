@@ -16,8 +16,8 @@ const Home = () => {
     departureDate: "",
     returnDate: "",
     passengers: 1,
-    cabin: "Economy",
-    currency: "USD", // add default
+    cabin: "",
+    currency: "USD",
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -42,16 +42,39 @@ const Home = () => {
   };
 
   // Handle search
-    const handleSubmit = (e) => {
-         e.preventDefault();
-          setLoading(true); 
-          setTimeout(() => {
-             const filtered = flights.filter((flight) => {
-                 return (
-                        (!formData.tripType ||
-                            flight.tripType.toLowerCase() === 
-                            formData.tripType.toLowerCase()) && 
-                            (!formData.from || flight.origin.city .toLowerCase() .includes(formData.from.toLowerCase())) && (!formData.to || flight.destination.city .toLowerCase() .includes(formData.to.toLowerCase())) && (!formData.departureDate || flight.departureDate === formData.departureDate) && (formData.tripType !== "RoundTrip" || !formData.returnDate || flight.returnDate === formData.returnDate) && (!formData.cabin || flight.cabin.toLowerCase() === formData.cabin.toLowerCase()) && flight.seatsAvailable >= Number(formData.passengers || 1) ); }); setLoading(false); navigate("/Availableflights", { state: { results: filtered, ...formData, }, }); }, 3000); };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setTimeout(() => {
+      const filtered = flights.filter((flight) => {
+        return (
+          (!formData.tripType ||
+            flight.tripType.toLowerCase() ===
+              formData.tripType.toLowerCase()) &&
+          (!formData.from ||
+            flight.origin.city
+              .toLowerCase()
+              .includes(formData.from.toLowerCase())) &&
+          (!formData.to ||
+            flight.destination.city
+              .toLowerCase()
+              .includes(formData.to.toLowerCase())) &&
+          (!formData.departureDate ||
+            flight.departureDate === formData.departureDate) &&
+          (formData.tripType !== "RoundTrip" ||
+            !formData.returnDate ||
+            flight.returnDate === formData.returnDate) &&
+          (!formData.cabin ||
+            flight.cabin.toLowerCase() === formData.cabin.toLowerCase()) &&
+          flight.seatsAvailable >= Number(formData.passengers || 1)
+        );
+      });
+      setLoading(false);
+      navigate("/Availableflights", {
+        state: { results: filtered, ...formData },
+      });
+    }, 3000);
+  };
 
   return (
     <div className="w-full min-h-screen flex flex-col bg-blue-100">
@@ -69,7 +92,7 @@ const Home = () => {
         className="relative flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat min-h-[500px]"
         style={{
           backgroundImage:
-            "url('https://capital-placement.com/wp-content/uploads/2021/07/The-benefits-of-travelling.jpg')",
+            "url('https://pixels-cache.icelandair.com/upload/w_780%2Cg_auto%2Cc_fill%2Cf_auto%2Cq_auto/icelandair/blt356056608d00502b.jpg')",
         }}
       >
         {/* Overlay */}
@@ -118,10 +141,15 @@ const Home = () => {
               onChange={handleChange}
               className="border bg-yellow-100 border-white/40 px-2 py-2 rounded-full text-sm cursor-pointer outline-none"
             >
-              <option value="GHC">GHC</option>
-              <option value="USD">USD</option>
-              <option value="NAR">NAR</option>
-              <option value="EUR">EUR</option>
+              <option className="bg-white" value="GHC">
+                GHC
+              </option>
+              <option className="bg-white" value="USD">
+                USD
+              </option>
+              <option className="bg-white" value="EUR">
+                EUR
+              </option>
             </select>
           </div>
 
@@ -153,7 +181,10 @@ const Home = () => {
 
             {/* Departure */}
             <div>
-              <label htmlFor="departure" className="block text-sm font-medium mb-1">
+              <label
+                htmlFor="departure"
+                className="block text-sm font-medium mb-1"
+              >
                 Departure
               </label>
               <input
@@ -168,7 +199,10 @@ const Home = () => {
 
             {/* Return */}
             <div>
-              <label htmlFor="return" className="block text-sm font-medium mb-1">
+              <label
+                htmlFor="return"
+                className="block text-sm font-medium mb-1"
+              >
                 Return
               </label>
               <input
