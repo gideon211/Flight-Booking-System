@@ -36,7 +36,7 @@ const PaymentPage = () => {
   return (
     <div className="max-w-3xl mx-auto bg-white shadow rounded-lg p-6">
         
-      <div className="bg-red-500 text-white px-4 py-2 rounded-t-lg font-medium -mx-6 -mt-6 mb-6">
+      <div className="bg-blue-500 text-white px-4 py-2 rounded-t-lg font-medium -mx-6 -mt-6 mb-6">
             4. Payment Methods <span className="font-normal">Safe Secured</span>
       </div>
 
@@ -45,7 +45,7 @@ const PaymentPage = () => {
             <button
             onClick={() => setMethod("card")}
             className={`flex-1 border-none p-2 rounded ${
-                method === "card" ? "bg-red-200 shadow font-medium" : "bg-gray-100"
+                method === "card" ? "bg-blue-200 shadow font-medium" : "bg-gray-100"
             }`}
             >
             Credit/Debit Card
@@ -53,7 +53,7 @@ const PaymentPage = () => {
             <button
             onClick={() => setMethod("momo")}
             className={`flex-1  border-none p-2 rounded ${
-                method === "momo" ? "bg-red-200 shadow font-medium " : "bg-gray-100"
+                method === "momo" ? "bg-blue-200 shadow font-medium " : "bg-gray-100"
             }`}
             >
             Mobile Money
@@ -61,7 +61,7 @@ const PaymentPage = () => {
             <button
             onClick={() => setMethod("bank")}
             className={`flex-1 border-none p-2 rounded ${
-                method === "bank" ? "bg-red-200 shadow font-medium" : "bg-gray-100"
+                method === "bank" ? "bg-blue-200 shadow font-medium" : "bg-gray-100"
             }`}
             >
             Bank Deposit
@@ -86,7 +86,7 @@ const PaymentPage = () => {
                         name="cardName"
                         value={formData.cardName}
                         onChange={handleChange}
-                        className="w-full  border-2 border-red-200 outline-none rounded p-2 mt-1"
+                        className="w-full  border-2 border-blue-200 outline-none rounded p-2 mt-1"
                         required
                     />
                     </div>
@@ -100,7 +100,7 @@ const PaymentPage = () => {
                         name="cardNumber"
                         value={formData.cardNumber}
                         onChange={handleChange}
-                        className="w-full border-2 border-red-200 outline-none rounded p-2 mt-1"
+                        className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
                         required
                     />
                     </div>
@@ -114,7 +114,7 @@ const PaymentPage = () => {
                             value={formData.expiry}
                             onChange={handleChange}
                             placeholder="MM/YY"
-                            className="w-full border-2 border-red-200 outline-none rounded p-2 mt-1"
+                            className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
                             required
                             />
                         </div>
@@ -126,7 +126,7 @@ const PaymentPage = () => {
                             value={formData.cvv}
                             onChange={handleChange}
                             placeholder="123"
-                            className="w-full border-2 border-red-200 outline-none rounded p-2 mt-1"
+                            className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
                             required
                             />
                         </div>
@@ -144,7 +144,7 @@ const PaymentPage = () => {
                     name="momoProvider"
                     value={formData.momoProvider}
                     onChange={handleChange}
-                    className="w-full border-2 border-red-200 outline-none rounded p-2 mt-1"
+                    className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
                     required
                 >
                     <option value="">Select Provider</option>
@@ -164,7 +164,7 @@ const PaymentPage = () => {
                         value={formData.momoNumber}
                         onChange={handleChange}
                         placeholder="05XXXXXXXX"
-                        className="w-full border-2 border-red-200 outline-none rounded p-2 mt-1"
+                        className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1 placeholder:text-sm placeholder:text-gray-300"
                         required
                     />
                 </div>
@@ -182,24 +182,24 @@ const PaymentPage = () => {
                         name="depositRef"
                         value={formData.depositRef}
                         onChange={handleChange}
-                        className="w-full border-2 border-red-200 outline-none rounded p-2 mt-1"
+                        className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
                         required
                     />
                 </div>
 
-                <div>
+                {/* <div>
                     <label className="block text-sm font-medium">Upload Deposit Slip (optional)</label>
                     <input
                         type="file"
                         name="depositSlip"
-                        className="w-full border-2 border-red-200 outline-none rounded p-2 mt-1"
+                        className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
                     />
-                </div>
+                </div> */}
             </>
             )}
 
             {/* Address Fields */}
-            <div>
+            {/* <div>
                 <label className="block text-sm font-medium">
                     Address <span className="text-red-500">(Mandatory)</span>
                 </label>
@@ -208,10 +208,10 @@ const PaymentPage = () => {
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
-                    className="w-full border-2 border-red-200 outline-none rounded p-2 mt-1"
+                    className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
                     required
                 />
-            </div>
+            </div> */}
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -221,7 +221,7 @@ const PaymentPage = () => {
                     name="street"
                     value={formData.street}
                     onChange={handleChange}
-                    className="w-full border-2 border-red-200 outline-none rounded p-2 mt-1"
+                    className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
                     required
                     />
                 </div>
@@ -232,7 +232,7 @@ const PaymentPage = () => {
                     name="city"
                     value={formData.city}
                     onChange={handleChange}
-                    className="w-full border-2 border-red-200 outline-none rounded p-2 mt-1"
+                    className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
                     required
                     />
                 </div>
@@ -246,7 +246,7 @@ const PaymentPage = () => {
                     name="state"
                     value={formData.state}
                     onChange={handleChange}
-                    className="w-full border-2 border-red-200 outline-none rounded p-2 mt-1"
+                    className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
                     required
                     />
                 </div>
@@ -257,7 +257,7 @@ const PaymentPage = () => {
                     name="zip"
                     value={formData.zip}
                     onChange={handleChange}
-                    className="w-full border-2 border-red-200 outline-none rounded p-2 mt-1"
+                    className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
                     required
                     />
                 </div>
@@ -269,7 +269,7 @@ const PaymentPage = () => {
                     name="country"
                     value={formData.country}
                     onChange={handleChange}
-                    className="w-full border-2 border-red-200 outline-none rounded p-2 mt-1"
+                    className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
                     required
                 >
                     <option>Ghana</option>
@@ -293,7 +293,7 @@ const PaymentPage = () => {
 
             <button
             type="submit"
-            className="mt-4 bg-yellow-400  px-6 py-2 font-medium rounded"
+            className="mt-4 bg-yellow-300 hover:bg-yellow-400 cursor-pointer px-6 py-2 font-medium rounded"
             >
             MAKE PAYMENT
             </button>

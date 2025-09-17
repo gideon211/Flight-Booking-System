@@ -1,16 +1,9 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
+import React, { useState, useContext, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { AuthContext } from '../context/AuthContext';
-import Car from "../assets/car-solid-full.svg";
-import Umbrella from "../assets/umbrella-beach-solid-full.svg";
-import Boat from "../assets/sailboat-solid-full.svg";
-import Cart from "../assets/cart-flatbed-suitcase-solid-full (1).svg";
-import Build from "../assets/building-solid-full.svg";
-import House from "../assets/house-solid-full.svg";
+import { AuthContext } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 
-// Example API call to fetch bookings
-// Replace with your real API function
+// Fake API
 const fetchUserBookings = async (userId) => {
   return [
     { id: 1, flight: "Accra → London", date: "2025-09-20" },
@@ -20,142 +13,135 @@ const fetchUserBookings = async (userId) => {
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
-
   const { t, i18n } = useTranslation();
   const [language, setLanguage] = useState("en");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [bookings, setBookings] = useState([]);
   const dropdownRef = useRef(null);
 
-    useEffect(() => {
-    const handleClickOutside = (event) => {
-        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpen(false);
-        }
+      }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-    };
-    }, []);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
-    if (user) {
-      fetchUserBookings(user.id).then(setBookings);
-    }
+    if (user) fetchUserBookings(user.id).then(setBookings);
   }, [user]);
 
   const handleLanguageChange = (e) => {
-    const selectedLang = e.target.value;
-    setLanguage(selectedLang);
-    i18n.changeLanguage(selectedLang);
+    setLanguage(e.target.value);
+    i18n.changeLanguage(e.target.value);
   };
 
-
-
   return (
-
-    <nav className="flex justify-between px-8 items-center h-[5rem] bg-white shadow-md">
-      {/* Logo */}
-      <div className="h-6 flex items-center">
-        <img
-          src="https://cdn.travelwings.com/web-assets/images/travelwings-logo.svg"
-          alt="logo"
-          className="w-64"
-        />
+    <nav className="flex justify-between items-center px-8 h-[4.5rem] bg-gradient-to-r from-blue-400 to-indigo-500 text-white shadow-lg">
+      {/* Left: Logo */}
+      <div className="flex items-center gap-2">
+        <h1 className="text-3xl font-bold leading-2">NextTrip.</h1>
       </div>
 
-      {/* Icons */}
-      <ul className="flex gap-6 items-center">
-        <li className="w-7 cursor-pointer">
-          <img src={House} alt="Home" />
+      {/* Center: Links */}
+      <ul className="hidden md:flex gap-8 font-medium">
+        <Link to="/Availableflights">
+        <li className="hover:text-yellow-300 cursor-pointer transition">
+          {t("Flights")}
         </li>
-        <li className="w-7 cursor-pointer">
-          <img src={Build} alt="Building" />
+        </Link>
+        <li className="hover:text-yellow-300 cursor-pointer transition">
+          {t("Hotels")}
         </li>
-        <li className="w-7 cursor-pointer">
-          <img src={Cart} alt="Cart" />
+        <li className="hover:text-yellow-300 cursor-pointer transition">
+          {t("Packages")}
         </li>
-        <li className="w-7 cursor-pointer">
-          <img src={Boat} alt="Boat" />
-        </li>
-        <li className="w-7 cursor-pointer">
-          <img src={Umbrella} alt="Umbrella" />
-        </li>
-        <li className="w-7 cursor-pointer">
-          <img src={Car} alt="Car" />
+        <li className="hover:text-yellow-300 cursor-pointer transition">
+          {t("Car Rentals")}
         </li>
       </ul>
 
-      {/* Right side */}
+      {/* Right: Language + Account */}
       <div className="flex items-center gap-6">
-        {/* Language selector */}
+        {/* Language */}
         <select
           value={language}
           onChange={handleLanguageChange}
-          className="border-none px-2 py-1 rounded cursor-pointer outline-0"
+          className="bg-transparent border border-white/40 px-2 py-1 rounded text-sm cursor-pointer text-gray-300 outline-none"
         >
-          <option value="en">English</option>
-          <option value="fr">Français</option>
-          <option value="es">Español</option>
-          <option value="de">Deutsch</option>
+          <option value="en">EN</option>
+          <option value="fr">FR</option>
+          <option value="es">ES</option>
+          <option value="de">DE</option>
         </select>
 
-        {/* Account dropdown */}
-        <div className="relative">
+        {/* Profile dropdown */}
+        <div className="relative" ref={dropdownRef}>
           <button
-            ref={dropdownRef}
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="focus:outline-none px-3 py-2 bg-red-400 rounded-md hover:bg-red-500 text-white font-medium cursor-pointer"
+            className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition"
           >
-            Account
+            <span className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center font-bold text-black">
+              {user ? user.name?.[0] || "U" : "?"}
+            </span>
+            <span className="hidden sm:inline font-medium">
+              {user ? user.name : "Account"}
+            </span>
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-60 bg-white rounded-md z-50 shadow-2xl py-2 max-h-80 overflow-y-auto">
+            <div className="absolute right-0 mt-3 w-72 bg-white text-gray-800 rounded-xl shadow-xl overflow-hidden z-50">
               {!user ? (
-                <div>
+                <div className="flex flex-col">
                   <Link
                     to="/Login"
-                    className="block px-4 py-2 text-gray-700 hover:bg-red-100 "
+                    className="px-4 py-3 hover:bg-gray-100 transition"
                   >
                     Login
                   </Link>
                   <Link
                     to="/SignUp"
-                    className="block px-4 py-2 text-gray-700 hover:bg-red-100 "
+                    className="px-4 py-3 hover:bg-gray-100 transition"
                   >
                     Register
                   </Link>
                 </div>
               ) : (
                 <div>
-                  {/* Bookings list */}
-                  <div className="px-4 py-2 border-b font-semibold text-gray-700">
+                  {/* Header */}
+                  <div className="px-4 py-3 border-b">
+                    <p className="font-semibold">{user.name}</p>
+                    <p className="text-sm text-gray-500">{user.email}</p>
+                  </div>
+
+                  {/* Tickets */}
+                  <div className="px-4 py-2 text-sm font-semibold text-gray-600">
                     My Tickets
                   </div>
-                  {bookings.length > 0 ? (
-                    bookings.map((b) => (
-                      <div
-                        key={b.id}
-                        className="px-4 py-2 text-sm text-gray-600 hover:bg-red-100"
-                      >
-                        <div>{b.flight}</div>
-                        <div className="text-xs text-gray-500">{b.date}</div>
+                  <div className="max-h-48 overflow-y-auto">
+                    {bookings.length > 0 ? (
+                      bookings.map((b) => (
+                        <div
+                          key={b.id}
+                          className="px-4 py-2 hover:bg-gray-50 transition"
+                        >
+                          <div>{b.flight}</div>
+                          <div className="text-xs text-gray-500">{b.date}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-gray-500 text-sm">
+                        No tickets booked yet
                       </div>
-                    ))
-                  ) : (
-                    <div className="px-4 py-2 text-gray-500 text-sm">
-                      No tickets booked yet
-                    </div>
-                  )}
+                    )}
+                  </div>
 
-                  {/* Logout button */}
+                  {/* Logout */}
                   <button
                     onClick={logout}
-                    className="w-full text-left px-4 py-2 mt-2 text-gray-700 hover:bg-red-100"
+                    className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition"
                   >
                     Logout
                   </button>

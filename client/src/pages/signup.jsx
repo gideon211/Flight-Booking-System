@@ -55,7 +55,7 @@ const Signup = () => {
         <div className='w-full h-screen flex justify-center items-center bg-[url("https://images.unsplash.com/photo-1524592714635-d77511a4834d?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")] bg-cover bg-center'>
             <div className='lg:w-1/3 2xl:w-1/4 p-10 bg-white'>
                 <h1 className='text-center text-3xl font-bold py-5'>
-                    Welcome to <span className='text-red-500'>TravelWings</span>
+                    Welcome to <span className='text-yellow-500'>NextTrip.</span>
                 </h1>
 
                 <div className='space-y-5'>
@@ -118,7 +118,7 @@ const Signup = () => {
                         type="submit"
                         disabled={loading}
                         className={`p-2 text-md font-semibold rounded-md cursor-pointer w-full
-                        ${loading ? "bg-red-400 cursor-not-allowed" : "bg-red-500 hover:bg-red-600 text-white"}`}
+                        ${loading ? "bg-red-400 cursor-not-allowed" : "bg-yellow-500 hover:bg-yellow-600 cursor-pointer text-white"}`}
                         >
                         {loading ? (
                         <div className="flex justify-center items-center space-x-2">

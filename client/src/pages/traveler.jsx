@@ -24,10 +24,7 @@ const TravelerPage = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen p-8">
-      <h2 className="text-3xl font-medium mb-6">
-        {location.state?.from?.toUpperCase() ?? "ACCRA"} To{" "}
-        {location.state?.to?.toUpperCase() ?? "KUMASI"}
-      </h2>
+
 
       <div className="grid grid-cols-3 gap-6">
             {/* Left Side - Steps */}
@@ -48,14 +45,14 @@ const TravelerPage = () => {
 
                 {/* Step 3 - Active */}
                 <div className="shadow-md rounded-b-2xl">
-                    <div className="bg-red-600 text-white px-4 py-2 font-semibold">
+                    <div className="bg-blue-600 text-white px-4 py-2 font-semibold">
                         3. Traveller Details
                     </div>
                     <form
                     onSubmit={handleSubmit}
                     className="bg-white p-6 rounded-b-xl space-y-4 items-center justify-center text-center"
                     >
-                        <div className="w-full h-[3rem] flex justify-center items-center bg-red-400 rounded-b-lg">
+                        <div className="w-full h-[3rem] flex justify-center items-center bg-blue-400 rounded-b-lg">
                             <h3 className="font-medium text-white text-xl">Adult - 1</h3>
                         </div>
 
@@ -70,7 +67,7 @@ const TravelerPage = () => {
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             required
-                            className="border rounded px-3 py-2 w-28 border-red-200 outline-0"
+                            className="border rounded px-3 py-2 w-28 border-blue-200 outline-0"
                             >
                             <option value="">Select</option>
                             <option value="Mr">Mr</option>
@@ -89,7 +86,7 @@ const TravelerPage = () => {
                             type="text"
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
-                            className="border rounded px-3 py-2 w-64 outline-0 border-red-200"
+                            className="border rounded px-3 py-2 w-64 outline-0 border-blue-200"
                             required
                             />
                         </div>
@@ -103,7 +100,7 @@ const TravelerPage = () => {
                             type="text"
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
-                            className="border rounded px-3 py-2 w-64 border-red-200 outline-0"
+                            className="border rounded px-3 py-2 w-64 border-blue-200 outline-0"
                             required
                             />
                         </div>
@@ -117,7 +114,7 @@ const TravelerPage = () => {
                             type="date"
                             value={dob}
                             onChange={(e) => setDob(e.target.value)}
-                            className="border rounded px-3 py-2 w-64 border-red-200 outline-0"
+                            className="border rounded px-3 py-2 w-64 border-blue-200 outline-0"
                             required
                             />
                         </div>
@@ -128,14 +125,14 @@ const TravelerPage = () => {
                                 Mobile No. <span className="text-red-500">*</span>
                             </label>
                             <div className="flex w-64">
-                                <span className="px-3 py-2 border rounded-l bg-gray-200 text-sm border-red-200">
+                                <span className="px-3 py-2 border rounded-l bg-gray-200 text-sm border-blue-200">
                                 +233
                                 </span>
                                 <input
                                 type="tel"
                                 value={mobile}
                                 onChange={(e) => setMobile(e.target.value)}
-                                className="border rounded-r px-3 py-2 flex-1 w-64 border-red-200 outline-0"
+                                className="border rounded-r px-3 py-2 flex-1 w-64 border-blue-200 outline-0"
                                 required
                                 />
                             </div>

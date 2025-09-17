@@ -30,7 +30,7 @@ const EmailPage = () => {
 
                 {/* Step 2 - Active */}
                 <div className="mb-4 shadow-md rounded-b-2xl">
-                    <div className="bg-red-600 text-white px-4 py-2 font-semibold">
+                    <div className="bg-blue-600 text-white px-4 py-2 font-semibold">
                     2. Your Email ID
                     </div>
                     <div className="bg-white p-6 rounded-b-xl">
@@ -53,7 +53,7 @@ const EmailPage = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="Enter your email"
-                                className="w-72 border-2 rounded px-3 py-2 border-red-100 placeholder:"
+                                className="w-72 border-2 rounded px-3 py-2 border-blue-100 placeholder:"
                             />
                             </div>
 
@@ -111,7 +111,7 @@ const EmailPage = () => {
 
         {/* Right Summary */}
         <div>
-          <div className="bg-white shadow rounded-md p-4 h-[50rem]">
+          <div className="bg-white shadow rounded-b-md p-4 h-[20rem]">
                 <h1 className="font-semibold mb-3 text-3xl">Summary</h1>
                 <div className="text-sm text-gray-700 mb-2">
                     <p className="text-xl"> {flight.airline}</p>
@@ -131,8 +131,8 @@ const EmailPage = () => {
                         </span>
                     </p>
                     <p>Taxes & Fees: GHS 75.00</p>
-                    <p className="font- text-lg">
-                        <span className="text-md font-medium">Total:</span> GHS {flight.price + 75}
+                    <p className="font- text-lg text-red-500">
+                        <span className="text-md font-medium ">Total:</span> GHS {flight.price + 75}
                     </p>
                 </div>
           </div>

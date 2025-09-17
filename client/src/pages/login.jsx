@@ -40,7 +40,7 @@ const login = () => {
     return (
         <div className='w-full h-screen bg-gray-100 flex justify-center items-center bg-[url("https://images.unsplash.com/photo-1549897411-b06572cdf806?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")] bg-cover bg-center'>
             <div className='lg:w-1/3 2xl:w-1/4 p-10 bg-white'>
-                <h1 className='text-center text-3xl font-bold py-5'>Welcome to <span className='text-red-500'>TravelWings</span></h1>
+                <h1 className='text-center text-3xl font-bold py-5'>Welcome to <span className='text-blue-500'>NextTrip.</span></h1>
                 <div className='space-y-5'>
 
                     <h1 className='text-xl font-semibold text-center'>
@@ -58,7 +58,7 @@ const login = () => {
                         <input
                         value={password}
                         onChange={(e) => setPassword(e.target.value)} 
-                        type="password" placeholder='Password' className='outline-0 px-5 py-2 bg-gray-100' />
+                        type="password" placeholder='Password' className='outline-0 px-5 py-2 bg-gray-100 accent-yellow-100' />
                         <div className='flex justify-between items-center'>
                             <div className='flex items-center space-x-2'>
                                 <input type="checkbox" name="" id="" />
@@ -73,7 +73,7 @@ const login = () => {
                         type='submit'
                         disabled={loading}
                         className={`p-2 t font-semibold rounded-md 
-                        ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-red-500 hover:bg-red-600 text-white"}`}
+                        ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-yellow-500 hover:bg-yellow-600 text-white cursor-pointer"}`}
                         >
                         {loading ? <Loader /> : "Sign In"}
                         </button>

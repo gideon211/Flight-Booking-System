@@ -1,366 +1,280 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import List from "../components/HomeFlight"
-import  Footer  from "../components/Footer";
-import About from "../components/About";
-import Story from "../components/Story";
+import List from "../components/HomeFlight";
+import Footer from "../components/Footer";
 import Airlines from "../components/Airlines";
-
-
-
-
-
+import Loader from "../components/Loader";
 
 const Home = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [flights, setFlights] = useState([]);
+  const [formData, setFormData] = useState({
+    tripType: "oneway", // match radio values
+    from: "",
+    to: "",
+    departureDate: "",
+    returnDate: "",
+    passengers: 1,
+    cabin: "Economy",
+    currency: "USD", // add default
+  });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
 
-
+  // Check auth token
   useEffect(() => {
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
-    navigate("/Login");
+  // Fetch flights
+  useEffect(() => {
+    fetch("/flights.json")
+      .then((res) => res.json())
+      .then((data) => setFlights(data));
+  }, []);
+
+  // Handle form change
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-
-  const [flights, setFlights] = useState([]);
-
-    useEffect(() => {
-        fetch("/flights.json")
-        .then(res => res.json())
-        .then(data => setFlights(data));
-    }, []);
-
-    const [formData, setFormData] = useState({
-        tripType: "",
-        from: "",
-        to: "",
-        departureDate: "",
-        returnDate: "",
-        passengers: 1,
-        cabin: "",
-    });
-
-    const [results, setResults] = useState([]);
-
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
-
+  // Handle search
     const handleSubmit = (e) => {
-        e.preventDefault();
-        setLoading(true);
-
-        // Simulate 2 second delay before navigating
-        setTimeout(() => {
-            const filtered = flights.filter((flight) => {
-                return (
-                    (!formData.tripType || flight.tripType.toLowerCase() === formData.tripType.toLowerCase()) &&
-                    (!formData.from || flight.origin.city.toLowerCase().includes(formData.from.toLowerCase())) &&
-                    (!formData.to || flight.destination.city.toLowerCase().includes(formData.to.toLowerCase())) &&
-                    (!formData.departureDate || flight.departureDate === formData.departureDate) &&
-                    (formData.tripType !== "RoundTrip" || !formData.returnDate || flight.returnDate === formData.returnDate) &&
-                    (!formData.cabin || flight.cabin.toLowerCase() === formData.cabin.toLowerCase()) &&
-                    flight.seatsAvailable >= Number(formData.passengers || 1)
-                );
-            });
-
-            setResults(filtered);
-            setLoading(false);
-
-            navigate("/Availableflights", {
-                state: {
-                    results: filtered,
-                    from: formData.from,
-                    to: formData.to,
-                    date: formData.departureDate,
-                    passengers: formData.passengers,
-                    cabin: formData.cabin,
-                },
-            });
-        }, 5000); 
-    };
-
-  
+         e.preventDefault();
+          setLoading(true); 
+          setTimeout(() => {
+             const filtered = flights.filter((flight) => {
+                 return (
+                        (!formData.tripType ||
+                            flight.tripType.toLowerCase() === 
+                            formData.tripType.toLowerCase()) && 
+                            (!formData.from || flight.origin.city .toLowerCase() .includes(formData.from.toLowerCase())) && (!formData.to || flight.destination.city .toLowerCase() .includes(formData.to.toLowerCase())) && (!formData.departureDate || flight.departureDate === formData.departureDate) && (formData.tripType !== "RoundTrip" || !formData.returnDate || flight.returnDate === formData.returnDate) && (!formData.cabin || flight.cabin.toLowerCase() === formData.cabin.toLowerCase()) && flight.seatsAvailable >= Number(formData.passengers || 1) ); }); setLoading(false); navigate("/Availableflights", { state: { results: filtered, ...formData, }, }); }, 3000); };
 
   return (
-        <div>
+    <div className="w-full min-h-screen flex flex-col bg-blue-100">
+      {/* Loading Screen */}
+      {loading && (
+        <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
+          <Loader />
+        </div>
+      )}
 
+      <Navbar />
 
-            {loading && (
-                <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
-                    <img
-                    src="https://cdn.travelwings.com/static/images/icons/search-loader.gif"
-                    alt="Loading..."
-                    className="w-[30rem] h-[20rem] object-cover"
-                    />
-                </div>
-            )}
+      {/* Hero Section */}
+      <div
+        className="relative flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat min-h-[500px]"
+        style={{
+          backgroundImage:
+            "url('https://capital-placement.com/wp-content/uploads/2021/07/The-benefits-of-travelling.jpg')",
+        }}
+      >
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black/10 bg-opacity-40"></div>
 
-        <Navbar />
-
-        <section>
-                <div className="h-[500px] flex flex-col justify-center bg-[url('https://images.unsplash.com/photo-1569154941061-e231b4725ef1?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')] bg-cover bg-center">
-                    <div className="text-center items-center mt-[15rem]">
-                        <h1 className="text-4xl text-white font-bold font-stretch-extra-condensed">
-                        Book Cheap Africa world Airlines Flight
-                        </h1>
-                        <p className="text-white justify-center font-medium">
-                        Africa World Airlines (AW): Fly with us, and see the world in a
-                        new light
-                        </p>
-                    </div>
-                </div>
-
-                <div>
-                        <form
-                        onSubmit={handleSubmit}
-                        className="  mx-auto bg-white p-[34px] rounded-xl shadow-md  top-[33rem] absolute right-[20rem]"
-                        >
-                        {/* Trip Type */}
-                            <div className="mb-4 flex gap-2 ">
-                                <label className="flex items-center gap-2 px-6 py-2 rounded-full cursor-pointer bg-red-50 peer-checked:bg-red-100">
-                                    <input
-                                    type="radio"
-                                    name="tripType"
-                                    value="OneWay"
-                                    defaultChecked
-                                    className="peer accent-red-500"
-                                    />
-                                    <span className="font-medium peer-checked:text-red-600">
-                                    One-way
-                                    </span>
-                                </label>
-
-                                {/* Roundtrip */}
-                                <label className="flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer bg-red-50 peer-checked:bg-red-100">
-                                    <input
-                                    type="radio"
-                                    name="tripType"
-                                    value="RoundTrip"
-                                    className="peer accent-red-500"
-                                    />
-                                    <span className="font-medium peer-checked:text-red-600">
-                                    Roundtrip
-                                    </span>
-                                </label>
-
-                            </div>
-
-                            <div className="flex gap-5 mb-5">
-                                {/* From & To */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-[1rem] mb-4">
-                                    <div className="relative">
-                                    <label
-                                        htmlFor="from"
-                                        className="absolute -top-2 left-3 bg-white px-1 text-md font-medium"
-                                    >
-                                        From
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.from}
-                                        name="from"
-                                        onChange={handleChange}
-                                        id="from"
-                                        placeholder="From (city or airport)"
-                                        className="py-[25px] px-[15px] border-2 border-gray-300 p-2 outline-0 rounded-md"
-                                    />
-                                    </div>
-
-                                    <div className="relative">
-                                        <label
-                                        htmlFor="to"
-                                        className="absolute -top-2 left-3 bg-white px-1 text-md font-medium"
-                                        >
-                                            To
-                                        </label>
-                                        <input
-                                        type="text"
-                                        id="to"
-                                        name="to"
-                                        value={formData.to}
-                                        onChange={handleChange}
-                                        placeholder="To (city or airport)"
-                                        className="py-[25px] px-[15px] border-2 border-gray-300 p-2 outline-0 rounded-md"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Dates */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div className="relative">
-                                        <label
-                                        htmlFor="departure"
-                                        className="absolute -top-2 left-3 bg-white px-1 text-md font-medium"
-                                        >
-                                            Departure Date
-                                        </label>
-                                        <input
-                                        type="date"
-                                        id="departure"
-                                        name="departureDate"
-                                        value={formData.departureDate}
-                                        onChange={handleChange}
-                                        className="py-[25px] border-2 border-gray-300 p-2 outline-0 rounded-md"
-                                        />
-                                    </div>
-
-                                    <div className="relative">
-                                        <label
-                                        htmlFor="return"
-                                        className="absolute -top-2 left-3 bg-white px-1 text-md font-medium"
-                                        >
-                                        Return Date
-                                        </label>
-                                        <input
-                                        type="date"
-                                        name="returnDate"
-                                        id="return"
-                                        value={formData.returnDate}
-                                        onChange={handleChange}
-                                        className="py-[25px] border-2 border-gray-300 p-2 outline-0 rounded-md"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Passengers */}
-                                <div className="relative mb-4">
-                                    <label
-                                    htmlFor="passengers"
-                                    className="absolute -top-2 left-3 bg-white px-1 text-md font-medium"
-                                    >
-                                    Traveller
-                                    </label>
-                                    <input
-                                    type="number"
-                                    name="passengers"
-                                    id="passengers"
-                                        value={formData.passengers}
-                                        onChange={handleChange}
-                                    min="1"
-                                    
-                                    className="py-[25px] px-[15px] border-2 border-gray-300 p-2 outline-0 rounded-md Y"
-                                    />
-                                </div>
-
-                                {/* Class */}
-                                <div className="relative mb-4">
-                                    <label
-                                    htmlFor="cabin"
-                                    className="absolute -top-2 left-3 bg-white px-1 text-md font-medium"
-                                    >
-                                    Cabin Class
-                                    </label>
-                                    <select
-                                    id="cabin"
-                                    name="cabin"
-                                        value={formData.cabin}
-                                        onChange={handleChange}
-                                    className="py-[25px] border-2 border-gray-300 p-2 rounded-md outline-0"
-                                    >
-                                            <option>Economy</option>
-                                            <option>Premium</option>
-                                            <option>Business</option>
-                                            <option>First Class</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-center items-center absolute -bottom- right-[35rem]">
-                                <button
-                                type="submit"
-                                className="bg-red-500 cursor-pointer hover:bg-red-600 text-white text-xl px-10 py-5 rounded-full flex items-center gap-2 font-medium"
-                                >
-                                    <img
-                                    src="https://cdn.travelwings.com/b2c-production/static/html/staticPages/assets/img/lets-fly.svg"
-                                    width="24"
-                                    alt="fly"
-                                    className="w-9 mr-3"
-                                    />
-                                    LET'S FLY
-                                </button>
-                            </div>
-                        </form>
-                </div>
-        </section>
-
-
-
-        <div className="mt-[20rem] ">
-            <List />
+        {/* Title */}
+        <div className="z-10 text-center text-white px-4 mb-6">
+          <h1 className="text-3xl md:text-4xl font-bold">
+            Flights to Ghana starting
+          </h1>
         </div>
 
-        <div className="flex gap-8 ml-[12rem] items-stretch mb-8 mt-8">
-            {/* Left Image Card */}
-            <div className="border border-gray-400 w-[40rem] rounded-sm overflow-hidden items-center justify-center flex h-[10rem]">
-                <img
-                src="https://cdn.travelwings.com/assets/images/Destination-Landing-page-1.png"
-                className="h- object-cover"
-                alt="Destination-Landing"
-                />
+        {/* Search Form */}
+        <form
+          onSubmit={handleSubmit}
+          className="z-10 bg-white shadow-lg p-6 md:p-8 max-w-4xl w-full"
+        >
+          {/* Trip type and currency */}
+          <div className="flex gap-4 mb-6">
+            <label className="flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer bg-yellow-100">
+              <input
+                type="radio"
+                name="tripType"
+                value="round"
+                checked={formData.tripType === "round"}
+                onChange={handleChange}
+                className="accent-yellow-500"
+              />
+              <span className="font-medium">Round Trip</span>
+            </label>
+            <label className="flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer bg-yellow-100">
+              <input
+                type="radio"
+                name="tripType"
+                value="oneway"
+                checked={formData.tripType === "oneway"}
+                onChange={handleChange}
+                className="accent-yellow-500"
+              />
+              <span className="font-medium">One Way</span>
+            </label>
+
+            <select
+              name="currency"
+              value={formData.currency}
+              onChange={handleChange}
+              className="border bg-yellow-100 border-white/40 px-2 py-2 rounded-full text-sm cursor-pointer outline-none"
+            >
+              <option value="GHC">GHC</option>
+              <option value="USD">USD</option>
+              <option value="NAR">NAR</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </div>
+
+          {/* Form fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* From */}
+            <div className="mt-4">
+              <input
+                type="text"
+                name="from"
+                value={formData.from}
+                onChange={handleChange}
+                placeholder="Origin"
+                className="w-full border border-blue-200 outline-none rounded-lg px-3 py-3"
+              />
             </div>
 
-            {/* Right Newsletter Card */}
-            <div className="border border-gray-400 w-[40rem] h-[10rem] p-8 bg-white rounded-md shadow-sm flex flex-col justify-center">
-                <h2 className="text-md font-medium mb-2">Great Offers & Amazing Deals</h2>
-                <p className="text-gray-600 mb-2 text-sm">
-                Get personalised recommendations and private deals
-                </p>
+            {/* To */}
+            <div className="mt-4">
+              <input
+                type="text"
+                name="to"
+                value={formData.to}
+                onChange={handleChange}
+                placeholder="Destination"
+                className="w-full border border-blue-200 rounded-lg px-3 py-3 outline-none"
+              />
+            </div>
 
-                <form className="flex">
-                <input
-                    type="email"
-                    name="emailid"
-                    id="emailid"
-                    placeholder="Enter Email Address"
-                    className="flex-grow border border-red-300 rounded-l-sm px-4  outline-none placeholder:text-sm"
-                />
-                <button
-                    type="submit"
-                    className="bg-red-500 text-white px-6 py-3 rounded-r-sm hover:bg-red-600 transition cursor-pointer text-sm"
+            {/* Departure */}
+            <div>
+              <label htmlFor="departure" className="block text-sm font-medium mb-1">
+                Departure
+              </label>
+              <input
+                type="date"
+                id="departure"
+                name="departureDate"
+                value={formData.departureDate}
+                onChange={handleChange}
+                className="w-full border rounded-lg px-3 py-3 border-blue-200 outline-none"
+              />
+            </div>
+
+            {/* Return */}
+            <div>
+              <label htmlFor="return" className="block text-sm font-medium mb-1">
+                Return
+              </label>
+              <input
+                type="date"
+                id="return"
+                name="returnDate"
+                value={formData.returnDate}
+                onChange={handleChange}
+                className="w-full border border-blue-200 outline-none rounded-lg px-3 py-3"
+              />
+            </div>
+          </div>
+
+          {/* Bottom row */}
+          <div className="mt-6 flex flex-col md:flex-row gap-4 items-center">
+            <div className="flex-1 grid grid-cols-2 gap-4 w-full">
+              {/* Passengers */}
+              <div>
+                <label
+                  htmlFor="passengers"
+                  className="block text-sm font-medium mb-1"
                 >
-                    Subscribe
-                </button>
-                </form>
+                  Passengers
+                </label>
+                <input
+                  type="number"
+                  id="passengers"
+                  name="passengers"
+                  min="1"
+                  value={formData.passengers}
+                  onChange={handleChange}
+                  className="w-full border border-blue-200 rounded-lg px-3 py-3 outline-none"
+                />
+              </div>
+
+              {/* Cabin */}
+              <div>
+                <label
+                  htmlFor="cabin"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Cabin Class
+                </label>
+                <select
+                  id="cabin"
+                  name="cabin"
+                  value={formData.cabin}
+                  onChange={handleChange}
+                  className="w-full border-2 rounded-lg px-3 py-3 outline-none border-blue-200"
+                >
+                  <option>Economy</option>
+                  <option>Premium</option>
+                  <option>Business</option>
+                  <option>First Class</option>
+                </select>
+              </div>
             </div>
+
+            {/* Search button */}
+            <button
+              type="submit"
+              className="bg-yellow-500 hover:bg-yellow-600 cursor-pointer mt-4 text-black px-10 py-4 rounded-md font-semibold shadow-lg w-full md:w-auto"
+            >
+              Search Flights
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Flights List */}
+      <div className="mt-[0rem]">
+        <List />
+      </div>
+
+      {/* Deals & Newsletter */}
+      <div className="flex flex-col md:flex-row gap-8 justify-center items-stretch mb-16 mt-12 px-6 w-full">
+        <div className="border-none bg- p-8  w-full md:w-[40rem] flex flex-col justify-center">
+          <h2 className="text-lg font-semibold mb-2">
+            Great Offers & Amazing Deals
+          </h2>
+          <p className="text-gray-600 mb-4 text-sm">
+            Get personalised recommendations and private deals
+          </p>
+
+          <form className="flex">
+            <input
+              type="email"
+              name="emailid"
+              id="emailid"
+              placeholder="Enter Email Address"
+              className="flex-grow border border-blue-300 rounded-l-md px-4 py-2 outline-none placeholder:text-sm"
+            />
+            <button
+              type="submit"
+              className="bg-yellow-500 text-white px-6 py-2 rounded-r-md hover:bg-yellow-600 transition text-sm"
+            >
+              Subscribe
+            </button>
+          </form>
         </div>
+      </div>
 
-
-            <div>
-            <About />
-        </div>
-
-        <div>
-            <Story />
-        </div>
-
-
-            <div className="mb-[10rem] mt-[5rem]">
-                <Airlines />
-            </div>
-
-
-
-            <div>
-                <Footer />
-            </div>            
-
-
-
-
-
-        </div>
-    );
+      <Airlines />
+      <Footer />
+    </div>
+  );
 };
 
 export default Home;

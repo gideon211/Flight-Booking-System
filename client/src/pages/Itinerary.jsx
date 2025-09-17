@@ -17,39 +17,10 @@ const ItineraryPage = () => {
 
   return (
     <div>
-        <nav className="flex justify-between px-8 items-center h-[5rem] bg-white shadow-md">
-            <div className="h-6 flex items-center">
-                <img
-                src="https://cdn.travelwings.com/web-assets/images/travelwings-logo.svg"
-                alt="logo"
-                className="w-64"
-                />
-            </div>
-
-            <ul className="flex gap-6 items-center">
-                <div className="flex mr-10 ">
-                    <li className="w-7 cursor-pointer flex gap-1">
-                        <img src={Flight} alt="Home" />
-                        <p className="font-semibold">Flights</p>
-                    </li>
-                </div>
-
-                <li className="w-7 cursor-pointer">
-                <img src={Build} alt="Building" />
-                </li>
-                <li className="w-7 cursor-pointer">
-                <img src={Cart} alt="Cart" />
-                </li>
-                <li className="w-7 cursor-pointer">
-                <img src={Boat} alt="Boat" />
-                </li>
-                <li className="w-7 cursor-pointer">
-                <img src={Umbrella} alt="Umbrella" />
-                </li>
-                <li className="w-7 cursor-pointer">
-                <img src={Car} alt="Car" />
-                </li>
-            </ul>
+        <nav className="flex justify-between px-8 items-center h-[5rem] bg-blue-200 shadow-md">
+        <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-bold leading-2 text-blue-500">NextTrip.</h1>
+        </div>
       </nav>
         <div className="bg-gray-100 min-h-screen p-8">
 
@@ -60,19 +31,19 @@ const ItineraryPage = () => {
 
             {/* Step 1: Your Itinerary */}
             <div className="mb-4 shadow-md rounded-b-2xl">
-                <div className="bg-red-600 text-white px-4 py-2 font-semibold">
+                <div className="bg-blue-600 text-white px-4 py-2 font-semibold">
                     1. Your Itinerary
                 </div>
                 <div className="bg-white p-4 rounded-b-xl">
                     {/* Flight info */}
-                    <div className="flex justify-between items-center border-b border-red-200 pb-4 mb-4">
+                    <div className="flex justify-between items-center border-b border-blue-200 pb-4 mb-4">
                         <div>
 
-                            <div className="flex items-center">
-                                <div className="w-40 h-full">
+                            <div className="flex gap-2  items-center">
+                                <div className="w-28 h-full">
                                     <img
                                     className="w-full h-full object-cover rounded-l-md" 
-                                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQZZznTuZkcFKT0Uj5q9FELohRI2bdci6rGOQ&s" 
+                                    src="https://static.vecteezy.com/system/resources/thumbnails/005/145/664/small_2x/flying-airplane-air-transportation-airline-plane-illustration-vector.jpg"
                                     alt="" 
                                     />
                             </div>
@@ -120,14 +91,14 @@ const ItineraryPage = () => {
                             <input
                             type="text"
                             placeholder="Enter Gift Card/Coupon Code"
-                            className="border-2 rounded border-red-200 outline-0 w-64 p-2 h-15 placeholder:text-sm"
+                            className="border-2 rounded border-blue-200 outline-0 w-64 p-2 h-15 placeholder:text-sm"
                             />
                             <input
                             type="text"
                             placeholder="PIN"
-                            className="border-2 rounded p-2 w-24 border-red-200 h-15 outline-0 placeholder:text-sm"
+                            className="border-2 rounded p-2 w-24 border-blue-200 h-15 outline-0 placeholder:text-sm"
                             />
-                            <button className="bg-red-500 rounded-md text-white px-4 h-15 cursor-pointer hover:bg-red-400">Apply</button>
+                            <button className="bg-blue-500 rounded-md text-white px-4 h-15 cursor-pointer hover:bg-blue-400">Apply</button>
                         </div>
                         <div className="items-end flex flex-col">
                             {/* Total */}
