@@ -5,7 +5,7 @@ import bcrypt
 
 app = Flask(__name__)
 app.secret_key = 'MY_SECRET_KEY'
-CORS(app)
+CORS(app,supports_credentials=True)
 
 def database_connection():
     return mysql.connector.connect(
