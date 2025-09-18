@@ -37,10 +37,10 @@ const Signup = () => {
         setLoading(true);
         try {
             const data = await signupUser({
-            firstname: formData.firstname,
-            lastname: formData.lastname,
-            email: formData.email,
-            password: formData.password,
+                firstname: formData.firstname,
+                lastname: formData.lastname,
+                email: formData.email,
+                password: formData.password,
             });
 
             localStorage.setItem("token", data.token);
