@@ -20,7 +20,8 @@ frontend_origin = [
     "https://q0smnp61-5000.uks1.devtunnels.ms"
 ]
 
-CORS(app, supports_credentials=True, origins=frontend_origin)
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": frontend_origin}})
+
 
 JWT_SECRET = os.getenv("JWT_KEY", "MY_SECRET_KEY")  # store this in .env
 JWT_ALGORITHM = "HS256"
