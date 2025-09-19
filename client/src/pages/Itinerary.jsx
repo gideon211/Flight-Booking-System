@@ -2,13 +2,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 
 const ItineraryPage = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const flight = location.state?.flight;
+    const location = useLocation();
+    const navigate = useNavigate();
+    const flight = location.state?.flight;
     const from = location.state?.from ?? "ACCRA";
     const to = location.state?.to ?? "KUMASI";
 
-  if (!flight) return <p>No flight selected.</p>;
+    if (!flight) return <p>No flight selected.</p>;
 
   return (
     <div>

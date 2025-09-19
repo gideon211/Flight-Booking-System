@@ -5,6 +5,8 @@ import List from "../components/HomeFlight";
 import Footer from "../components/Footer";
 import Airlines from "../components/Airlines";
 import Loader from "../components/Loader";
+import Flatpickr from "react-flatpickr";
+import "flatpickr/dist/flatpickr.min.css";
 
 const Home = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -73,7 +75,7 @@ const Home = () => {
         navigate("/Availableflights", {
             state: { results: filtered, ...formData },
         });
-    }, 3000);
+    }, 2000);
   };
 
   return (
@@ -159,7 +161,7 @@ const Home = () => {
      
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
     
-            <div className="mt-4">
+            <div className="mt-6">
               <input
                 type="text"
                 name="from"
@@ -170,7 +172,7 @@ const Home = () => {
               />
             </div>
 
-            <div className="mt-4">
+            <div className="mt-6">
               <input
                 type="text"
                 name="to"
@@ -184,35 +186,51 @@ const Home = () => {
             <div>
               <label
                 htmlFor="departure"
-                className="block text-sm font-medium mb-1"
+                className="block text-sm font-medium mb-1 text-center"
               >
                 Departure
               </label>
-              <input
-                type="date"
+                <Flatpickr
                 id="departure"
                 name="departureDate"
-                value={formData.departureDate}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-3 border-blue-200 outline-none"
-              />
+                placeholder="departure date"
+                value={formData.departureDate} 
+                options={{ dateFormat: "d-m-Y" }}
+                onChange={(selectedDates, dateStr) => {
+                    setFormData((prev) => ({
+                    ...prev,
+                    departureDate: dateStr,
+                    }));
+                }}
+                className="w-full border rounded-lg px-3 py-3 border-blue-200 outline-none text-center"
+                />
+
+
             </div>
 
             <div>
               <label
                 htmlFor="return"
-                className="block text-sm font-medium mb-1"
+                className="block text-sm font-medium mb-1 text-center"
               >
                 Return
               </label>
-              <input
-                type="date"
+                <Flatpickr
                 id="return"
                 name="returnDate"
                 value={formData.returnDate}
-                onChange={handleChange}
-                className="w-full border border-blue-200 outline-none rounded-lg px-3 py-3"
-              />
+                options={{ dateFormat: "d-m-Y" }}
+                onChange={(selectedDates, dateStr) => {
+                    setFormData((prev) => ({
+                    ...prev,
+                    returnDate: dateStr,
+                    }));
+                }}
+                className="w-full border border-blue-200 outline-none rounded-lg px-3 py-3 text-center "
+                placeholder="return date"
+                />
+
+
             </div>
           </div>
 
