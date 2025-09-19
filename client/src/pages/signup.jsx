@@ -42,7 +42,7 @@ const Signup = () => {
       })
 
       localStorage.setItem("token", data.token)
-      navigate("/Home")
+      navigate("/login")
     } catch (err) {
       console.error("Signup error:", err)
       setError(err.response?.data?.message || err.message || "Signup failed")

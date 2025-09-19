@@ -16,7 +16,7 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "MY_SECRET_KEY")
 frontend_origins = [
     "http://localhost:5173",
     "http://localhost:5174",
-    "http://localhost:5175"
+    "http://localhost:5175",
     "https://q0smnp61-5000.uks1.devtunnels.ms"
 ]
 

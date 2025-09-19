@@ -13,10 +13,10 @@ const ItineraryPage = () => {
   return (
     <div>
         <nav className="flex justify-between px-8 items-center h-[5rem] bg-blue-200 shadow-md">
-        <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold leading-2 text-blue-500">NextTrip.</h1>
-        </div>
-      </nav>
+            <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-bold leading-2 text-blue-500">NextTrip.</h1>
+            </div>
+        </nav>
         <div className="bg-gray-100 min-h-screen p-8">
 
             <h2 className="text-3xl font-medium mb-6 ">
@@ -41,10 +41,10 @@ const ItineraryPage = () => {
                                     src="https://static.vecteezy.com/system/resources/thumbnails/005/145/664/small_2x/flying-airplane-air-transportation-airline-plane-illustration-vector.jpg"
                                     alt="" 
                                     />
-                            </div>
+                                </div>
 
 
-                            <div>
+                                <div>
                                     <p className="text-lg font-medium ">
                                     {from.toUpperCase()} → {to.toUpperCase()}
                                     </p>
@@ -52,13 +52,13 @@ const ItineraryPage = () => {
                                     <p className="text-xs text-gray-500">
                                     {flight.code} {flight.cabin}
                                     </p>  
-                            </div>
+                                </div>
                             </div>
 
-                            </div>
-                            <div className="text-right">
-                                <p className="font-medium text-gray-700">GHS {flight.price}</p>
-                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="font-medium text-gray-700">GHS {flight.price}</p>
+                        </div>
                     </div>
 
                   

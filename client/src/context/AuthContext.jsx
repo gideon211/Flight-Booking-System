@@ -32,8 +32,6 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (formData) => {
     await api.post("/signup", formData);
-    const res = await api.get("/me");
-    setUser(res.data.user);
   };
 
 
@@ -43,7 +41,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, loading, setUser }}>
       {children}
     </AuthContext.Provider>
   );

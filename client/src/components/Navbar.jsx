@@ -4,7 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlane } from "@fortawesome/free-solid-svg-icons";
-import TicketSection from "../pages/ticketsection"
+
 
 
 const fetchUserBookings = async (userId) => {
@@ -96,7 +96,7 @@ const Navbar = () => {
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right- mt-2 w-72 bg-white text-gray-800  rounded-l shadow-xl overflow-hidden z-50 cursor-pointer">
+            <div className="absolute right-1 mt-2 w-72 bg-white text-gray-800  rounded-l shadow-xl overflow-hidden z-50 cursor-pointer">
               {!user ? (
                 <div className="flex flex-col font-medium">
                   <Link
@@ -133,23 +133,23 @@ const Navbar = () => {
                   <div className="px-4 py-2 text-sm font-semibold text-gray-600">
                     My Tickets
                   </div>
-                  <div className="max-h-48 overflow-y-auto">
-                    {bookings.length > 0 ? (
-                      bookings.map((b) => (
-                        <div
-                          key={b.id}
-                          className="px-4 py-2 hover:bg-gray-50 transition"
-                        >
-                          <div>{b.flight}</div>
-                          <div className="text-xs text-gray-500">{b.date}</div>
+                    <div className="max-h-48 overflow-y-auto">
+                        {bookings.length > 0 ? (
+                        bookings.map((b) => (
+                            <div
+                            key={b.id}
+                            className="px-4 py-2 hover:bg-gray-50 transition"
+                            >
+                            <div>{b.flight}</div>
+                            <div className="text-xs text-gray-500">{b.date}</div>
+                            </div>
+                        ))
+                        ) : (
+                        <div className="px-4 py-3 text-gray-500 text-sm">
+                            No tickets booked yet
                         </div>
-                      ))
-                    ) : (
-                      <div className="px-4 py-3 text-gray-500 text-sm">
-                        No tickets booked yet
-                      </div>
-                    )}
-                  </div>
+                        )}
+                    </div>
 
                   {/* Logout */}
                   <button

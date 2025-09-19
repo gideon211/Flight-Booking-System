@@ -43,36 +43,36 @@ const Home = () => {
 
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setTimeout(() => {
-      const filtered = flights.filter((flight) => {
-        return (
-          (!formData.tripType ||
-            flight.tripType.toLowerCase() ===
-              formData.tripType.toLowerCase()) &&
-          (!formData.from ||
-            flight.origin.city
-              .toLowerCase()
-              .includes(formData.from.toLowerCase())) &&
-          (!formData.to ||
-            flight.destination.city
-              .toLowerCase()
-              .includes(formData.to.toLowerCase())) &&
-          (!formData.departureDate ||
-            flight.departureDate === formData.departureDate) &&
-          (formData.tripType !== "RoundTrip" ||
-            !formData.returnDate ||
-            flight.returnDate === formData.returnDate) &&
-          (!formData.cabin ||
-            flight.cabin.toLowerCase() === formData.cabin.toLowerCase()) &&
-          flight.seatsAvailable >= Number(formData.passengers || 1)
-        );
-      });
-      setLoading(false);
-      navigate("/Availableflights", {
-        state: { results: filtered, ...formData },
-      });
+        e.preventDefault();
+        setLoading(true);
+        setTimeout(() => {
+        const filtered = flights.filter((flight) => {
+            return (
+            (!formData.tripType ||
+                flight.tripType.toLowerCase() ===
+                formData.tripType.toLowerCase()) &&
+            (!formData.from ||
+                flight.origin.city
+                .toLowerCase()
+                .includes(formData.from.toLowerCase())) &&
+            (!formData.to ||
+                flight.destination.city
+                .toLowerCase()
+                .includes(formData.to.toLowerCase())) &&
+            (!formData.departureDate ||
+                flight.departureDate === formData.departureDate) &&
+            (formData.tripType !== "RoundTrip" ||
+                !formData.returnDate ||
+                flight.returnDate === formData.returnDate) &&
+            (!formData.cabin ||
+                flight.cabin.toLowerCase() === formData.cabin.toLowerCase()) &&
+            flight.seatsAvailable >= Number(formData.passengers || 1)
+            );
+        });
+        setLoading(false);
+        navigate("/Availableflights", {
+            state: { results: filtered, ...formData },
+        });
     }, 3000);
   };
 
@@ -116,17 +116,6 @@ const Home = () => {
               <input
                 type="radio"
                 name="tripType"
-                value="round"
-                checked={formData.tripType === "round"}
-                onChange={handleChange}
-                className="accent-yellow-500"
-              />
-              <span className="font-medium">Round Trip</span>
-            </label>
-            <label className="flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer bg-yellow-100">
-              <input
-                type="radio"
-                name="tripType"
                 value="oneway"
                 checked={formData.tripType === "oneway"}
                 onChange={handleChange}
@@ -134,6 +123,20 @@ const Home = () => {
               />
               <span className="font-medium">One Way</span>
             </label>
+
+
+            <label className="flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer bg-yellow-100">
+              <input
+                type="radio"
+                name="tripType"
+                value="round"
+                checked={formData.tripType === "round"}
+                onChange={handleChange}
+                className="accent-yellow-500"
+              />
+              <span className="font-medium">Round Trip</span>
+            </label>
+
 
             <select
               name="currency"
