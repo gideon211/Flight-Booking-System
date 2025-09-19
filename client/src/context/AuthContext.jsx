@@ -10,39 +10,39 @@ export const AuthProvider = ({ children }) => {
  
   useEffect(() => {
     const fetchUser = async () => {
-      try {
-        const res = await api.get("/me");
-        setUser(res.data.user);
-      } catch {
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
+        try {
+            const res = await api.get("/me");
+            setUser(res.data.user);
+        } catch {
+            setUser(null);
+            } finally {
+                setLoading(false);
+            }
     };
     fetchUser();
   }, []);
 
 
   const login = async (credentials) => {
-    await api.post("/login", credentials);
-    const res = await api.get("/me");
-    setUser(res.data.user);
-  };
+        await api.post("/login", credentials);
+        const res = await api.get("/me");
+        setUser(res.data.user);
+    };
 
 
-  const signup = async (formData) => {
-    await api.post("/signup", formData);
-  };
+   const signup = async (formData) => {
+        await api.post("/signup", formData);
+    };
 
 
-  const logout = async () => {
-    await api.post("/logout");
-    setUser(null);
-  };
+    const logout = async () => {
+        await api.post("/logout");
+        setUser(null);
+    };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, loading, setUser }}>
-      {children}
-    </AuthContext.Provider>
-  );
+        <AuthContext.Provider value={{ user, login, signup, logout, loading, setUser }}>
+          {children}
+        </AuthContext.Provider>
+    );
 };

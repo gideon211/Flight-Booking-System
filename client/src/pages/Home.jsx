@@ -159,167 +159,167 @@ const Home = () => {
           </div>
 
      
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    
-            <div className="mt-6">
-              <input
-                type="text"
-                name="from"
-                value={formData.from}
-                onChange={handleChange}
-                placeholder="Origin"
-                className="w-full border border-blue-200 outline-none rounded-lg px-3 py-3"
-              />
-            </div>
-
-            <div className="mt-6">
-              <input
-                type="text"
-                name="to"
-                value={formData.to}
-                onChange={handleChange}
-                placeholder="Destination"
-                className="w-full border border-blue-200 rounded-lg px-3 py-3 outline-none"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="departure"
-                className="block text-sm font-medium mb-1 text-center"
-              >
-                Departure
-              </label>
-                <Flatpickr
-                id="departure"
-                name="departureDate"
-                placeholder="departure date"
-                value={formData.departureDate} 
-                options={{ dateFormat: "d-m-Y" }}
-                onChange={(selectedDates, dateStr) => {
-                    setFormData((prev) => ({
-                    ...prev,
-                    departureDate: dateStr,
-                    }));
-                }}
-                className="w-full border rounded-lg px-3 py-3 border-blue-200 outline-none text-center"
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">    
+                <div className="mt-6">
+                    <input
+                        type="text"
+                        name="from"
+                        value={formData.from}
+                        onChange={handleChange}
+                        placeholder="Origin"
+                        className="w-full border border-blue-200 outline-none rounded-lg px-3 py-3"
                 />
+                </div>
+
+                <div className="mt-6">
+                    <input
+                        type="text"
+                        name="to"
+                        value={formData.to}
+                        onChange={handleChange}
+                        placeholder="Destination"
+                        className="w-full border border-blue-200 rounded-lg px-3 py-3 outline-none"
+                    />
+                </div>
+
+                <div>
+                    <label
+                        htmlFor="departure"
+                        className="block text-sm font-medium mb-1 text-center"
+                    >
+                    Departure
+                </label>
+                    <Flatpickr
+                    id="departure"
+                    name="departureDate"
+                    placeholder="departure date"
+                    value={formData.departureDate} 
+                    options={{ dateFormat: "d-m-Y" }}
+                    onChange={(selectedDates, dateStr) => {
+                        setFormData((prev) => ({
+                        ...prev,
+                        departureDate: dateStr,
+                        }));
+                    }}
+                    className="w-full border rounded-lg px-3 py-3 border-blue-200 outline-none text-center"
+                    />
 
 
-            </div>
+                </div>
 
-            <div>
-              <label
-                htmlFor="return"
-                className="block text-sm font-medium mb-1 text-center"
-              >
-                Return
-              </label>
-                <Flatpickr
-                id="return"
-                name="returnDate"
-                value={formData.returnDate}
-                options={{ dateFormat: "d-m-Y" }}
-                onChange={(selectedDates, dateStr) => {
-                    setFormData((prev) => ({
-                    ...prev,
-                    returnDate: dateStr,
-                    }));
-                }}
-                className="w-full border border-blue-200 outline-none rounded-lg px-3 py-3 text-center "
-                placeholder="return date"
-                />
+                <div>
+                    <label
+                        htmlFor="return"
+                        className="block text-sm font-medium mb-1 text-center"
+                    >
+                    Return
+                    </label>
+                        <Flatpickr
+                        id="return"
+                        name="returnDate"
+                        value={formData.returnDate}
+                        options={{ dateFormat: "d-m-Y" }}
+                        onChange={(selectedDates, dateStr) => {
+                            setFormData((prev) => ({
+                            ...prev,
+                            returnDate: dateStr,
+                            }));
+                        }}
+                        className="w-full border border-blue-200 outline-none rounded-lg px-3 py-3 text-center "
+                        placeholder="return date"
+                    />
 
 
-            </div>
+                </div>
           </div>
 
           <div className="mt-6 flex flex-col md:flex-row gap-4 items-center">
-            <div className="flex-1 grid grid-cols-2 gap-4 w-full">
-         
-              <div>
-                <label
-                  htmlFor="passengers"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Passengers
-                </label>
-                <input
-                  type="number"
-                  id="passengers"
-                  name="passengers"
-                  min="1"
-                  value={formData.passengers}
-                  onChange={handleChange}
-                  className="w-full border border-blue-200 rounded-lg px-3 py-3 outline-none"
-                />
-              </div>
+                <div className="flex-1 grid grid-cols-2 gap-4 w-full">
+            
+                    <div>
+                        <label
+                        htmlFor="passengers"
+                        className="block text-sm font-medium mb-1"
+                        >
+                        Passengers
+                        </label>
+                        <input
+                        type="number"
+                        id="passengers"
+                        name="passengers"
+                        min="1"
+                        value={formData.passengers}
+                        onChange={handleChange}
+                        className="w-full border border-blue-200 rounded-lg px-3 py-3 outline-none"
+                        />
+                    </div>
+
+                
+                    <div>
+                        <label
+                        htmlFor="cabin"
+                        className="block text-sm font-medium mb-1"
+                        >
+                        Cabin Class
+                        </label>
+                        <select
+                        id="cabin"
+                        name="cabin"
+                        value={formData.cabin}
+                        onChange={handleChange}
+                        className="w-full border-2 rounded-lg px-3 py-3 outline-none border-blue-200"
+                        >
+                        <option>Economy</option>
+                        <option>Premium</option>
+                        <option>Business</option>
+                        <option>First Class</option>
+                        </select>
+                    </div>
+
+                </div>
 
         
-              <div>
-                <label
-                  htmlFor="cabin"
-                  className="block text-sm font-medium mb-1"
+                <button
+                type="submit"
+                className="bg-yellow-500 hover:bg-yellow-600 cursor-pointer mt-4 text-black px-10 py-4 rounded-md font-semibold shadow-lg w-full md:w-auto"
                 >
-                  Cabin Class
-                </label>
-                <select
-                  id="cabin"
-                  name="cabin"
-                  value={formData.cabin}
-                  onChange={handleChange}
-                  className="w-full border-2 rounded-lg px-3 py-3 outline-none border-blue-200"
-                >
-                  <option>Economy</option>
-                  <option>Premium</option>
-                  <option>Business</option>
-                  <option>First Class</option>
-                </select>
-              </div>
-            </div>
-
-     
-            <button
-              type="submit"
-              className="bg-yellow-500 hover:bg-yellow-600 cursor-pointer mt-4 text-black px-10 py-4 rounded-md font-semibold shadow-lg w-full md:w-auto"
-            >
-              Search Flights
-            </button>
+                Search Flights
+                </button>
           </div>
         </form>
       </div>
 
 
-      <div className="mt-[0rem]">
-        <List />
-      </div>
+        <div className="mt-[0rem]">
+         <List />
+        </div>
 
 
       <div className="flex flex-col md:flex-row gap-8 justify-center items-stretch mb-16 mt-12 px-6 w-full">
-        <div className="border-none bg- p-8  w-full md:w-[40rem] flex flex-col justify-center">
-          <h2 className="text-lg font-semibold mb-2">
-            Great Offers & Amazing Deals
-          </h2>
-          <p className="text-gray-600 mb-4 text-sm">
-            Get personalised recommendations and private deals
-          </p>
+            <div className="border-none bg- p-8  w-full md:w-[40rem] flex flex-col justify-center">
+                <h2 className="text-lg font-semibold mb-2">
+                    Great Offers & Amazing Deals
+                </h2>
+                <p className="text-gray-600 mb-4 text-sm">
+                    Get personalised recommendations and private deals
+                </p>
 
-          <form className="flex">
-            <input
-              type="email"
-              name="emailid"
-              id="emailid"
-              placeholder="Enter Email Address"
-              className="flex-grow border border-blue-300 rounded-l-md px-4 py-2 outline-none placeholder:text-sm"
-            />
-            <button
-              type="submit"
-              className="bg-yellow-500 text-white px-6 py-2 rounded-r-md hover:bg-yellow-600 transition text-sm"
-            >
-              Subscribe
-            </button>
-          </form>
-        </div>
+                <form className="flex">
+                    <input
+                    type="email"
+                    name="emailid"
+                    id="emailid"
+                    placeholder="Enter Email Address"
+                    className="flex-grow border border-blue-300 rounded-l-md px-4 py-2 outline-none placeholder:text-sm"
+                    />
+                    <button
+                    type="submit"
+                    className="bg-yellow-500 text-white px-6 py-2 rounded-r-md hover:bg-yellow-600 transition text-sm"
+                    >
+                    Subscribe
+                    </button>
+                </form>
+           </div>
       </div>
 
       <Airlines />

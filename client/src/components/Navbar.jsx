@@ -25,7 +25,7 @@ const Navbar = () => {
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setDropdownOpen(false);
+            setDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -37,19 +37,19 @@ const Navbar = () => {
   }, [user]);
 
   const handleLanguageChange = (e) => {
-    setLanguage(e.target.value);
-    i18n.changeLanguage(e.target.value);
-  };
+        setLanguage(e.target.value);
+        i18n.changeLanguage(e.target.value);
+    };
 
   return (
     <nav className="flex justify-between items-center px-8 h-[4.5rem] bg-gradient-to-r from-blue-400 to-indigo-500 text-white shadow-lg">
-      {/* Left: Logo */}
+
       <div className="flex items-center gap-2">
-        <FontAwesomeIcon icon={faPlane} style={{ color: "#1b69ee", fontSize: "34px" }} />
-        <h1 className="text-2xl font-bold leading-2">NextTrip.</h1>
+            <FontAwesomeIcon icon={faPlane} style={{ color: "#1b69ee", fontSize: "34px" }} />
+            <h1 className="text-2xl font-bold leading-2">NextTrip.</h1>
       </div>
 
-      {/* Center: Links */}
+
       <ul className="hidden md:flex gap-8 font-medium">
         <Link to="/Availableflights">
         <li className="hover:text-yellow-300 cursor-pointer transition">
@@ -67,7 +67,7 @@ const Navbar = () => {
         </li>
       </ul>
 
-      {/* Right: Language + Account */}
+ 
       <div className="flex items-center gap-6">
         {/* Language */}
         <select
@@ -98,40 +98,40 @@ const Navbar = () => {
           {dropdownOpen && (
             <div className="absolute right-1 mt-2 w-72 bg-white text-gray-800  rounded-l shadow-xl overflow-hidden z-50 cursor-pointer">
               {!user ? (
-                <div className="flex flex-col font-medium">
-                  <Link
-                    to="/Login"
-                    className="px-4 py-3 hover:bg-gray-200 transition"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/SignUp"
-                    className="px-4 py-3 hover:bg-gray-200 transition"
-                  >
-                    Register
-                  </Link>
+                    <div className="flex flex-col font-medium">
+                        <Link
+                            to="/Login"
+                            className="px-4 py-3 hover:bg-gray-200 transition"
+                        >
+                            Login
+                        </Link>
+                        <Link
+                            to="/SignUp"
+                            className="px-4 py-3 hover:bg-gray-200 transition"
+                        >
+                            Register
+                        </Link>
 
-                <div className="flex flex-col">
-                    <Link
-                    to="/TicketSection"
-                    className="px-4 py-3 hover:bg-gray-200 transition"
-                    >
-                    My Tickets
-                    </Link>
-                </div>
-                </div>
+                        <div className="flex flex-col">
+                            <Link
+                            to="/TicketSection"
+                            className="px-4 py-3 hover:bg-gray-200 transition"
+                            >
+                            My Tickets
+                            </Link>
+                        </div>
+                    </div>
               ) : (
                 <div>
                   {/* Header */}
                   <div className="px-4 py-3 border-b">
-                    <p className="font-semibold">{user.name}</p>
-                    <p className="text-sm text-gray-500">{user.email}</p>
+                        <p className="font-semibold">{user.name}</p>
+                        <p className="text-sm text-gray-500">{user.email}</p>
                   </div>
 
                   {/* Tickets */}
                   <div className="px-4 py-2 text-sm font-semibold text-gray-600">
-                    My Tickets
+                        My Tickets
                   </div>
                     <div className="max-h-48 overflow-y-auto">
                         {bookings.length > 0 ? (

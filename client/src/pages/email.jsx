@@ -24,14 +24,14 @@ const EmailPage = () => {
                 
                 <div className="mb-4 shadow-md rounded-b-2xl text-gray-600">
                     <div className="bg-gray-200 px-4 py-2 font-medium rounded-b-2xl">
-                    1. Your Itinerary
+                        1. Your Itinerary
                     </div>
                 </div>
 
                 
                 <div className="mb-4 shadow-md rounded-b-2xl">
                     <div className="bg-blue-600 text-white px-4 py-2 font-semibold">
-                    2. Your Email ID
+                        2. Your Email ID
                     </div>
                     <div className="bg-white p-6 rounded-b-xl">
                         <p className="mb-2 text-gray-700">
@@ -41,20 +41,20 @@ const EmailPage = () => {
                         <div className="flex items-center gap-2 mb-4">
                             
                             <div className="flex-1">
-                            <label
-                                htmlFor="email"
-                                className="block text font-medium mb-1"
-                            >
-                                Email
-                            </label>
-                            <input
-                                id="email"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Enter your email"
-                                className="w-72 border-2 rounded px-3 py-2 border-blue-100 placeholder:"
-                            />
+                                <label
+                                    htmlFor="email"
+                                    className="block text font-medium mb-1"
+                                >
+                                    Email
+                                </label>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="Enter your email"
+                                    className="w-72 border-2 rounded px-3 py-2 border-blue-100 placeholder:"
+                                />
                             </div>
 
 
@@ -63,14 +63,14 @@ const EmailPage = () => {
                             <div className="flex flex-col gap-6 items-center">
                                 <div>
                             
-                                <button className=" flex items-center border border-gray-100 px-4 py-2 rounded shadow hover:bg-gray-50">
-                                <img
-                                src="https://developers.google.com/identity/images/g-logo.png"
-                                alt="Google"
-                                className="w-5 h-5 mr-2"
-                                />
-                                Sign in with Google
-                                </button>
+                                    <button className=" flex items-center border border-gray-100 px-4 py-2 rounded shadow hover:bg-gray-50">
+                                    <img
+                                    src="https://developers.google.com/identity/images/g-logo.png"
+                                    alt="Google"
+                                    className="w-5 h-5 mr-2"
+                                    />
+                                    Sign in with Google
+                                    </button>
                                 </div>
 
                                 <div>
@@ -91,20 +91,22 @@ const EmailPage = () => {
                             <input type="checkbox" className="accent-red-500" />
                             I have a Travelwings Account
                         </label>
+
                     </div>
+
                 </div>
 
              
                 <div className="mb-4 shadow-md rounded-b-2xl text-gray-600">
                     <div className="bg-gray-200 px-4 py-2 font-medium rounded-b-2xl">
-                    3. Traveller Details
+                      3. Traveller Details
                     </div>
                 </div>
 
          
                 <div className="mb-4 rounded-b-2xl text-gray-600">
                     <div className="bg-gray-200 px-4 py-2 font-medium rounded-b-2xl">
-                    4. Payment Methods <span className="text-green-600">Safe Secured</span>
+                      4. Payment Methods <span className="text-green-600">Safe Secured</span>
                     </div>
                 </div>
             </div>

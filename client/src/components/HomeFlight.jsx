@@ -29,13 +29,13 @@ const HomeFlight = () => {
   return (
     <div className="bg-blue-100 p-8">
       <div className="max-w-4xl mx-auto text-center py-6">
-        <h1 className="text-4xl font-bold mb-2">
-          Popular Africa World Airlines Flights
-        </h1>
-        <p className="text-md text-gray-800">
-          Enjoy a wide network of routes and a commitment to excellence. <br />
-          <span>Africa World Airlines is the perfect choice for your next trip.</span>
-        </p>
+            <h1 className="text-4xl font-bold mb-2">
+            Popular Africa World Airlines Flights
+            </h1>
+            <p className="text-md text-gray-800">
+            Enjoy a wide network of routes and a commitment to excellence. <br />
+            <span>Africa World Airlines is the perfect choice for your next trip.</span>
+            </p>
       </div>
 
       
@@ -82,11 +82,11 @@ const HomeFlight = () => {
 
     
       <div className="max-w-4xl mx-auto text-center mt-6">
-        <p className="text-sm text-white">
-          *Fares displayed above are inclusive of taxes & fees, based on
-          historical data, are subject to change and cannot be guaranteed at the
-          time of booking. See all booking terms and conditions.
-        </p>
+            <p className="text-sm text-white">
+            *Fares displayed above are inclusive of taxes & fees, based on
+            historical data, are subject to change and cannot be guaranteed at the
+            time of booking. See all booking terms and conditions.
+            </p>
       </div>
     </div>
   );

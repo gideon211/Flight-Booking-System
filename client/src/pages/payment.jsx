@@ -70,133 +70,128 @@ const PaymentPage = () => {
       </div>
 
       
-      <form onSubmit={handleSubmit} className="space-y-4">
-        
-
-
-
-
+        <form onSubmit={handleSubmit} className="space-y-4">
             {method === "card" && (
-            <>
-                <div>
-                    <label className="block text-sm font-medium">
-                        Card Holder Name <span className="text-red-500">(Mandatory)</span>
-                    </label>
-                    <input
-                        type="text"
-                        name="cardName"
-                        value={formData.cardName}
-                        onChange={handleChange}
-                        className="w-full  border-2 border-blue-200 outline-none rounded p-2 mt-1"
-                        required
-                    />
-                    </div>
-
+                <>
                     <div>
-                    <label className="block text-sm font-medium">
-                        Card Number <span className="text-red-500">(Mandatory)</span>
-                    </label>
-                    <input
-                        type="text"
-                        name="cardNumber"
-                        value={formData.cardNumber}
-                        onChange={handleChange}
-                        className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
-                        required
-                    />
-                    </div>
+                        <label className="block text-sm font-medium">
+                            Card Holder Name <span className="text-red-500">(Mandatory)</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="cardName"
+                            value={formData.cardName}
+                            onChange={handleChange}
+                            className="w-full  border-2 border-blue-200 outline-none rounded p-2 mt-1"
+                            required
+                        />
+                        </div>
 
-                    <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium">Expiry Date</label>
+                            <label className="block text-sm font-medium">
+                                Card Number <span className="text-red-500">(Mandatory)</span>
+                            </label>
                             <input
-                            type="text"
-                            name="expiry"
-                            value={formData.expiry}
-                            onChange={handleChange}
-                            placeholder="MM/YY"
-                            className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
-                            required
+                                type="text"
+                                name="cardNumber"
+                                value={formData.cardNumber}
+                                onChange={handleChange}
+                                className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
+                                required
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium">CVV</label>
-                            <input
-                            type="text"
-                            name="cvv"
-                            value={formData.cvv}
-                            onChange={handleChange}
-                            placeholder="123"
-                            className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
-                            required
-                            />
-                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium">Expiry Date</label>
+                                <input
+                                type="text"
+                                name="expiry"
+                                value={formData.expiry}
+                                onChange={handleChange}
+                                placeholder="MM/YY"
+                                className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
+                                required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium">CVV</label>
+                                <input
+                                type="text"
+                                name="cvv"
+                                value={formData.cvv}
+                                onChange={handleChange}
+                                placeholder="123"
+                                className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
+                                required
+                                />
+                            </div>
                     </div>
-            </>
+                </>
             )}
 
             {method === "momo" && (
-            <>
-                <div>
-                <label className="block text-sm font-medium">
-                    MoMo Provider <span className="text-red-500">(Mandatory)</span>
-                </label>
-                <select
-                    name="momoProvider"
-                    value={formData.momoProvider}
-                    onChange={handleChange}
-                    className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
-                    required
-                >
-                    <option value="">Select Provider</option>
-                    <option value="MTN">MTN</option>
-                    <option value="Vodafone">Vodafone</option>
-                    <option value="AirtelTigo">AirtelTigo</option>
-                </select>
-                </div>
-
-                <div>
+                <>
+                    <div>
                     <label className="block text-sm font-medium">
-                        MoMo Number <span className="text-red-500">(Mandatory)</span>
+                        MoMo Provider <span className="text-red-500">(Mandatory)</span>
                     </label>
-                    <input
-                        type="tel"
-                        name="momoNumber"
-                        value={formData.momoNumber}
+                    <select
+                        name="momoProvider"
+                        value={formData.momoProvider}
                         onChange={handleChange}
-                        placeholder="05XXXXXXXX"
-                        className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1 placeholder:text-sm placeholder:text-gray-300"
+                        className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
                         required
-                    />
-                </div>
-            </>
+                    >
+                        <option value="">Select Provider</option>
+                        <option value="MTN">MTN</option>
+                        <option value="Vodafone">Vodafone</option>
+                        <option value="AirtelTigo">AirtelTigo</option>
+                    </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium">
+                            MoMo Number <span className="text-red-500">(Mandatory)</span>
+                        </label>
+                        <input
+                            type="tel"
+                            name="momoNumber"
+                            value={formData.momoNumber}
+                            onChange={handleChange}
+                            placeholder="05XXXXXXXX"
+                            className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1 placeholder:text-sm placeholder:text-gray-300"
+                            required
+                        />
+                    </div>
+                </>
             )}
 
             {method === "bank" && (
-            <>
-                <div>
-                    <label className="block text-sm font-medium">
-                        Deposit Reference <span className="text-red-500">(Mandatory)</span>
-                    </label>
-                    <input
-                        type="text"
-                        name="depositRef"
-                        value={formData.depositRef}
-                        onChange={handleChange}
-                        className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
-                        required
-                    />
-                </div>
+                <>
+                    <div>
+                        <label className="block text-sm font-medium">
+                            Deposit Reference <span className="text-red-500">(Mandatory)</span>
+                        </label>
+                        <input
+                            type="text"
+                            name="depositRef"
+                            value={formData.depositRef}
+                            onChange={handleChange}
+                            className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
+                            required
+                        />
+                    </div>
 
-                {/* <div>
-                    <label className="block text-sm font-medium">Upload Deposit Slip (optional)</label>
-                    <input
-                        type="file"
-                        name="depositSlip"
-                        className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
-                    />
-                </div> */}
-            </>
+                    {/* <div>
+                        <label className="block text-sm font-medium">Upload Deposit Slip (optional)</label>
+                        <input
+                            type="file"
+                            name="depositSlip"
+                            className="w-full border-2 border-blue-200 outline-none rounded p-2 mt-1"
+                        />
+                    </div> */}
+                </>
             )}
 
             {/* Address Fields */}
