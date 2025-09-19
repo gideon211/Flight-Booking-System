@@ -7,7 +7,7 @@ import ItineraryPage from "../pages/Itinerary"
 import EmailPage from "../pages/email";
 import TravelerPage from "../pages/traveler";
 import PaymentPage from "../pages/payment";
-
+import TicketSection from "../pages/ticketsection";
 
 export default function AppRoutes() {
   return (
@@ -21,7 +21,7 @@ export default function AppRoutes() {
       <Route path="/email" element={<EmailPage />} />
       <Route path="/traveler" element={<TravelerPage />} />
       <Route path="/payment" element={<PaymentPage />} />
-      
+      <Route path="/ticketsection" element={<TicketSection />} />
     </Routes>
   );
 }

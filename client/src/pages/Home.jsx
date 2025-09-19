@@ -77,7 +77,7 @@ const Home = () => {
   };
 
   return (
-    <div className="w-full min-h-screen flex flex-col bg-blue-100">
+    <div className="w-full min-h-screen flex flex-col bg-blue-50">
       {/* Loading Screen */}
       {loading && (
         <div className="fixed inset-0 bg-white flex items-center justify-center z-50">

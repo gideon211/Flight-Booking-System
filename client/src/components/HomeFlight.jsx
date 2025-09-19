@@ -27,7 +27,7 @@ const HomeFlight = () => {
   };
 
   return (
-    <div className="bg-blue-200 p-8">
+    <div className="bg-blue-100 p-8">
       {/* Header */}
       <div className="max-w-4xl mx-auto text-center py-6">
         <h1 className="text-4xl font-bold mb-2">

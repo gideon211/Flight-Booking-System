@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from "react";
-import { loginUser, signupUser, logoutUser, getCurrentUser } from "../api/auth";
+import api from "../api/axios"; // axios instance withCredentials: true
 
 export const AuthContext = createContext();
 
@@ -11,9 +11,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const data = await getCurrentUser();
-        setUser(data.user);
-      } catch (err) {
+        const res = await api.get("/me");
+        setUser(res.data.user);
+      } catch {
         setUser(null);
       } finally {
         setLoading(false);
@@ -22,18 +22,23 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, []);
 
+
   const login = async (credentials) => {
-    const data = await loginUser(credentials);
-    setUser(data.user);
+    await api.post("/login", credentials);
+    const res = await api.get("/me");
+    setUser(res.data.user);
   };
+
 
   const signup = async (formData) => {
-    const data = await signupUser(formData);
-    setUser(data.user);
+    await api.post("/signup", formData);
+    const res = await api.get("/me");
+    setUser(res.data.user);
   };
 
+
   const logout = async () => {
-    await logoutUser();
+    await api.post("/logout");
     setUser(null);
   };
 

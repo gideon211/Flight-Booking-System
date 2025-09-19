@@ -2,8 +2,11 @@ import React, { useState, useContext, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { useTranslation } from "react-i18next";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlane } from "@fortawesome/free-solid-svg-icons";
+import TicketSection from "../pages/ticketsection"
 
-// Fake API
+
 const fetchUserBookings = async (userId) => {
   return [
     { id: 1, flight: "Accra → London", date: "2025-09-20" },
@@ -42,7 +45,8 @@ const Navbar = () => {
     <nav className="flex justify-between items-center px-8 h-[4.5rem] bg-gradient-to-r from-blue-400 to-indigo-500 text-white shadow-lg">
       {/* Left: Logo */}
       <div className="flex items-center gap-2">
-        <h1 className="text-3xl font-bold leading-2">NextTrip.</h1>
+        <FontAwesomeIcon icon={faPlane} style={{ color: "#1b69ee", fontSize: "34px" }} />
+        <h1 className="text-2xl font-bold leading-2">NextTrip.</h1>
       </div>
 
       {/* Center: Links */}
@@ -92,21 +96,30 @@ const Navbar = () => {
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 mt-3 w-72 bg-white text-gray-800 rounded-xl shadow-xl overflow-hidden z-50 cursor-pointer">
+            <div className="absolute right- mt-2 w-72 bg-white text-gray-800  rounded-l shadow-xl overflow-hidden z-50 cursor-pointer">
               {!user ? (
-                <div className="flex flex-col">
+                <div className="flex flex-col font-medium">
                   <Link
                     to="/Login"
-                    className="px-4 py-3 hover:bg-gray-100 transition"
+                    className="px-4 py-3 hover:bg-gray-200 transition"
                   >
                     Login
                   </Link>
                   <Link
                     to="/SignUp"
-                    className="px-4 py-3 hover:bg-gray-100 transition"
+                    className="px-4 py-3 hover:bg-gray-200 transition"
                   >
                     Register
                   </Link>
+
+                <div className="flex flex-col">
+                    <Link
+                    to="/TicketSection"
+                    className="px-4 py-3 hover:bg-gray-200 transition"
+                    >
+                    My Tickets
+                    </Link>
+                </div>
                 </div>
               ) : (
                 <div>

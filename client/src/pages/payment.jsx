@@ -4,6 +4,7 @@ import { useState } from "react";
 const PaymentPage = () => {
     const location = useLocation();
     const { flight, email, name } = location.state || {};
+    const [loading, setLoading] = useState(false);
 
     const [method, setMethod] = useState("card");
     const [formData, setFormData] = useState({
@@ -291,12 +292,16 @@ const PaymentPage = () => {
             .
             </p>
 
-            <button
-            type="submit"
-            className="mt-4 bg-yellow-300 hover:bg-yellow-400 cursor-pointer px-6 py-2 font-medium rounded"
-            >
-            MAKE PAYMENT
-            </button>
+        <button
+        disabled={loading}
+        type="submit"
+        className={`mt-4 px-6 py-2 font-medium rounded 
+            ${loading ? "bg-gray-400 cursor-not-allowed text-black" : "bg-yellow-500 hover:bg-yellow-600 text-white cursor-pointer"}`}
+        >
+        {loading ? "Please wait..." : "MAKE PAYMENT"}
+        </button>
+
+            
       </form>
     </div>
   );

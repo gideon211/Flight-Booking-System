@@ -1,26 +1,27 @@
 import api from "./axios";
 
-// Login
+
 export const loginUser = async (credentials) => {
-  // Flask login is on "/"
-  const res = await api.post("/", credentials);
-  return res.data; // Flask should return JSON (not redirect) for React
+  await api.post("/login", credentials); 
+  const res = await api.get("/me");
+  return res.data;
 };
 
-// Signup
+
 export const signupUser = async (userData) => {
-  const res = await api.post("/signup", userData);
+  await api.post("/signup", userData);
+  const res = await api.get("/me");
   return res.data;
 };
 
-// Logout
+
 export const logoutUser = async () => {
-  const res = await api.post("/logout"); // you’ll need to add /logout route in Flask
+  const res = await api.post("/logout");
   return res.data;
 };
 
-// Get current user
+
 export const getCurrentUser = async () => {
-  const res = await api.get("/me"); // you’ll need a /me route in Flask
+  const res = await api.get("/me");
   return res.data;
 };
