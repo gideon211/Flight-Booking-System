@@ -19,10 +19,10 @@ const AvailableFlights = () => {
 
   return (
     <div className="bg-blue-50 min-h-screen flex flex-col">
-      {/* Navbar */}
+
       <Navbar />
 
-      {/* Header section */}
+   
       <div className="bg-gradient-to-r from-blue-400 to-blue-300 text-white shadow rounded p-6 flex justify-between items-center mx-6 mt-6">
         <div>
           <p className="font-medium text-2xl">
@@ -38,9 +38,8 @@ const AvailableFlights = () => {
         </button>
       </div>
 
-      {/* Main layout */}
       <div className="flex flex-1 p-6 gap-6">
-        {/* Sidebar Filters */}
+    
         <aside className="w-1/4 bg-white p-6 shadow-md rounded-md">
           <h3 className="font-semibold text-lg mb-4">Filters</h3>
 
@@ -73,7 +72,7 @@ const AvailableFlights = () => {
           </div>
         </aside>
 
-        {/* Flight Results */}
+    
         <main className="flex-1">
           {results.length > 0 ? (
             <div className="space-y-4 max-w-2/3">
@@ -82,7 +81,7 @@ const AvailableFlights = () => {
                   key={flight.flightId}
                   className="flex justify-between items-center bg-white p-4"
                 >
-                  {/* Airline */}
+                 
                   <div className="flex items-center gap-3">
                     <img
                       src="https://static.vecteezy.com/system/resources/thumbnails/005/145/664/small_2x/flying-airplane-air-transportation-airline-plane-illustration-vector.jpg"
@@ -95,7 +94,6 @@ const AvailableFlights = () => {
                     </div>
                   </div>
 
-                  {/* Time */}
                   <div className="text-center">
                     <p className="font-medium">
                       {flight.departureTime} → {flight.arrivalTime}
@@ -103,7 +101,7 @@ const AvailableFlights = () => {
                     <p className="text-sm text-gray-500">{flight.duration}</p>
                   </div>
 
-                  {/* Price + Action */}
+
                   <div className="text-right">
                     <p className="text- font-medium text-blue-600">GHS {flight.price}</p>
                     <button
@@ -127,7 +125,7 @@ const AvailableFlights = () => {
         </main>
       </div>
 
-      {/* Footer */}
+
       <Footer />
     </div>
   );

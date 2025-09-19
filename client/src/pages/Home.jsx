@@ -22,26 +22,26 @@ const Home = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Check auth token
+ 
   useEffect(() => {
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
   }, []);
 
-  // Fetch flights
+  
   useEffect(() => {
     fetch("/flights.json")
       .then((res) => res.json())
       .then((data) => setFlights(data));
   }, []);
 
-  // Handle form change
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle search
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
@@ -78,7 +78,7 @@ const Home = () => {
 
   return (
     <div className="w-full min-h-screen flex flex-col bg-blue-50">
-      {/* Loading Screen */}
+     
       {loading && (
         <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
           <Loader />
@@ -87,7 +87,7 @@ const Home = () => {
 
       <Navbar />
 
-      {/* Hero Section */}
+      
       <div
         className="relative flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat min-h-[500px]"
         style={{
@@ -95,22 +95,22 @@ const Home = () => {
             "url('https://pixels-cache.icelandair.com/upload/w_780%2Cg_auto%2Cc_fill%2Cf_auto%2Cq_auto/icelandair/blt356056608d00502b.jpg')",
         }}
       >
-        {/* Overlay */}
+        
         <div className="absolute inset-0 bg-black/10 bg-opacity-40"></div>
 
-        {/* Title */}
+        
         <div className="z-10 text-center text-white px-4 mb-6">
           <h1 className="text-3xl md:text-4xl font-bold">
             Flights to Ghana starting
           </h1>
         </div>
 
-        {/* Search Form */}
+       
         <form
           onSubmit={handleSubmit}
           className="z-10 bg-white shadow-lg p-6 md:p-8 max-w-4xl w-full"
         >
-          {/* Trip type and currency */}
+    
           <div className="flex gap-4 mb-6">
             <label className="flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer bg-yellow-100">
               <input
@@ -153,9 +153,9 @@ const Home = () => {
             </select>
           </div>
 
-          {/* Form fields */}
+     
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* From */}
+    
             <div className="mt-4">
               <input
                 type="text"
@@ -167,7 +167,6 @@ const Home = () => {
               />
             </div>
 
-            {/* To */}
             <div className="mt-4">
               <input
                 type="text"
@@ -179,7 +178,6 @@ const Home = () => {
               />
             </div>
 
-            {/* Departure */}
             <div>
               <label
                 htmlFor="departure"
@@ -197,7 +195,6 @@ const Home = () => {
               />
             </div>
 
-            {/* Return */}
             <div>
               <label
                 htmlFor="return"
@@ -216,10 +213,9 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Bottom row */}
           <div className="mt-6 flex flex-col md:flex-row gap-4 items-center">
             <div className="flex-1 grid grid-cols-2 gap-4 w-full">
-              {/* Passengers */}
+         
               <div>
                 <label
                   htmlFor="passengers"
@@ -238,7 +234,7 @@ const Home = () => {
                 />
               </div>
 
-              {/* Cabin */}
+        
               <div>
                 <label
                   htmlFor="cabin"
@@ -261,7 +257,7 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Search button */}
+     
             <button
               type="submit"
               className="bg-yellow-500 hover:bg-yellow-600 cursor-pointer mt-4 text-black px-10 py-4 rounded-md font-semibold shadow-lg w-full md:w-auto"
@@ -272,12 +268,12 @@ const Home = () => {
         </form>
       </div>
 
-      {/* Flights List */}
+
       <div className="mt-[0rem]">
         <List />
       </div>
 
-      {/* Deals & Newsletter */}
+
       <div className="flex flex-col md:flex-row gap-8 justify-center items-stretch mb-16 mt-12 px-6 w-full">
         <div className="border-none bg- p-8  w-full md:w-[40rem] flex flex-col justify-center">
           <h2 className="text-lg font-semibold mb-2">

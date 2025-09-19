@@ -27,23 +27,23 @@ const TravelerPage = () => {
 
 
       <div className="grid grid-cols-3 gap-6">
-            {/* Left Side - Steps */}
+           
             <div className="col-span-2 space-y-4">
-                {/* Step 1 */}
+               
                 <div className="shadow-md rounded-b-2xl text-gray-600">
                     <div className="bg-gray-200 px-4 py-2 font-medium rounded-b-2xl">
                     1. Your Itinerary
                     </div>
                 </div>
 
-                {/* Step 2 */}
+              
                 <div className="shadow-md rounded-b-2xl text-gray-600">
                     <div className="bg-gray-200 px-4 py-2 font-medium rounded-b-2xl">
                     2. Your Email ID
                     </div>
                 </div>
 
-                {/* Step 3 - Active */}
+                
                 <div className="shadow-md rounded-b-2xl">
                     <div className="bg-blue-600 text-white px-4 py-2 font-semibold">
                         3. Traveller Details
@@ -58,7 +58,7 @@ const TravelerPage = () => {
 
                         
 
-                        {/* Title */}
+                        
                         <div>
                             <label className="block text-sm font-medium mb-1">
                             Title <span className="text-red-500">*</span>
@@ -77,7 +77,7 @@ const TravelerPage = () => {
                             </select>
                         </div>
 
-                        {/* First Name */}
+                       
                         <div>
                             <label className="block text-sm font-medium mb-1">
                             First Name <span className="text-red-500">*</span>
@@ -91,7 +91,7 @@ const TravelerPage = () => {
                             />
                         </div>
 
-                        {/* Last Name */}
+                     
                         <div>
                             <label className="block text-sm font-medium mb-1">
                             Last Name <span className="text-red-500">*</span>
@@ -105,7 +105,7 @@ const TravelerPage = () => {
                             />
                         </div>
 
-                        {/* Date of Birth */}
+                        
                         <div>
                             <label className="block text-sm font-medium mb-1">
                             Date of Birth <span className="text-red-500">*</span>
@@ -119,7 +119,7 @@ const TravelerPage = () => {
                             />
                         </div>
 
-                            {/* Mobile */}
+                          
                         <div className="flex flex-col items-center justify-center">
                             <label className="block text-sm font-medium mb-1">
                                 Mobile No. <span className="text-red-500">*</span>
@@ -142,7 +142,7 @@ const TravelerPage = () => {
                         </div>
 
 
-                        {/* Continue */}
+                        
                         <div className="text-right">
                             <button
                             onClick={() => navigate("/payment", { state: { flight } })}
@@ -155,7 +155,7 @@ const TravelerPage = () => {
                     </form>
                 </div>
 
-                {/* Step 4 */}
+               
                 <div className="shadow-md rounded-b-2xl text-gray-600">
                     <div className="bg-gray-200 px-4 py-2 font-medium rounded-b-2xl">
                         4. Payment Methods <span className="text-green-600">Safe Secured</span>
@@ -163,7 +163,7 @@ const TravelerPage = () => {
                 </div>
             </div>
 
-            {/* Right Side - Summary */}
+           
             <div>
                 <div className="bg-white shadow rounded-md p-4">
                     <h3 className="font-semibold mb-3">Summary</h3>

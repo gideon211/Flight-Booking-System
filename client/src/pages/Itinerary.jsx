@@ -1,10 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import Car from "../assets/car-solid-full.svg";
-import Umbrella from "../assets/umbrella-beach-solid-full.svg";
-import Boat from "../assets/sailboat-solid-full.svg";
-import Cart from "../assets/cart-flatbed-suitcase-solid-full (1).svg";
-import Build from "../assets/building-solid-full.svg";
-import Flight from "../assets/flights.svg";
+
 
 const ItineraryPage = () => {
   const location = useLocation();
@@ -29,13 +24,13 @@ const ItineraryPage = () => {
                 
             </h2>
 
-            {/* Step 1: Your Itinerary */}
+          
             <div className="mb-4 shadow-md rounded-b-2xl">
                 <div className="bg-blue-600 text-white px-4 py-2 font-semibold">
                     1. Your Itinerary
                 </div>
                 <div className="bg-white p-4 rounded-b-xl">
-                    {/* Flight info */}
+                  
                     <div className="flex justify-between items-center border-b border-blue-200 pb-4 mb-4">
                         <div>
 
@@ -66,7 +61,7 @@ const ItineraryPage = () => {
                             </div>
                     </div>
 
-                    {/* Times */}
+                  
                     <div className="flex justify-between items-center mb-4">
                         <div>
                             <p className="font-medium">{flight.departureTime}</p>
@@ -79,13 +74,13 @@ const ItineraryPage = () => {
                         </div>
                     </div>
 
-                    {/* Baggage */}
+                 
                     <div className="flex items-center gap-4 mb-4 text-sm text-gray-700">
                         <span>🧳 Baggage: 23kg</span>
                         <span>Adult</span>
                     </div>
 
-                    {/* Gift card */}
+                  
                     <div className="flex justify-between">
                         <div className="flex gap-2 mb-4">
                             <input
@@ -101,7 +96,7 @@ const ItineraryPage = () => {
                             <button className="bg-blue-500 rounded-md text-white px-4 h-15 cursor-pointer hover:bg-blue-400">Apply</button>
                         </div>
                         <div className="items-end flex flex-col">
-                            {/* Total */}
+                            
                             <div className="flex gap-4 items-center font-semibold mb-4">
                                 <span>Grand Total:</span>
                                 <span className="text-red-600">GHS {flight.price}</span>
@@ -124,21 +119,21 @@ const ItineraryPage = () => {
                 </div>
             </div>
 
-            {/* Step 2 */}
+           
             <div className="mb-4 shadow-md rounded-b-2xl text-gray-600">
                 <div className="bg-gray-200 px-4 py-2 font-medium rounded-b-2xl">
                     2. Your Email ID
                 </div>
             </div>
 
-            {/* Step 3 */}
+            
             <div className="mb-4 rounded-b-2xl">
                 <div className="bg-gray-200 px-4 py-2 font-medium rounded-b-2xl text-gray-600">
                     3. Traveller Details
                 </div>
             </div>
 
-            {/* Step 4 */}
+           
             <div className="mb-4  rounded-b-2xl">
                 <div className="bg-gray-200 px-4 py-2 font-medium rounded-b-2xl text-gray-600">
                     4. Payment Methods <span className="text-green-600">Safe Secured</span>

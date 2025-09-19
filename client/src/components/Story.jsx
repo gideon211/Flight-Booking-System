@@ -55,7 +55,6 @@ const Story = () => {
     <li><strong>Business Class:</strong> Spacious seating, lounge access, gourmet dining, and priority boarding.</li>
   </ul>
 
-  {/* Section: Top Destinations */}
   <h3 className="text-2xl font-semibold  mb-2">Top Destinations from Ghana:</h3>
   <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6 text-gray-700">
     <li>Accra - Ghana</li>
@@ -69,7 +68,6 @@ const Story = () => {
     <li>Dakar - Senegal</li>
   </ul>
 
-  {/* FAQs */}
   <h2 className="text-3xl font-medium  mt-10 mb-6">
     FAQs  Ghana Travelers Edition
   </h2>

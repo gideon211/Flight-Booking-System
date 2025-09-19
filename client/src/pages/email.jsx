@@ -19,16 +19,16 @@ const EmailPage = () => {
       </h2>
 
       <div className="grid grid-cols-3 gap-6">
-        {/* Left Section */}
+        
             <div className="col-span-2 space-y-4">
-                {/* Step 1 - Collapsed */}
+                
                 <div className="mb-4 shadow-md rounded-b-2xl text-gray-600">
                     <div className="bg-gray-200 px-4 py-2 font-medium rounded-b-2xl">
                     1. Your Itinerary
                     </div>
                 </div>
 
-                {/* Step 2 - Active */}
+                
                 <div className="mb-4 shadow-md rounded-b-2xl">
                     <div className="bg-blue-600 text-white px-4 py-2 font-semibold">
                     2. Your Email ID
@@ -39,7 +39,7 @@ const EmailPage = () => {
                         </p>
 
                         <div className="flex items-center gap-2 mb-4">
-                            {/* Email input */}
+                            
                             <div className="flex-1">
                             <label
                                 htmlFor="email"
@@ -62,7 +62,7 @@ const EmailPage = () => {
 
                             <div className="flex flex-col gap-6 items-center">
                                 <div>
-                                {/* Google Sign In */}
+                            
                                 <button className=" flex items-center border border-gray-100 px-4 py-2 rounded shadow hover:bg-gray-50">
                                 <img
                                 src="https://developers.google.com/identity/images/g-logo.png"
@@ -86,7 +86,7 @@ const EmailPage = () => {
 
                         </div>
 
-                        {/* Checkbox */}
+                        
                         <label className="flex items-center gap-2 text-sm text-gray-700">
                             <input type="checkbox" className="accent-red-500" />
                             I have a Travelwings Account
@@ -94,14 +94,14 @@ const EmailPage = () => {
                     </div>
                 </div>
 
-                {/* Step 3 */}
+             
                 <div className="mb-4 shadow-md rounded-b-2xl text-gray-600">
                     <div className="bg-gray-200 px-4 py-2 font-medium rounded-b-2xl">
                     3. Traveller Details
                     </div>
                 </div>
 
-                {/* Step 4 */}
+         
                 <div className="mb-4 rounded-b-2xl text-gray-600">
                     <div className="bg-gray-200 px-4 py-2 font-medium rounded-b-2xl">
                     4. Payment Methods <span className="text-green-600">Safe Secured</span>
@@ -109,7 +109,7 @@ const EmailPage = () => {
                 </div>
             </div>
 
-        {/* Right Summary */}
+
         <div>
           <div className="bg-white shadow rounded-b-md p-4 h-[20rem]">
                 <h1 className="font-semibold mb-3 text-3xl">Summary</h1>

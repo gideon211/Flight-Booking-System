@@ -69,9 +69,9 @@ const PaymentPage = () => {
             </button>
       </div>
 
-      {/* Form */}
+      
       <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Shared Fields */}
+        
 
 
 

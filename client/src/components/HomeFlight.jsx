@@ -28,7 +28,6 @@ const HomeFlight = () => {
 
   return (
     <div className="bg-blue-100 p-8">
-      {/* Header */}
       <div className="max-w-4xl mx-auto text-center py-6">
         <h1 className="text-4xl font-bold mb-2">
           Popular Africa World Airlines Flights
@@ -39,14 +38,14 @@ const HomeFlight = () => {
         </p>
       </div>
 
-      {/* Flights Grid */}
+      
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         {flights.slice(0, 10).map((flight) => (
           <div
             key={flight.flightId}
             className="flex w-full h-40 bg-white shadow-sm rounded-sm hover:shadow-2xl"
           >
-            {/* Left image */}
+            
             <div className="w-40 h-full">
               <img
                 className="w-full h-full object-cover rounded-l-md"
@@ -55,7 +54,7 @@ const HomeFlight = () => {
               />
             </div>
 
-            {/* Right content */}
+         
             <div className="flex justify-between items-center px-6 flex-1">
               <div>
                 <h2 className="flex items-center gap-2 font-medium text-xl">
@@ -81,7 +80,7 @@ const HomeFlight = () => {
         ))}
       </div>
 
-      {/* Disclaimer */}
+    
       <div className="max-w-4xl mx-auto text-center mt-6">
         <p className="text-sm text-white">
           *Fares displayed above are inclusive of taxes & fees, based on

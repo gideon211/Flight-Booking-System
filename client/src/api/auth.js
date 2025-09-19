@@ -1,27 +1,49 @@
 import api from "./axios";
 
-
+// Login user
 export const loginUser = async (credentials) => {
-  await api.post("/login", credentials); 
-  const res = await api.get("/me");
-  return res.data;
+  try {
+    // Send login request
+    await api.post("/login", credentials);
+
+    // Get current user from /me
+    const res = await api.get("/me");
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
-
+// Signup user
 export const signupUser = async (userData) => {
-  await api.post("/signup", userData);
-  const res = await api.get("/me");
-  return res.data;
+  try {
+    // Send signup request
+    await api.post("/signup", userData);
+
+    // Get current user from /me
+    const res = await api.get("/me");
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 
 export const logoutUser = async () => {
-  const res = await api.post("/logout");
-  return res.data;
+  try {
+    const res = await api.post("/logout");
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 
 export const getCurrentUser = async () => {
-  const res = await api.get("/me");
-  return res.data;
+  try {
+    const res = await api.get("/me");
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
 };

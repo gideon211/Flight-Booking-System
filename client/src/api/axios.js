@@ -12,25 +12,21 @@ const api = axios.create({
 
 
 api.interceptors.response.use(
-  response => response,
-  async error => {
+  (response) => response,
+  async (error) => {
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
       try {
+        const res = await api.post("/refresh");
+        const newAccessToken = res.data.access_token;
 
-        const refreshResponse = await axios.post(
-          `${API_URL}/refresh`,
-          {},
-          { withCredentials: true }
-        );
+        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
 
-      
-        return api(originalRequest);
+        return api(originalRequest); 
       } catch (refreshError) {
-    
+        console.error("Session expired, please log in again.");
         return Promise.reject(refreshError);
       }
     }
@@ -38,5 +34,6 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 
 export default api;
