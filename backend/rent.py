@@ -14,7 +14,11 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = 'MY_SECRET_KEY'
 
-frontend_origin = ["http://localhost:5173", "https://q0smnp61-5000.uks1.devtunnels.ms"]
+frontend_origin = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "https://q0smnp61-5000.uks1.devtunnels.ms"
+]
 
 CORS(app, supports_credentials=True, origins=frontend_origin)
 
