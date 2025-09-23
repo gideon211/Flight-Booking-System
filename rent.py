@@ -14,11 +14,12 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = 'MY_SECRET_KEY'
 
-frontend_origin = ["http://localhost:5173", "https://q0smnp61-5000.uks1.devtunnels.ms"]
+frontend_origin = ["http://localhost:5175","http://localhost:5173", "https://q0smnp61-5000.uks1.devtunnels.ms"]
+
 
 CORS(app, supports_credentials=True, origins=frontend_origin)
 
-JWT_SECRET = os.getenv("JWT_KEY", "MY_SECRET_KEY")  # store this in .env
+JWT_SECRET = os.getenv("JWT_KEY", "MY_SECRET_KEY")  
 JWT_ALGORITHM = "HS256"
 JWT_EXP_DELTA_MINUTES = 60
 
@@ -60,21 +61,20 @@ def login():
 
             response = jsonify({"message": "Login successful", "access_token": access_token})
 
-            # For local development, secure=False, samesite='Lax'
-            # For production, set secure=True, samesite='None'
+            
             response.set_cookie(
                 'refresh_token',
                 refresh_token,
                 httponly=True,
-                secure=True,  # Change to True in production
-                samesite='None',  # Change to 'None' in production if cross-site cookies needed
+                secure=True,  
+                samesite='None',  
                 max_age=7 * 24 * 60 * 60
             )
             response.set_cookie(
                 'access_token',
                 access_token,
                 httponly=True,
-                secure=True,  # Change to True in production
+                secure=True,  
                 samesite='None',
                 max_age=15 * 60
             )
@@ -107,7 +107,7 @@ def refresh():
         'access_token',
         new_access_token,
         httponly=True,
-        secure=True,  # Change to True in production
+        secure=True, 
         samesite='None',
         max_age=15 * 60
     )
@@ -166,7 +166,7 @@ def signup():
             'refresh_token',
             refresh_token,
             httponly=True,
-            secure=True,  # Change to True in production
+            secure=True, 
             samesite='None',
             max_age=7 * 24 * 60 * 60
         )
@@ -193,7 +193,7 @@ def signup():
 def logout():
     session.clear()
     response = jsonify({"message": "Logout successful", "status": "success"})
-    # Clear cookies on logout
+  
     response.set_cookie('access_token', '', expires=0)
     response.set_cookie('refresh_token', '', expires=0)
     return response, 200
@@ -222,5 +222,5 @@ def me():
     return jsonify({"user": None}), 404
 
 if __name__ == '__main__':
-    # For local dev, debug=True; consider disabling in production
+    
     app.run(debug=True)
