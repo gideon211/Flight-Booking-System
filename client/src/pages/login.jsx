@@ -26,8 +26,7 @@ const login = () => {
             localStorage.setItem("token", data.token);
             setUser(data.user);
             navigate("/Home")
-        } catch (err
-        ) {
+        } catch (err) {
             setError(err.response?.data?.message || err.message || "Login failed")
     
         }finally{

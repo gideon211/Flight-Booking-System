@@ -11,19 +11,19 @@ import TicketSection from "../pages/ticketsection";
 import AdminFlights from "../pages/admin/pages/AdminFlights";
 
 export default function AppRoutes() {
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/home" element={<Home />} />
-      <Route path="/Availableflights" element={<Availableflights />} />
-      <Route path="/itinerary/:flightId" element={<ItineraryPage />} />
-      <Route path="/email" element={<EmailPage />} />
-      <Route path="/traveler" element={<TravelerPage />} />
-      <Route path="/payment" element={<PaymentPage />} />
-      <Route path="/ticketsection" element={<TicketSection />} />
-      <Route path="/AdminFlights" element={<AdminFlights />} />
-    </Routes>
-  );
+    return (
+        <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/Availableflights" element={<Availableflights />} />
+            <Route path="/itinerary/:flightId" element={<ItineraryPage />} />
+            <Route path="/email" element={<EmailPage />} />
+            <Route path="/traveler" element={<TravelerPage />} />
+            <Route path="/payment" element={<PaymentPage />} />
+            <Route path="/ticketsection" element={<TicketSection />} />
+            <Route path="/AdminFlights" element={<AdminFlights />} />
+        </Routes>
+    );
 }

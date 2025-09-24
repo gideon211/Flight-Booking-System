@@ -65,53 +65,53 @@ const TicketTable = () => {
         return actions;
     };
 
-  return (
-    <div className="p-4 space-y-4">
-  
-        <div className="flex flex-wrap gap-2">
-            <input type="text" placeholder="Search flight/date/user" value={search} onChange={e => setSearch(e.target.value)} className="border-2 border-red-200 rounded px-3 py-2 outline-none placeholder:text-sm" />
-            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="border-2 border-red-200 outline-none text-center py-1">
-                <option>All</option>
-                <option>Confirmed</option>
-                <option>Pending</option>
-                <option>Cancelled</option>
-            </select>
-            <button onClick={() => setModalData({ id: null, flight: "", date: "", price: 0, status: "Confirmed", user: { name: "", email: "" } })} className="bg-red-500 text-white px-3 py-1 rounded cursor-pointer">Add Ticket</button>
-        </div>
+    return (
+        <div className="p-4 space-y-4">
+    
+            <div className="flex flex-wrap gap-2">
+                <input type="text" placeholder="Search flight/date/user" value={search} onChange={e => setSearch(e.target.value)} className="border-2 border-red-200 rounded px-3 py-2 outline-none placeholder:text-sm" />
+                <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="border-2 border-red-200 outline-none text-center py-1">
+                    <option>All</option>
+                    <option>Confirmed</option>
+                    <option>Pending</option>
+                    <option>Cancelled</option>
+                </select>
+                <button onClick={() => setModalData({ id: null, flight: "", date: "", price: 0, status: "Confirmed", user: { name: "", email: "" } })} className="bg-red-500 text-white px-3 py-1 rounded cursor-pointer">Add Ticket</button>
+            </div>
 
-   
-      <div className="overflow-x-auto">
-        <table className="w-full">
-            <thead>
-                <tr className="bg-red-400">
-                {["Flight","Date","Price","Status","User","Actions"].map(col => (
-                    <th key={col} className="px-2 py-1 text-center text-white">{col}</th>
-                ))}
-                </tr>
-            </thead>
-            <tbody>
-                {currentRows.map(t => (
-                <tr key={t.id} className="hover:bg-gray-300 cursor-pointer" onClick={() => setModalData(t)}>
-                    <td className="border px-2 py-1 text-center">{t.flight}</td>
-                    <td className="border px-2 py-1 text-center">{t.date}</td>
-                    <td className="border px-2 py-1 text-center">${t.price.toLocaleString()}</td>
-                    <td className={`border px-2 py-1 font-medium text-center ${t.status === "Confirmed" ? "text-green-600" : t.status === "Pending" ? "text-yellow-600" : "text-red-600"}`}>{t.status}</td>
-                    <td className="border px-2 py-1 text-center">{t.user.name}</td>
-                    <td className="border px-2 py-1 text-center relative" ref={dropdownRef}>
-                        <button onClick={e => { e.stopPropagation(); setDropdownOpen(dropdownOpen === t.id ? null : t.id); }} className="bg-blue-500 text-white px-3 py-1 rounded">Action</button>
-                        {dropdownOpen === t.id && (
-                            <div className="absolute right-0 mt-1 w-40 bg-white border rounded shadow-lg z-20">
-                                {getActions(t).map((act, idx) => (
-                                    <button key={idx} onClick={e => { e.stopPropagation(); act.action(); setDropdownOpen(null); }} className="block w-full text-left px-3 py-1 hover:bg-gray-200">{act.label}</button>
-                                ))}
-                            </div>
-                        )}
-                    </td>
-                </tr>
-                ))}
-            </tbody>
-        </table>
-      </div>
+    
+        <div className="overflow-x-auto">
+            <table className="w-full">
+                <thead>
+                    <tr className="bg-red-400">
+                    {["Flight","Date","Price","Status","User","Actions"].map(col => (
+                        <th key={col} className="px-2 py-1 text-center text-white">{col}</th>
+                    ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {currentRows.map(t => (
+                        <tr key={t.id} className="hover:bg-gray-300 cursor-pointer" onClick={() => setModalData(t)}>
+                            <td className="border px-2 py-1 text-center">{t.flight}</td>
+                            <td className="border px-2 py-1 text-center">{t.date}</td>
+                            <td className="border px-2 py-1 text-center">${t.price.toLocaleString()}</td>
+                            <td className={`border px-2 py-1 font-medium text-center ${t.status === "Confirmed" ? "text-green-600" : t.status === "Pending" ? "text-yellow-600" : "text-red-600"}`}>{t.status}</td>
+                            <td className="border px-2 py-1 text-center">{t.user.name}</td>
+                            <td className="border px-2 py-1 text-center relative" ref={dropdownRef}>
+                                <button onClick={e => { e.stopPropagation(); setDropdownOpen(dropdownOpen === t.id ? null : t.id); }} className="bg-blue-500 text-white px-3 py-1 rounded">Action</button>
+                                {dropdownOpen === t.id && (
+                                    <div className="absolute right-0 mt-1 w-40 bg-white border rounded shadow-lg z-20">
+                                        {getActions(t).map((act, idx) => (
+                                            <button key={idx} onClick={e => { e.stopPropagation(); act.action(); setDropdownOpen(null); }} className="block w-full text-left px-3 py-1 hover:bg-gray-200">{act.label}</button>
+                                        ))}
+                                    </div>
+                                )}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
 
 
         <div className="flex justify-between items-center">
@@ -120,7 +120,7 @@ const TicketTable = () => {
             <button onClick={() => setCurrentPage(p => Math.min(p+1,totalPages))} className="px-3 py-1 bg-gray-200 rounded" disabled={currentPage===totalPages}>Next</button>
         </div>
 
-    
+        
         {modalData && (
             <div className="fixed inset-0 flex justify-center items-center bg-black/40">
                 <div className="bg-white border-2 border-red-200 p-6 rounded shadow w-96 space-y-2">
@@ -146,22 +146,22 @@ const TicketTable = () => {
             </div>
         )}
 
-      
-      {confirmAction && (
-        <div className="fixed inset-0 flex justify-center items-center bg-black/40">
-          <div className="bg-white p-6 rounded shadow w-80 space-y-4 text-center">
-            <p className="text-lg font-semibold">
-              Are you sure you want to {confirmAction.newStatus} this ticket?
-            </p>
-            <div className="flex justify-center gap-4">
-              <button onClick={()=>setConfirmAction(null)} className="px-3 py-1 bg-gray-300 rounded">Cancel</button>
-              <button onClick={confirmStatusChange} className="px-3 py-1 bg-red-500 text-white rounded">Yes</button>
+        
+        {confirmAction && (
+            <div className="fixed inset-0 flex justify-center items-center bg-black/40">
+                <div className="bg-white p-6 rounded shadow w-80 space-y-4 text-center">
+                    <p className="text-lg font-semibold">
+                    Are you sure you want to {confirmAction.newStatus} this ticket?
+                    </p>
+                    <div className="flex justify-center gap-4">
+                        <button onClick={()=>setConfirmAction(null)} className="px-3 py-1 bg-gray-300 rounded">Cancel</button>
+                        <button onClick={confirmStatusChange} className="px-3 py-1 bg-red-500 text-white rounded">Yes</button>
+                    </div>
+                </div>
             </div>
-          </div>
+        )}
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default TicketTable;

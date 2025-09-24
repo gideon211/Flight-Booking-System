@@ -38,7 +38,7 @@ const AvailableFlights = () => {
             </button>
       </div>
 
-      <div className="flex flex-1 p-6 gap-6">  
+        <div className="flex flex-1 p-6 gap-6">  
             <aside className="w-1/4 bg-white p-6 shadow-md rounded-md">
                 <h3 className="font-semibold text-lg mb-4">Filters</h3>
 
@@ -76,39 +76,39 @@ const AvailableFlights = () => {
                 {results.length > 0 ? (
                     <div className="space-y-4 max-w-2/3">
                         {results.map((flight) => (
-                        <div
-                        key={flight.flightId}
-                        className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-md shadow-md gap-4"
-                        >
-                        <div className="flex items-center gap-3 min-w-[180px] flex-shrink-0">
-                            <img
-                            src="https://static.vecteezy.com/system/resources/thumbnails/005/145/664/small_2x/flying-airplane-air-transportation-airline-plane-illustration-vector.jpg"
-                            alt={flight.airline}
-                            className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded"
-                            />
-                            <div className="flex-1 min-w-0">
-                            <p className="font-medium text-lg truncate">{flight.airline}</p>
-                            <p className="text-sm text-gray-500 truncate">{flight.cabin}</p>
-                            </div>
-                        </div>
-
-                        <div className="text-center flex-1">
-                            <p className="font-medium">
-                            {flight.departureTime} → {flight.arrivalTime}
-                            </p>
-                            <p className="text-sm text-gray-500">{flight.duration}</p>
-                        </div>
-
-                        <div className="text-right flex-shrink-0">
-                            <p className="font-medium text-blue-600">GHS {flight.price}</p>
-                            <button
-                            onClick={() => handleSelect(flight)}
-                            className="mt-2 bg-yellow-500 text-black px-5 py-2 rounded-md font-medium hover:bg-yellow-600 shadow cursor-pointer"
+                            <div
+                            key={flight.flightId}
+                            className="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-md shadow-md gap-4"
                             >
-                            Select
-                            </button>
-                        </div>
-                        </div>
+                                <div className="flex items-center gap-3 min-w-[180px] flex-shrink-0">
+                                    <img
+                                    src="https://static.vecteezy.com/system/resources/thumbnails/005/145/664/small_2x/flying-airplane-air-transportation-airline-plane-illustration-vector.jpg"
+                                    alt={flight.airline}
+                                    className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-lg truncate">{flight.airline}</p>
+                                    <p className="text-sm text-gray-500 truncate">{flight.cabin}</p>
+                                    </div>
+                                </div>
+
+                                <div className="text-center flex-1">
+                                    <p className="font-medium">
+                                    {flight.departureTime} → {flight.arrivalTime}
+                                    </p>
+                                    <p className="text-sm text-gray-500">{flight.duration}</p>
+                                </div>
+
+                                <div className="text-right flex-shrink-0">
+                                    <p className="font-medium text-blue-600">GHS {flight.price}</p>
+                                    <button
+                                    onClick={() => handleSelect(flight)}
+                                    className="mt-2 bg-yellow-500 text-black px-5 py-2 rounded-md font-medium hover:bg-yellow-600 shadow cursor-pointer"
+                                    >
+                                    Select
+                                    </button>
+                                </div>
+                            </div>
 
                         ))}
                     </div>
@@ -121,7 +121,7 @@ const AvailableFlights = () => {
                     </div>
                 )}
             </main>
-      </div>
+        </div>
 
 
       <Footer />

@@ -18,8 +18,7 @@ const EmailPage = () => {
         {location.state?.to?.toUpperCase() ?? "KUMASI"}
       </h2>
 
-      <div className="grid grid-cols-3 gap-6">
-        
+        <div className="grid grid-cols-3 gap-6">       
             <div className="col-span-2 space-y-4">
                 
                 <div className="mb-4 shadow-md rounded-b-2xl text-gray-600">
@@ -112,34 +111,34 @@ const EmailPage = () => {
             </div>
 
 
-        <div>
-          <div className="bg-white shadow rounded-b-md p-4 h-[20rem]">
-                <h1 className="font-semibold mb-3 text-3xl">Summary</h1>
-                <div className="text-sm text-gray-700 mb-2">
-                    <p className="text-xl"> {flight.airline}</p>
-                    <p className="text-md">
+            <div>
+                <div className="bg-white shadow rounded-b-md p-4 h-[20rem]">
+                    <h1 className="font-semibold mb-3 text-3xl">Summary</h1>
+                    <div className="text-sm text-gray-700 mb-2">
+                        <p className="text-xl"> {flight.airline}</p>
+                        <p className="text-md">
                         {flight.origin.city} ({flight.origin.code}){" "}
                         <strong>{flight.departureTime}</strong> →{" "}
                         {flight.destination.city} ({flight.destination.code}){" "}
                         <strong>{flight.arrivalTime}</strong>
-                    </p>
-                    <p>{flight.departureDate}</p>
-                </div>
-                <div className="border-t pt-2 text-sm space-y-1 border-gray-300">
-                    <p className="mt-4 text-lg">
+                        </p>
+                        <p>{flight.departureDate}</p>
+                    </div>
+                    <div className="border-t pt-2 text-sm space-y-1 border-gray-300">
+                        <p className="mt-4 text-lg">
                         Net Fare:{" "}
                         <span className="text-red-500 font-medium text-md">
                         GHS {flight.price}
                         </span>
-                    </p>
-                    <p>Taxes & Fees: GHS 75.00</p>
-                    <p className="font- text-lg text-red-500">
-                        <span className="text-md font-medium ">Total:</span> GHS {flight.price + 75}
-                    </p>
+                        </p>
+                        <p>Taxes & Fees: GHS 75.00</p>
+                        <p className="font- text-lg text-red-500">
+                            <span className="text-md font-medium ">Total:</span> GHS {flight.price + 75}
+                        </p>
+                    </div>
                 </div>
-          </div>
+            </div>
         </div>
-      </div>
 
     </div>
   );
