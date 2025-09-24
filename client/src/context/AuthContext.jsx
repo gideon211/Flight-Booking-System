@@ -14,10 +14,10 @@ export const AuthProvider = ({ children }) => {
                 const res = await api.get("/me");
                 setUser(res.data.user);
             } catch {
-                setUser(null);
-                } finally {
-                    setLoading(false);
-                }
+            setUser(null);
+            } finally {
+                setLoading(false);
+            }
         };
         fetchUser();
     }, []);
@@ -41,7 +41,9 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, signup, logout, loading, setUser }}>
+        <AuthContext.Provider 
+        value={{ user, login, signup, logout, loading, setUser }}
+        >
           {children}
         </AuthContext.Provider>
     );

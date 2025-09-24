@@ -41,8 +41,8 @@ const FlightForm = () => {
             const [parent, child] = name.split(".");
             setFormData({ ...formData, [parent]: { ...formData[parent], [child]: value } });
         } else {
-              setFormData({ ...formData, [name]: value });
-            }
+        setFormData({ ...formData, [name]: value });
+        }
     };
 
     const handleCheckbox = (meal) => {
@@ -61,7 +61,7 @@ const FlightForm = () => {
             const response = await api.post("/admin/flights", formData);
             setSuccess("Flight created successfully!");
         } catch (err) {
-         setError(err.response?.data?.message || "Failed to create flight");
+        setError(err.response?.data?.message || "Failed to create flight");
         } finally {
         setLoading(false);
         }
@@ -73,7 +73,7 @@ const FlightForm = () => {
             {error && <p className="text-red-500 mb-2">{error}</p>}
             {success && <p className="text-green-500 mb-2">{success}</p>}
 
-            <form  onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <input name="flightId" placeholder="Flight ID" value={formData.flightId} onChange={handleChange} className="border-2 p-2 border-red-100 outline-0 " />
                     <select name="tripType" value={formData.tripType} onChange={handleChange} className="border-2 p-2 border-red-100 outline-0 ">
