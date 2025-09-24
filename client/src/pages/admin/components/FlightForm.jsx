@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-// import api from "../../api/axios";
+
 
 const tripTypes = ["OneWay", "RoundTrip", "MultiCity"];
 const cabinClasses = ["Economy", "Premium", "Business", "First Class"];

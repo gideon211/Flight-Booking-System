@@ -112,64 +112,61 @@ const OverviewDashboard = () => {
 
   return (
     <div className="p-6 space-y-6">
+        <div className="mb-4">
+            <label className="mr-2 font-medium">Filter by Month:</label>
+            <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="border p-1 rounde border-red-200 rounded outline-none cursor-pointer"
+            >
+                <option value="All">All</option>
+                {[...Array(12)].map((_, i) => (
+                    <option key={i} value={i} className="bg-red-50 hover:bg-red-100">
+                    {new Date(0, i).toLocaleString("default", { month: "long" })}
+                    </option>
+                ))}
+            </select>
+        </div>
 
 
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="bg-red-500 text-white p-4 rounded shadow text-center border border-red-200">
+                <p className="text-black text-xl">Total Flights</p>
+                <p className="text-2xl font-bold">{totalFlights}</p>
+            </div>
+            <div className="bg-red-500 text-white p-4 rounded shadow text-center border border-red-200">
+                <p className="text-black text-xl">Total Bookings</p>
+                <p className="text-2xl font-bold">{totalBookings}</p>
+            </div>
+            <div className="bg-red-500 text-white p-4 rounded shadow text-center border border-red-200">
+                <p className="text-black text-xl">Total Revenue</p>
+                <p className="text-2xl font-medium">${totalRevenue.toFixed(2)}</p>
+            </div>
+            <div className="bg-red-500 text-white p-4 rounded shadow text-center border border-red-200">
+                <p className="text-black text-xl">CANCELLED BOOKINGS</p>
+                <p className="text-2xl font-medium">{cancelledBookings}</p>
+            </div>
+            <div className="bg-red-500 text-white p-4 rounded shadow text-center border border-red-200">
+                <p className="text-black text-xl">Upcoming Flights</p>
+                <p className="text-2xl font-medium">{upcomingFlights}</p>
+            </div>
+        </div>
 
-      <div className="mb-4">
-        <label className="mr-2 font-medium">Filter by Month:</label>
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="border p-1 rounde border-red-200 rounded outline-none cursor-pointer"
-        >
-          <option value="All">All</option>
-          {[...Array(12)].map((_, i) => (
-            <option key={i} value={i} className="bg-red-50 hover:bg-red-100">
-              {new Date(0, i).toLocaleString("default", { month: "long" })}
-            </option>
-          ))}
-        </select>
-      </div>
-
-
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <div className="bg-red-500 text-white p-4 rounded shadow text-center border border-red-200">
-          <p className="text-black text-xl">Total Flights</p>
-          <p className="text-2xl font-bold">{totalFlights}</p>
+  
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white p-4 rounded shadow">
+                <h2 className="text-lg font-semimedium mb-2">Bookings Per Route</h2>
+                <Bar data={bookingsPerRouteData} />
+            </div>
+            <div className="bg-white p-4 rounded shadow">
+                <h2 className="text-lg font-semimedium mb-2">Revenue Over Months</h2>
+                <Line data={revenueChartData} />
+            </div>
+            <div className="bg-white p-4 rounded shadow lg:col-span-2">
+                <h2 className="text-lg font-semimedium mb-2">Flight Status Distribution</h2>
+                <Pie data={flightStatusData} />
+            </div>
         </div>
-        <div className="bg-red-500 text-white p-4 rounded shadow text-center border border-red-200">
-          <p className="text-black text-xl">Total Bookings</p>
-          <p className="text-2xl font-bold">{totalBookings}</p>
-        </div>
-        <div className="bg-red-500 text-white p-4 rounded shadow text-center border border-red-200">
-          <p className="text-black text-xl">Total Revenue</p>
-          <p className="text-2xl font-medium">${totalRevenue.toFixed(2)}</p>
-        </div>
-        <div className="bg-red-500 text-white p-4 rounded shadow text-center border border-red-200">
-          <p className="text-black text-xl">CANCELLED BOOKINGS</p>
-          <p className="text-2xl font-medium">{cancelledBookings}</p>
-        </div>
-        <div className="bg-red-500 text-white p-4 rounded shadow text-center border border-red-200">
-          <p className="text-black text-xl">Upcoming Flights</p>
-          <p className="text-2xl font-medium">{upcomingFlights}</p>
-        </div>
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-lg font-semimedium mb-2">Bookings Per Route</h2>
-          <Bar data={bookingsPerRouteData} />
-        </div>
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-lg font-semimedium mb-2">Revenue Over Months</h2>
-          <Line data={revenueChartData} />
-        </div>
-        <div className="bg-white p-4 rounded shadow lg:col-span-2">
-          <h2 className="text-lg font-semimedium mb-2">Flight Status Distribution</h2>
-          <Pie data={flightStatusData} />
-        </div>
-      </div>
     </div>
   );
 };
