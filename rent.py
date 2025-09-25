@@ -10,10 +10,13 @@ from helper.generate_token import generate_refresh_token, decode_token, generate
 
 import jwt
 from datetime import datetime, timedelta
+import requests
+
 
 app = Flask(__name__)
 app.secret_key = 'MY_SECRET_KEY'
 
+API_KEY = os.getenv("API_KEY")
 frontend_origin = ["http://localhost:5175","http://localhost:5173", "https://q0smnp61-5000.uks1.devtunnels.ms"]
 
 
@@ -87,8 +90,10 @@ def login():
         return jsonify({"message": "Database error", "error": str(e)}), 500
 
     finally:
-        cursor.close()
-        db.close()
+        if 'cursor' in locals():
+            cursor.close()
+        if 'db' in locals():
+            db.close()
 
 @app.route('/refresh', methods=['POST'])
 def refresh():
@@ -220,6 +225,162 @@ def me():
     if user:
         return jsonify({"user": user}), 200
     return jsonify({"user": None}), 404
+
+
+
+
+
+@app.route("/admin/flights", methods=["POST"])
+def create_flight():
+    data = request.get_json()
+
+    
+    required_fields = [
+        "flight_id",
+        "trip_type",
+        "airline",
+        "departure_city",
+        "arrival_city",
+        "departure_datetime",
+        "price",
+        "cabin_class",
+        "seats_available",
+        "flight_status"
+    ]
+
+    missing = [field for field in required_fields if field not in data or data[field] in (None, "")]
+    if missing:
+        return jsonify({
+            "error": f"Missing required field(s): {', '.join(missing)}"
+        }), 400
+
+   
+    try:
+
+        
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        
+        
+        cursor.execute("""
+            SELECT city_id, city_name, longitude::float AS longitude, latitude::float AS latitude, country
+            FROM cities WHERE city_name = %s
+        """, (data["departure_city"],))
+        departure_city = cursor.fetchone()
+        
+        if not  departure_city:
+            return jsonify({"message":"Departure City not found"}),400
+
+        cursor.execute("""
+            SELECT city_id, city_name, longitude::float AS longitude, latitude::float AS latitude, country
+            FROM cities WHERE city_name = %s
+        """, (data["arrival_city"],))
+        arrival_city = cursor.fetchone()
+
+        if not departure_city or not arrival_city:
+            return jsonify({"message":"Invalid departure or arrival city name"}),400
+        
+        
+        cursor.execute("SELECT airline_id FROM airlines WHERE airline_name = %s", (data["airline"],))
+        airline = cursor.fetchone()
+        if not airline:
+            return jsonify({"message": "Invalid airline"}), 400
+        airline_id = airline["airline_id"]
+
+        
+        
+        headers = {
+            'Authorization': API_KEY,
+            'Content-Type': 'application/json'
+        }
+
+        
+        body = {
+            "coordinates": [
+            [departure_city["longitude"],departure_city["latitude"]],      
+            [arrival_city["longitude"],arrival_city["latitude"]]
+            ]
+        }
+        
+        api_response = requests.post(
+            'https://api.openrouteservice.org/v2/directions/driving-car',
+            json=body,
+            headers=headers
+        )
+
+        api_data = api_response.json()
+        distance_meters = api_data['routes'][0]['summary']['distance']
+        duration_seconds = api_data['routes'][0]['summary']['duration']
+        flight_distance = round(distance_meters/1000,2)
+        flight_duration = round(duration_seconds/3600,2)
+
+        cursor.execute("""
+             INSERT INTO flights (
+                flight_id, trip_type, airline,airline_id,
+                origin_country, destination_country,departure_city_code, 
+                arrival_city_code,is_directs, transits,
+                departure_datetime, return_datetime,price, 
+                cabin_class, seats_available,flight_duration, 
+                flight_distance, flight_status,gate, 
+                terminal, baggage_allowance, flight_description, 
+                airline_logo
+            )VALUES (%s, %s, %s, %s,
+                    %s, %s, %s,
+                    %s, %s, %s, 
+                    %s, %s, %s,
+                    %s, %s, %s,
+                    %s, %s, %s,
+                    %s,%s,%s,
+                    %s
+            )
+                    RETURNING *
+                """,
+             (
+                data["flight_id"],
+                data["trip_type"],
+                data["airline"],
+                airline_id,                         
+                departure_city["country"],                   
+                arrival_city["country"],                    
+                departure_city["city_name"],
+                arrival_city["city_name"],
+                data.get("is_directs", True),                
+                data.get("transits"),                        
+                data["departure_datetime"],
+                data.get("return_datetime"),
+                float(data["price"]),
+                data["cabin_class"],
+                int(data["seats_available"]),
+                flight_duration,
+                flight_distance,
+                data["flight_status"],
+                data.get("gate"),
+                data.get("terminal"),
+                data.get("baggage_allowance"),
+                data.get("flight_description"),
+                data.get("airline_logo")
+            ))
+        new_flight = cursor.fetchone()
+        db.commit()
+        
+        return jsonify({"message": "Flight created successfully",
+                        "flight":new_flight}), 201
+
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+    
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'db' in locals():
+            db.close()
+
+
+
+@app.route('/bookflight')
+def bookflight():
+    pass
 
 if __name__ == '__main__':
     
