@@ -232,9 +232,13 @@ def me():
 
 @app.route("/admin/flights", methods=["POST"])
 def create_flight():
+    access_token = request.cookies.get('access_token')
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid or expired token"}), 401
+    
     data = request.get_json()
 
-    
     required_fields = [
         "flight_id",
         "trip_type",
@@ -313,6 +317,12 @@ def create_flight():
         duration_seconds = api_data['routes'][0]['summary']['duration']
         flight_distance = round(distance_meters/1000,2)
         flight_duration = round(duration_seconds/3600,2)
+
+
+        cursor.execute("SELECT flight_id FROM flights WHERE flight_id = %s", (data["flight_id"],))
+        if cursor.fetchone():
+            return jsonify({"message": "Flight ID already exists"}), 409
+
 
         cursor.execute("""
              INSERT INTO flights (

@@ -2,9 +2,10 @@ import jwt
 import datetime
 import os
 
-def generate_access_token(email):
+def generate_access_token(email,role):
     payload = {
         'email': email,
+        'role':role,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=int(os.getenv("ACCESS_TOKEN_EXPIRES_MINUTES", 15))),
         'iat': datetime.datetime.utcnow()
     }
@@ -12,9 +13,10 @@ def generate_access_token(email):
     return token
 
 
-def generate_refresh_token(email):
+def generate_refresh_token(email,role):
     payload = {
         'email': email,
+        'role':role,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(days=int(os.getenv("REFRESH_TOKEN_EXPIRES_DAYS", 7))),
         'iat': datetime.datetime.utcnow()
     }
