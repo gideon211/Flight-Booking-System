@@ -12,7 +12,6 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "MY_SECRET_KEY")
 
-# Allowed frontend origins
 frontend_origins = [
     "http://localhost:5173",
     "http://localhost:5174",
@@ -20,7 +19,7 @@ frontend_origins = [
     "https://q0smnp61-5000.uks1.devtunnels.ms"
 ]
 
-# CORS setup
+
 CORS(
     app,
     supports_credentials=True,
@@ -34,7 +33,7 @@ JWT_SECRET = os.getenv("JWT_KEY", "MY_SECRET_KEY")
 JWT_ALGORITHM = "HS256"
 JWT_EXP_DELTA_MINUTES = 60
 
-# ---------- DATABASE CONNECTION ----------
+
 def database_connection():
     try:
         return psycopg2.connect(
@@ -47,14 +46,14 @@ def database_connection():
         print("Database connection failed:", e)
         raise
 
-# ---------- COOKIE SETTINGS ----------
+
 def get_cookie_settings():
     """Dynamic cookie settings for local vs production."""
     secure_cookie = False if "localhost" in request.host else True
     samesite_cookie = "Lax" if "localhost" in request.host else "None"
     return secure_cookie, samesite_cookie
 
-# ---------- SIGNUP ----------
+
 @app.route('/signup', methods=['POST'])
 def signup():
     if not request.is_json:
@@ -120,7 +119,7 @@ def signup():
         if 'db' in locals():
             db.close()
 
-# ---------- LOGIN ----------
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -159,7 +158,7 @@ def login():
         if 'db' in locals():
             db.close()
 
-# ---------- REFRESH ----------
+
 @app.route('/refresh', methods=['POST'])
 def refresh():
     refresh_token = request.cookies.get('refresh_token')
@@ -176,7 +175,7 @@ def refresh():
     response.set_cookie('access_token', new_access_token, httponly=True, secure=secure_cookie, samesite=samesite_cookie, max_age=15*60)
     return response
 
-# ---------- LOGOUT ----------
+
 @app.route('/logout', methods=['POST'])
 def logout():
     session.clear()
@@ -186,7 +185,7 @@ def logout():
     response.set_cookie('refresh_token', '', expires=0, secure=secure_cookie, samesite=samesite_cookie)
     return response
 
-# ---------- CURRENT USER ----------
+
 @app.route('/me', methods=['GET'])
 def me():
     access_token = request.cookies.get('access_token')
@@ -209,6 +208,11 @@ def me():
         return jsonify({"user": user}), 200
     return jsonify({"user": None}), 404
 
-# ---------- RUN ----------
+
+
+@app.route('/admin/create_flights',methods=['POST'])
+def create_flights():
+    pass
+
 if __name__ == '__main__':
     app.run(debug=True)
