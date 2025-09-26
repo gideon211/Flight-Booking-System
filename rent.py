@@ -237,8 +237,13 @@ def create_flight():
     if not decoded:
         return jsonify({"message": "Invalid or expired token"}), 401
     
+    
+        
+    if decoded.get("role") != "admin":
+        return jsonify({"message": "Forbidden: Admins only"}), 403
+    
     data = request.get_json()
-
+    
     required_fields = [
         "flight_id",
         "trip_type",
@@ -281,8 +286,8 @@ def create_flight():
         """, (data["arrival_city"],))
         arrival_city = cursor.fetchone()
 
-        if not departure_city or not arrival_city:
-            return jsonify({"message":"Invalid departure or arrival city name"}),400
+        if not not arrival_city:
+            return jsonify({"message":"Invalid arrival city name"}),400
         
         
         cursor.execute("SELECT airline_id FROM airlines WHERE airline_name = %s", (data["airline"],))
@@ -291,7 +296,6 @@ def create_flight():
             return jsonify({"message": "Invalid airline"}), 400
         airline_id = airline["airline_id"]
 
-        
         
         headers = {
             'Authorization': API_KEY,
@@ -386,8 +390,52 @@ def create_flight():
         if 'db' in locals():
             db.close()
 
+@app.route('/superadmin/create_admin',methods=['POST'])
+def create_admin():
+    access_token = request.cookies.get('access_token')
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid or expired token"}), 401
+        
+    if decoded.get("role") != "superadmin":
+        return jsonify({"message": "Forbidden: Super Admins only"}),
 
+    data = request.get_json()
+    firstname = data.get("firstname")
+    lastname = data.get("lastname")
+    email = data.get("email")
+    password = data.get("password")
+    
+    
+    if not all([firstname, lastname, email, password]):
+        return jsonify({"message": "All fields are required"}), 400
 
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute("select email from login_users where email = %s",(email),)
+        if cursor.fetchone():
+            return jsonify({"message":"Account already exists"}),409
+        
+        hash_password = bcrypt.hashpw(password.encode('UTF-8'),bcrypt.gensalt()).decode('UTF-8')
+        
+        cursor.execute("""
+            INSERT INTO login_users (first_name, last_name, email, hash_password, role)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (firstname, lastname, email, hash_password, "admin"))
+        db.commit()
+        return jsonify({"message": "Admin created successfully"}), 201
+                
+    except Exception as e :
+        db.rollback()
+        return jsonify({"error":str((e))}),500
+    finally:
+        if 'cursor' in locals():
+            cursor.close
+        if 'db' in locals():
+            db.close()
+        
 @app.route('/bookflight')
 def bookflight():
     pass
