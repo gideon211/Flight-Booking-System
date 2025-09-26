@@ -143,7 +143,7 @@ def login():
     try:
         db = database_connection()
         cursor = db.cursor(cursor_factory=RealDictCursor)
-        cursor.execute("SELECT hash_password FROM login_users WHERE email = %s", (email,))
+        cursor.execute("SELECT hash_password,role,email FROM login_users WHERE email = %s", (email,))
         user = cursor.fetchone()
         
         if not user:
@@ -163,8 +163,6 @@ def login():
         response = jsonify({"message": "Login successful",
                             "access_token": access_token,
                            "user":{
-                               "first name":user['first_name'],
-                               "last name":user["last_name"],
                                "email":user["email"],
                                "role":role}
                            })
