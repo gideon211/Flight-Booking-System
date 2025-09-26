@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import { Link, useNavigate } from 'react-router-dom';
@@ -26,9 +26,9 @@ const login = () => {
             localStorage.setItem("token", data.token);
             setUser(data.user);
             navigate("/Home")
-        } catch (err
-        ) {
-            setError(err.response?.data.message || "Login failed")     
+        } catch (err) {
+            setError(err.response?.data?.message || err.message || "Login failed")
+    
         }finally{
             setLoading(false);
         }
@@ -40,7 +40,7 @@ const login = () => {
     return (
         <div className='w-full h-screen bg-gray-100 flex justify-center items-center bg-[url("https://images.unsplash.com/photo-1549897411-b06572cdf806?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")] bg-cover bg-center'>
             <div className='lg:w-1/3 2xl:w-1/4 p-10 bg-white'>
-                <h1 className='text-center text-3xl font-bold py-5'>Welcome to <span className='text-blue-500'>NextTrip.</span></h1>
+                <h1 className='text-center text-3xl font-bold py-5'>Welcome to <span className='text-yellow-500'>NextTrip.</span></h1>
                 <div className='space-y-5'>
 
                     <h1 className='text-xl font-semibold text-center'>
@@ -50,7 +50,7 @@ const login = () => {
 
                     <form
                         onSubmit={handleLogin} 
-                        className='flex flex-col space-y-5 '>
+                        className='flex flex-col space-y-5'>
                         <input
                         value={email} 
                         onChange={(e) => setEmail(e.target.value)}
@@ -75,7 +75,7 @@ const login = () => {
                         className={`p-2 t font-semibold rounded-md 
                         ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-yellow-500 hover:bg-yellow-600 text-white cursor-pointer"}`}
                         >
-                        {loading ? <Loader /> : "Sign In"}
+                        {loading ? "Logging in.." : "Sign In"}
                         </button>
 
                         <p className='text-sm text-center'><span className='font-semibold'>Terms & Conditions</span> and <span className='font-semibold'>Privacy</span></p>

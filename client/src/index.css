@@ -11,19 +11,15 @@ html * {
     font-family: 'Lexend',sans-serif;
 }
 
-/* in src/index.css or globals.css */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-/* input[type=number] {
-  -moz-appearance: textfield; 
-} */
 
 input[type="date"]::-webkit-datetime-edit {
-  color: gray;          /* text color */
-  font-style: italic;   /* italic placeholder look */
-  font-size: 13px;      /* size */
+  color: gray;          
+  font-style: italic;   
+  font-size: 13px;      
 }
