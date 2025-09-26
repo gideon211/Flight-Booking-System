@@ -31,7 +31,7 @@ frontend_origins = [
     "https://q0smnp61-5000.uks1.devtunnels.ms"
 ]
 
-# CORS setup
+
 CORS(
     app,
     supports_credentials=True,
@@ -216,7 +216,7 @@ def signup():
         if 'db' in locals():
             db.close()
 
-# ---------- LOGIN ----------
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -255,7 +255,7 @@ def login():
         if 'db' in locals():
             db.close()
 
-# ---------- REFRESH ----------
+
 @app.route('/refresh', methods=['POST'])
 def refresh():
     refresh_token = request.cookies.get('refresh_token')
@@ -480,7 +480,7 @@ def create_admin():
         return jsonify({"message": "Invalid or expired token"}), 401
         
     if decoded.get("role") != "superadmin":
-        return jsonify({"message": "Forbidden: Super Admins only"}),
+        return jsonify({"message": "Forbidden: Super Admins only"}),401
 
     data = request.get_json()
     firstname = data.get("firstname")
@@ -524,7 +524,7 @@ def bookflight():
 
 
     
-# ---------- RUN ----------
+
 if __name__ == '__main__':
 
     app.run(debug=True)
