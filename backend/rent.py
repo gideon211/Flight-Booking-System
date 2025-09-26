@@ -250,12 +250,10 @@ def me():
 @app.route("/admin/flights", methods=["POST"])
 def create_flight():
     access_token = request.cookies.get('access_token')
-    decoded = decode_token(access_token)
-    
     if not access_token:
         return jsonify({"message":"No Token"}),401
     
-   
+    decoded = decode_token(access_token)
     if not decoded:
         return jsonify({"message": "Invalid or expired token"}), 401
      
