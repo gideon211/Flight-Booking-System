@@ -154,13 +154,22 @@ def login():
         if not bcrypt.checkpw(password.encode('utf-8'), hash_password):
             return jsonify({"message": "Incorrect password"}), 401
 
-        access_token = generate_access_token(email)
-        refresh_token = generate_refresh_token(email)
+        role = user.get('role','user')
+        
+        access_token = generate_access_token(email,role)
+        refresh_token = generate_refresh_token(email,role)
         secure_cookie, samesite_cookie = get_cookie_settings()
 
         response = jsonify({"message": "Login successful",
-                            "access_token": access_token}
-                           )
+                            "access_token": access_token,
+                           "user":{
+                               "first name":user['first_name'],
+                               "last name":user["last_name"],
+                               "email":user["email"],
+                               "role":role}
+                           })
+
+        
         
         response.set_cookie('refresh_token', refresh_token,
                             httponly=True, 
