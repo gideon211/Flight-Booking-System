@@ -1,4 +1,6 @@
 flask
 bcrypt
-
+python-dotenv
 flask-cors
+psycopg2-binary
+PyJWT
