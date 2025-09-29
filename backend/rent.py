@@ -97,8 +97,8 @@ def signup():
         )
         db.commit()
 
-        access_token = generate_access_token(email)
-        refresh_token = generate_refresh_token(email)
+        access_token = generate_access_token(email,role='user')
+        refresh_token = generate_refresh_token(email,role='user')
         secure_cookie, samesite_cookie = get_cookie_settings()
 
         user = {"first_name": firstname, "last_name": lastname, "email": email}
@@ -164,8 +164,8 @@ def login():
                             "access_token": access_token,
                            "user":{
                                "email":user["email"],
-                               "role":role}
-                           })
+                               "role":role
+                           }})
 
         
         
@@ -203,7 +203,7 @@ def refresh():
     if not decoded:
         return jsonify({"message": "Invalid or expired refresh token"}), 401
 
-    new_access_token = generate_access_token(decoded['email'])
+    new_access_token = generate_access_token(decoded['email'],decoded['role'])
     secure_cookie, samesite_cookie = get_cookie_settings()
     response = jsonify({"access_token": new_access_token})
     response.set_cookie('access_token', new_access_token,
@@ -217,7 +217,6 @@ def refresh():
 
 @app.route('/logout', methods=['POST'])
 def logout():
-    session.clear()
     secure_cookie, samesite_cookie = get_cookie_settings()
     response = jsonify({"message": "Logout successful", "status": "success"})
 
@@ -241,7 +240,7 @@ def me():
     email = decoded.get('email')
     db = database_connection()
     cursor = db.cursor(cursor_factory=RealDictCursor)
-    cursor.execute("SELECT first_name, last_name, email FROM login_users WHERE email = %s", (email,))
+    cursor.execute("SELECT first_name, last_name, email,role FROM login_users WHERE email = %s", (email,))
     user = cursor.fetchone()
     cursor.close()
     db.close()
@@ -415,6 +414,59 @@ def create_flight():
         if 'db' in locals():
             db.close()
 
+
+@app.route('/create_superadmin', methods=['POST'])
+def create_superadmin():
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message":"No Token"}),401
+    
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid or expired token"}), 401
+        
+    if decoded.get("role") != "superadmin":
+        return jsonify({"message": "Forbidden: Super Admins only"}), 403
+
+    data = request.get_json()
+    firstname = data.get("firstname")
+    lastname = data.get("lastname")
+    email = data.get("email")
+    password = data.get("password")
+    confirm_password = data.get("confirmpassword")
+    
+    if not all([firstname, lastname, email, password,confirm_password]):
+        return jsonify({"message": "All fields are required"}), 400
+    if password != confirm_password:
+        return jsonify({"message":"Passwords do not match"}),400
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute("SELECT email FROM login_users WHERE email = %s", (email,))
+        if cursor.fetchone():
+            return jsonify({"message": "Account already exists"}), 409
+        
+        hash_password = bcrypt.hashpw(password.encode('UTF-8'), bcrypt.gensalt()).decode('UTF-8')
+        
+        cursor.execute("""
+            INSERT INTO login_users (first_name, last_name, email, hash_password, role)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (firstname, lastname, email, hash_password, "superadmin"))
+        db.commit()
+        return jsonify({"message": "Superadmin created successfully"}), 201
+                
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'db' in locals():
+            db.close()
+
+
+
 @app.route('/superadmin/create_admin',methods=['POST'])
 def create_admin():
     access_token = request.cookies.get('access_token')
@@ -423,7 +475,7 @@ def create_admin():
         return jsonify({"message": "Invalid or expired token"}), 401
         
     if decoded.get("role") != "superadmin":
-        return jsonify({"message": "Forbidden: Super Admins only"}),
+        return jsonify({"message": "Forbidden: Super Admins only"}),403
 
     data = request.get_json()
     firstname = data.get("firstname")
@@ -454,13 +506,13 @@ def create_admin():
                 
     except Exception as e :
         db.rollback()
-        return jsonify({"error":str((e))}),500
+        return jsonify({"error":  str((e))}),500
     finally:
         if 'cursor' in locals():
             cursor.close()
         if 'db' in locals():
             db.close()
-        
+
 @app.route('/bookflight')
 def bookflight():
     pass
