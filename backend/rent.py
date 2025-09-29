@@ -514,13 +514,10 @@ def delete_admin():
 
     
 
-
 @app.route('/bookflight')
 def bookflight():
     pass
 
-
-    
 
 if __name__ == '__main__':
 
