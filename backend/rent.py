@@ -415,57 +415,6 @@ def create_flight():
             db.close()
 
 
-@app.route('/create_superadmin', methods=['POST'])
-def create_superadmin():
-    access_token = request.cookies.get('access_token')
-    if not access_token:
-        return jsonify({"message":"No Token"}),401
-    
-    decoded = decode_token(access_token)
-    if not decoded:
-        return jsonify({"message": "Invalid or expired token"}), 401
-        
-    if decoded.get("role") != "superadmin":
-        return jsonify({"message": "Forbidden: Super Admins only"}), 403
-
-    data = request.get_json()
-    firstname = data.get("firstname")
-    lastname = data.get("lastname")
-    email = data.get("email")
-    password = data.get("password")
-    confirm_password = data.get("confirmpassword")
-    
-    if not all([firstname, lastname, email, password,confirm_password]):
-        return jsonify({"message": "All fields are required"}), 400
-    if password != confirm_password:
-        return jsonify({"message":"Passwords do not match"}),400
-    try:
-        db = database_connection()
-        cursor = db.cursor(cursor_factory=RealDictCursor)
-        
-        cursor.execute("SELECT email FROM login_users WHERE email = %s", (email,))
-        if cursor.fetchone():
-            return jsonify({"message": "Account already exists"}), 409
-        
-        hash_password = bcrypt.hashpw(password.encode('UTF-8'), bcrypt.gensalt()).decode('UTF-8')
-        
-        cursor.execute("""
-            INSERT INTO login_users (first_name, last_name, email, hash_password, role)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (firstname, lastname, email, hash_password, "superadmin"))
-        db.commit()
-        return jsonify({"message": "Superadmin created successfully"}), 201
-                
-    except Exception as e:
-        db.rollback()
-        return jsonify({"error": str(e)}), 500
-    finally:
-        if 'cursor' in locals():
-            cursor.close()
-        if 'db' in locals():
-            db.close()
-
-
 
 @app.route('/superadmin/create_admin',methods=['POST'])
 def create_admin():
@@ -512,6 +461,59 @@ def create_admin():
             cursor.close()
         if 'db' in locals():
             db.close()
+
+@app.route('/superadmin/deleteadmin', methods=['POST'])
+def delete_admin():
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid or expired token"}), 401
+
+    if decoded.get("role") != "superadmin":
+        return jsonify({"message": "Forbidden: Super Admins only"}), 403
+
+    
+    data = request.get_json()
+    email = data.get("email")
+
+    if not email:
+        return jsonify({"message": "Email is required"}), 400
+
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+
+   
+        cursor.execute("SELECT role FROM login_users WHERE email = %s", (email,))
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({"message": "User not found"}), 404
+
+       
+        if user["role"] != "admin":
+            return jsonify({"message": "Only admins can be deleted"}), 400
+
+        
+        cursor.execute("DELETE FROM login_users WHERE email = %s", (email,))
+        db.commit()
+
+        return jsonify({"message": f"Admin with email {email} deleted successfully"}), 200
+
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'db' in locals():
+            db.close()
+
+    
+
 
 @app.route('/bookflight')
 def bookflight():
