@@ -645,5 +645,48 @@ def all_bookings():
         if 'db' in locals(): db.close()
 
 
+@app.route('/cancelbooking', methods=['POST'])
+def cancel_booking():
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid or expired token"}), 401
+
+    user_email = decoded.get('email')
+    data = request.get_json()
+    booking_id = data.get("booking_id")
+
+    if not booking_id:
+        return jsonify({"message": "Booking ID is required"}), 400
+
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+
+        cursor.execute("SELECT * FROM bookings WHERE booking_id = %s AND user_email = %s", 
+                       (booking_id, user_email))
+        booking = cursor.fetchone()
+        if not booking:
+            return jsonify({"message": "Booking not found or not yours"}), 404
+
+        cursor.execute("UPDATE bookings SET status = %s WHERE booking_id = %s RETURNING *", 
+                       ("cancelled", booking_id))
+        updated = cursor.fetchone()
+        db.commit()
+
+        return jsonify({"message": "Booking cancelled", "booking": updated}), 200
+
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'db' in locals(): db.close()
+
+
 if __name__ == '__main__':
     app.run(debug=True)
