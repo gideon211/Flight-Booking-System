@@ -702,9 +702,9 @@ def userdetails():
     if not decoded:
         return jsonify({"message":"No Token was returned"}),401
         
-    useremail = request.get_json('email')
     data = request.get_json()
-    
+    if not data or 'email' not in data:
+        return jsonify({"message":"Login required"}),400
     try:
         db = database_connection()
         cursor = db.cursor(cursor_factory=RealDictCursor)
