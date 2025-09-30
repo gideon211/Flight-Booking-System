@@ -729,5 +729,47 @@ def userdetails():
         if 'db' in locals():
             db.close()
 
+
+@app.route('/user/history', methods=['GET'])
+def user_history():
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No token provided"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid or expired token"}), 401
+
+    user_email = decoded.get("email")
+    if not user_email:
+        return jsonify({"message": "Invalid token payload"}), 401
+
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("""
+            SELECT b.booking_id, b.flight_id, b.city_origin, b.city_destination, 
+                   b.price, b.booking_date, b.status,b.user_email,
+                   f.airline, f.departure_datetime, f.arrival_city, f.departure_city
+            FROM bookings b
+            JOIN flights f ON b.flight_id = f.flight_id
+            WHERE b.user_email = %s
+            ORDER BY b.booking_date DESC
+        """, (user_email,))
+        
+        history = cursor.fetchall()
+
+        return jsonify(history), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'db' in locals():
+            db.close()
+
+
 if __name__ == '__main__':
     app.run(debug=True)
