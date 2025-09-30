@@ -514,9 +514,63 @@ def delete_admin():
 
     
 
-@app.route('/bookflight')
-def bookflight():
-    pass
+@app.route('/bookflight', methods=['POST'])
+def book_flight():
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid or expired token"}), 401
+
+    user_email = decoded.get('email')
+    if not user_email:
+        return jsonify({"message": "Invalid token data"}), 401
+
+    data = request.get_json()
+    flight_id = data.get('flight_id')
+
+    if not flight_id:
+        return jsonify({"message": "Flight ID is required"}), 400
+
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+
+        
+        cursor.execute("SELECT flight_id, seats_available FROM flights WHERE flight_id = %s", (flight_id,))
+        flight = cursor.fetchone()
+        if not flight:
+            return jsonify({"message": "Flight not found"}), 404
+
+        
+        cursor.execute("SELECT * FROM bookings WHERE flight_id = %s AND user_email = %s", (flight_id, user_email))
+        existing = cursor.fetchone()
+        if existing:
+            return jsonify({"message": "You already booked this flight"}), 409
+
+        
+        cursor.execute("""
+            INSERT INTO bookings (user_email, first_name,last_name,flight_id, booking_date, status)
+            VALUES (%s, %s, NOW(), %s)
+            RETURNING *
+        """, (user_email, flight_id, "confirmed"))
+
+        booking = cursor.fetchone()
+        db.commit()
+
+        return jsonify({"message": "Flight booked successfully", "booking": booking}), 201
+
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'db' in locals():
+            db.close()
 
 
 if __name__ == '__main__':
