@@ -705,14 +705,21 @@ def userdetails():
     data = request.get_json()
     if not data or 'email' not in data:
         return jsonify({"message":"Login required"}),400
+    
+    useremail = data['email']
+    
     try:
         db = database_connection()
         cursor = db.cursor(cursor_factory=RealDictCursor)
         cursor.execute("""select first_name,last_name,email,
-                       role,from login_users where email =%s """)
-        details = cursor.fetchall
+                       rolefrom login_users where email =%s """,
+                       (useremail,))
+        details = cursor.fetchone()
+        
         if not details:
-            return jsonify({"message":"Something Happened"}),403
+            return jsonify({"message":"Something Happened"}),404
+        return jsonify(details),200
+    
     except Exception as e:
         return jsonify({"error":str(e)}),500
     
