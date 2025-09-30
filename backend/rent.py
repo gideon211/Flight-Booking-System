@@ -698,8 +698,8 @@ def userdetails():
     if not access_token:
         return jsonify({"message":"No Token was returned"}),401
         
-    decode_token = request.cookies.get('decoded_token')
-    if not decode_token:
+    decoded = decode_token(access_token)
+    if not decoded:
         return jsonify({"message":"No Token was returned"}),401
         
     useremail = request.get_json('email')
