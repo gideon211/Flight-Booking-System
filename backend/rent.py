@@ -586,6 +586,11 @@ def my_bookings():
         return jsonify({"message": "Invalid or expired token"}), 401
 
     user_email = decoded.get('email')
+    if not user_email:
+        return jsonify({"message":"Login required"})
+    
+    data = request.get_json()
+    
 
     try:
         db = database_connection()
