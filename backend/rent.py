@@ -419,6 +419,8 @@ def create_flight():
 @app.route('/superadmin/create_admin',methods=['POST'])
 def create_admin():
     access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message":"Invalid or expired token "})
     decoded = decode_token(access_token)
     if not decoded:
         return jsonify({"message": "Invalid or expired token"}), 401
@@ -684,9 +686,41 @@ def cancel_booking():
         return jsonify({"error": str(e)}), 500
 
     finally:
-        if 'cursor' in locals(): cursor.close()
-        if 'db' in locals(): db.close()
+        if 'cursor' in locals(): 
+            cursor.close()
+        if 'db' in locals(): 
+            db.close()
 
+
+@app.route('/userdetails',methods=['POST'])
+def userdetails():
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message":"No Token was returned"}),401
+        
+    decode_token = request.cookies.get('decoded_token')
+    if not decode_token:
+        return jsonify({"message":"No Token was returned"}),401
+        
+    useremail = request.get_json('email')
+    data = request.get_json()
+    
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("""select first_name,last_name,email,
+                       role,from login_users where email =%s """)
+        details = cursor.fetchall
+        if not details:
+            return jsonify({"message":"Something Happened"}),403
+    except Exception as e:
+        return jsonify({"error":str(e)}),500
+    
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'db' in locals():
+            db.close()
 
 if __name__ == '__main__':
     app.run(debug=True)
