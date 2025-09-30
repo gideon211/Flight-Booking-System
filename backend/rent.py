@@ -573,6 +573,42 @@ def book_flight():
             db.close()
 
 
+@app.route('/mybookings', methods=['GET'])
+def my_bookings():
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid or expired token"}), 401
+
+    user_email = decoded.get('email')
+
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+
+        cursor.execute("""
+            SELECT b.booking_id, b.flight_id, f.departure_city_code, f.arrival_city_code,
+                   f.departure_datetime, f.airline, b.status, b.booking_date
+            FROM bookings b
+            JOIN flights f ON b.flight_id = f.flight_id
+            WHERE b.user_email = %s
+            ORDER BY b.booking_date DESC
+        """, (user_email,))
+        bookings = cursor.fetchall()
+
+        return jsonify({"bookings": bookings}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'db' in locals(): db.close()
+
+
 if __name__ == '__main__':
 
     app.run(debug=True)
