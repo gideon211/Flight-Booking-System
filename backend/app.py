@@ -60,8 +60,9 @@ def database_connection():
 
 
 def get_cookie_settings():
-    secure_cookie = False if "localhost" in request.host else True
-    samesite_cookie = "Lax" if "localhost" in request.host else "None"
+    is_local = ("localhost" in request.host) or ("127.0.0.1" in request.host)
+    secure_cookie = False if is_local else True
+    samesite_cookie = "Lax" if is_local else "None"
     return secure_cookie, samesite_cookie
 
 
@@ -220,9 +221,8 @@ def logout():
     secure_cookie, samesite_cookie = get_cookie_settings()
     response = jsonify({"message": "Logout successful", "status": "success"})
 
-  
-    response.set_cookie('access_token', '', expires=0)
-    response.set_cookie('refresh_token', '', expires=0)
+    response.set_cookie('access_token', '', expires=0, httponly=True, secure=secure_cookie, samesite=samesite_cookie, path='/')
+    response.set_cookie('refresh_token', '', expires=0, httponly=True, secure=secure_cookie, samesite=samesite_cookie, path='/')
     return response, 200
 
 
@@ -267,7 +267,6 @@ def create_flight():
         return jsonify({"message": "Forbidden: Admins only"}), 403
     
     data = request.get_json()
-    
     required_fields = [
         "flight_id",
         "trip_type",
@@ -531,7 +530,7 @@ def book_flight():
         return jsonify({"message": "Invalid token data"}), 401
 
     data = request.get_json()
-    data = request.get_json()
+    
     first_name = data.get("first_name")
     last_name = data.get("last_name")
     flight_id = data.get('flight_id')
@@ -546,7 +545,7 @@ def book_flight():
         cursor = db.cursor(cursor_factory=RealDictCursor)
 
         
-        cursor.execute("SELECT flight_id, seats_available FROM flights WHERE flight_id = %s", (flight_id,))
+        cursor.execute("SELECT flight_id, seats_available, departure_city_code, arrival_city_code, price FROM flights WHERE flight_id = %s", (flight_id,))
         flight = cursor.fetchone()
         if not flight:
             return jsonify({"message": "Flight not found"}), 404
@@ -704,7 +703,7 @@ def cancel_booking():
             db.close()
 
 
-@app.route('/userdetails',methods=['POST'])
+@app.route('/userdetails',methods=['GET'])
 def userdetails():
     access_token = request.cookies.get('access_token')
     if not access_token:
@@ -714,11 +713,11 @@ def userdetails():
     if not decoded:
         return jsonify({"message":"No Token was returned"}),401
         
-    data = request.get_json()
-    if not data or 'email' not in data:
-        return jsonify({"message":"Login required"}),400
+    useremail = request.args.get('email')
+    if not useremail:
+        return jsonify({"message":"Email required"}),400
     
-    useremail = data['email']
+   
     
     try:
         db = database_connection()
