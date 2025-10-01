@@ -531,10 +531,15 @@ def book_flight():
         return jsonify({"message": "Invalid token data"}), 401
 
     data = request.get_json()
+    data = request.get_json()
+    first_name = data.get("first_name")
+    last_name = data.get("last_name")
     flight_id = data.get('flight_id')
 
-    if not flight_id:
-        return jsonify({"message": "Flight ID is required"}), 400
+    if not all([first_name, last_name, flight_id]):
+            return jsonify({"message": "First name, Last name and Flight ID are required"}), 400
+
+    user_name = f"{first_name} {last_name}"
 
     try:
         db = database_connection()
@@ -546,18 +551,20 @@ def book_flight():
         if not flight:
             return jsonify({"message": "Flight not found"}), 404
 
-        
-        cursor.execute("SELECT * FROM bookings WHERE flight_id = %s AND user_email = %s", (flight_id, user_email))
-        existing = cursor.fetchone()
-        if existing:
-            return jsonify({"message": "You already booked this flight"}), 409
-
-        
         cursor.execute("""
-            INSERT INTO bookings (user_email, first_name,last_name,flight_id, booking_date, status)
-            VALUES (%s, %s, NOW(), %s)
+            INSERT INTO bookings (user_name, user_email, flight_id, city_origin, city_destination, price, booking_date, status)
+            VALUES (%s, %s, %s, %s, %s, %s, NOW(), %s)
             RETURNING *
-        """, (user_email, flight_id, "confirmed"))
+        """, (
+            user_name,
+            user_email,
+            flight_id,
+            flight["departure_city_code"],
+            flight["arrival_city_code"],
+            flight["price"],
+            "confirmed"
+        ))
+
 
         booking = cursor.fetchone()
         db.commit()
@@ -765,6 +772,63 @@ def user_history():
         history = cursor.fetchall()
 
         return jsonify(history), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'db' in locals():
+            db.close()
+
+
+
+@app.route('/flights/search', methods=['GET'])
+def search_flights():
+    origin = request.args.get('origin')
+    destination = request.args.get('destination')
+    date = request.args.get('date')  
+    trip_type = request.args.get('trip_type')
+
+    query = """
+        SELECT flight_id, trip_type, airline, departure_city, arrival_city,
+               departure_datetime, price, cabin_class, seats_available, flight_status
+        FROM flights
+        WHERE seats_available > 0 AND flight_status = 'active'
+    """
+    params = []
+
+    if origin:
+        query += " AND departure_city ILIKE %s"
+        params.append(origin)
+
+    if destination:
+        query += " AND arrival_city ILIKE %s"
+        params.append(destination)
+
+    if date:
+        query += " AND DATE(departure_datetime) = %s"
+        params.append(date)
+
+    if trip_type:
+        query += " AND trip_type ILIKE %s"
+        params.append(trip_type)
+
+    query += " ORDER BY departure_datetime ASC"
+
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+
+        cursor.execute(query, tuple(params))
+        flights = cursor.fetchall()
+
+        if not flights:
+            return jsonify({"message":"No flights found for your search"}),404
+        
+        return jsonify(flights), 200
+        
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
