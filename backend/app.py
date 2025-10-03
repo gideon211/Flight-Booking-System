@@ -11,6 +11,7 @@ from helper.generate_token import generate_refresh_token, decode_token, generate
 import jwt
 from datetime import datetime, timedelta
 import requests
+import json
 
 
 load_dotenv()
@@ -37,12 +38,49 @@ CORS(
     resources={r"/*": {"origins": frontend_origins}},
     expose_headers=["Set-Cookie"],
     allow_headers=["Content-Type", "Authorization"],
-    methods=["GET", "POST", "OPTIONS"]
+    methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
 )
 
 JWT_SECRET = os.getenv("JWT_KEY", "MY_SECRET_KEY")  
 JWT_ALGORITHM = "HS256"
 JWT_EXP_DELTA_MINUTES = 60
+
+
+# Ensure admin-related columns exist on startup
+def ensure_admin_columns():
+    try:
+        db = database_connection()
+        cursor = db.cursor()
+        cursor.execute("""
+            ALTER TABLE login_users
+            ADD COLUMN IF NOT EXISTS permissions JSONB DEFAULT '[]'::jsonb;
+        """)
+        cursor.execute("""
+            ALTER TABLE login_users
+            ADD COLUMN IF NOT EXISTS last_login TIMESTAMP NULL;
+        """)
+        cursor.execute("""
+            ALTER TABLE login_users
+            ADD COLUMN IF NOT EXISTS status VARCHAR(16) DEFAULT 'active';
+        """)
+        db.commit()
+    except Exception:
+        # Silent fail to avoid blocking app start; operational errors will surface on use
+        try:
+            db.rollback()
+        except Exception:
+            pass
+    finally:
+        try:
+            cursor.close()
+        except Exception:
+            pass
+        try:
+            db.close()
+        except Exception:
+            pass
+
+ensure_admin_columns()
 
 
 def database_connection():
@@ -109,16 +147,16 @@ def signup():
             'refresh_token',
             refresh_token,
             httponly=True, 
-            secure=secure_cookie,
-            samesite=samesite_cookie,
+            secure=True,
+            samesite='None',
             max_age=7 * 24 * 60 * 60
         )
         response.set_cookie(
             'access_token',
             access_token,
             httponly=True,
-            secure=secure_cookie,
-            samesite=samesite_cookie,
+            secure=True,
+            samesite='None',
             max_age=15 * 60
         )
         return response, 201
@@ -153,9 +191,19 @@ def login():
         hash_password = user['hash_password'].encode('utf-8') if isinstance(user['hash_password'], str) else user['hash_password']
         
         if not bcrypt.checkpw(password.encode('utf-8'), hash_password):
-            return jsonify({"message": "Incorrect password"}), 401
+            return jsonify({"message": "Incorrect password"}), 404
 
         role = user.get('role','user')
+
+        # Track last login for admins and superadmins
+        try:
+            cursor.execute("""
+                UPDATE login_users SET last_login = NOW()
+                WHERE email = %s AND role IN ('admin','superadmin')
+            """, (email,))
+            db.commit()
+        except Exception:
+            db.rollback()
         
         access_token = generate_access_token(email,role)
         refresh_token = generate_refresh_token(email,role)
@@ -172,15 +220,15 @@ def login():
         
         response.set_cookie('refresh_token', refresh_token,
                             httponly=True, 
-                            secure=secure_cookie, 
-                            samesite=samesite_cookie,
+                            secure=True, 
+                            samesite='None',
                             max_age=7*24*60*60
                             )
         
         response.set_cookie('access_token', access_token,
                             httponly=True, 
-                            secure=secure_cookie, 
-                            samesite=samesite_cookie, 
+                            secure=True, 
+                            samesite='None', 
                             max_age=15*60
                             )
         return response
@@ -209,8 +257,8 @@ def refresh():
     response = jsonify({"access_token": new_access_token})
     response.set_cookie('access_token', new_access_token,
                         httponly=True, 
-                        secure=secure_cookie, 
-                        samesite=samesite_cookie,
+                        secure=True, 
+                        samesite='None',
                         max_age=15*60
                         )
     return response
@@ -416,7 +464,7 @@ def create_flight():
 
 
 @app.route('/superadmin/create_admin',methods=['POST'])
-def create_admin():
+def create_1admin():
     access_token = request.cookies.get('access_token')
     if not access_token:
         return jsonify({"message":"Invalid or expired token "})
@@ -463,7 +511,7 @@ def create_admin():
         if 'db' in locals():
             db.close()
 
-@app.route('/superadmin/deleteadmin', methods=['POST'])
+@app.route('/superadmin/deleteadmin', methods=['DELETE'])
 def delete_admin():
     access_token = request.cookies.get('access_token')
     if not access_token:
@@ -595,7 +643,7 @@ def my_bookings():
     if not user_email:
         return jsonify({"message":"Login required"})
     
-    data = request.get_json()
+    
     
 
     try:
@@ -800,11 +848,11 @@ def search_flights():
 
     if origin:
         query += " AND departure_city ILIKE %s"
-        params.append(origin)
+        params.append(f"%{origin}%")
 
     if destination:
         query += " AND arrival_city ILIKE %s"
-        params.append(destination)
+        params.append(f"%{destination}%")
 
     if date:
         query += " AND DATE(departure_datetime) = %s"
@@ -837,6 +885,530 @@ def search_flights():
             cursor.close()
         if 'db' in locals():
             db.close()
+
+
+# ==================== USER MANAGEMENT ENDPOINTS ====================
+
+@app.route('/users', methods=['GET'])
+def get_all_users():
+    """Get all users - SuperAdmin only"""
+    try:
+        # Get token from Authorization header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"message": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        decoded = decode_token(token)
+        
+        if not decoded:
+            return jsonify({"message": "Invalid token"}), 401
+        
+        # Check if user is superadmin
+        email = decoded.get('email')
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT role FROM login_users WHERE email = %s", (email,))
+        user = cursor.fetchone()
+        
+        if not user or user['role'] != 'superadmin':
+            return jsonify({"message": "Unauthorized - SuperAdmin access required"}), 403
+        
+        # Get all users
+        cursor.execute("""
+            SELECT id, first_name, last_name, email, role, status, permissions, last_login
+            FROM login_users
+            ORDER BY 
+                CASE role 
+                    WHEN 'superadmin' THEN 1
+                    WHEN 'admin' THEN 2
+                    WHEN 'user' THEN 3
+                    ELSE 4
+                END,
+                id DESC
+        """)
+        users = cursor.fetchall()
+        
+        cursor.close()
+        db.close()
+        
+        # Format response
+        users_list = []
+        for user in users:
+            users_list.append({
+                'id': user['id'],
+                'name': f"{user['first_name']} {user['last_name']}",
+                'email': user['email'],
+                'role': user['role'],
+                'status': user.get('status', 'active'),
+                'permissions': user.get('permissions', []),
+                'lastLogin': user.get('last_login')
+            })
+        
+        return jsonify(users_list), 200
+        
+    except Exception as e:
+        return jsonify({"message": f"Error fetching users: {str(e)}"}), 500
+
+@app.route('/users', methods=['POST'])
+def create_user():
+    """Create new user - SuperAdmin only"""
+    try:
+        # Get token from Authorization header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"message": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        decoded = decode_token(token)
+        
+        if not decoded:
+            return jsonify({"message": "Invalid token"}), 401
+        
+        # Check if user is superadmin
+        email = decoded.get('email')
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT role FROM login_users WHERE email = %s", (email,))
+        user = cursor.fetchone()
+        
+        if not user or user['role'] != 'superadmin':
+            return jsonify({"message": "Unauthorized - SuperAdmin access required"}), 403
+        
+        # Get request data
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        email_new = data.get('email', '').strip()
+        password = data.get('password', '').strip()
+        role = data.get('role', 'user').strip()
+        
+        # Validation
+        if not all([name, email_new, password]):
+            return jsonify({"message": "Name, email, and password are required"}), 400
+        
+        if role not in ['user', 'admin', 'superadmin']:
+            return jsonify({"message": "Invalid role"}), 400
+        
+        # Check if email already exists
+        cursor.execute("SELECT email FROM login_users WHERE email = %s", (email_new,))
+        if cursor.fetchone():
+            return jsonify({"message": "Email already exists"}), 409
+        
+        # Split name into first and last name
+        name_parts = name.split(' ', 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+        
+        # Hash password
+        hash_password = bcrypt.hashpw(password.encode('UTF-8'), bcrypt.gensalt()).decode('UTF-8')
+        
+        # Insert new user
+        cursor.execute("""
+            INSERT INTO login_users (first_name, last_name, email, hash_password, role)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id, first_name, last_name, email, role, status, permissions, last_login
+        """, (first_name, last_name, email_new, hash_password, role))
+        
+        new_user = cursor.fetchone()
+        db.commit()
+        
+        cursor.close()
+        db.close()
+        
+        return jsonify({
+            'id': new_user['id'],
+            'name': f"{new_user['first_name']} {new_user['last_name']}",
+            'email': new_user['email'],
+            'role': new_user['role'],
+            'status': new_user.get('status','active'),
+            'permissions': new_user.get('permissions',[]),
+            'lastLogin': new_user.get('last_login')
+        }), 201
+        
+    except Exception as e:
+        return jsonify({"message": f"Error creating user: {str(e)}"}), 500
+
+@app.route('/users/<int:user_id>', methods=['PUT'])
+def update_user(user_id):
+    """Update user - SuperAdmin only"""
+    try:
+        # Get token from Authorization header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"message": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        decoded = decode_token(token)
+        
+        if not decoded:
+            return jsonify({"message": "Invalid token"}), 401
+        
+        # Check if user is superadmin
+        email = decoded.get('email')
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT role FROM login_users WHERE email = %s", (email,))
+        user = cursor.fetchone()
+        
+        if not user or user['role'] != 'superadmin':
+            return jsonify({"message": "Unauthorized - SuperAdmin access required"}), 403
+        
+        # Get request data
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        email_new = data.get('email', '').strip()
+        password = data.get('password', '').strip()
+        role = data.get('role', '').strip()
+        
+        # Validation
+        if not all([name, email_new]):
+            return jsonify({"message": "Name and email are required"}), 400
+        
+        if role and role not in ['user', 'admin', 'superadmin']:
+            return jsonify({"message": "Invalid role"}), 400
+        
+        # Check if user exists
+        cursor.execute("SELECT id FROM login_users WHERE id = %s", (user_id,))
+        if not cursor.fetchone():
+            return jsonify({"message": "User not found"}), 404
+        
+        # Check if email already exists (excluding current user)
+        cursor.execute("SELECT id FROM login_users WHERE email = %s AND id != %s", (email_new, user_id))
+        if cursor.fetchone():
+            return jsonify({"message": "Email already exists"}), 409
+        
+        # Split name into first and last name
+        name_parts = name.split(' ', 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+        
+        # Build update query
+        update_fields = ["first_name = %s", "last_name = %s", "email = %s"]
+        update_values = [first_name, last_name, email_new]
+        
+        if password:
+            hash_password = bcrypt.hashpw(password.encode('UTF-8'), bcrypt.gensalt()).decode('UTF-8')
+            update_fields.append("hash_password = %s")
+            update_values.append(hash_password)
+        
+        if role:
+            update_fields.append("role = %s")
+            update_values.append(role)
+        
+        update_values.append(user_id)
+        
+        # Update user
+        cursor.execute(f"""
+            UPDATE login_users 
+            SET {', '.join(update_fields)}
+            WHERE id = %s
+            RETURNING id, first_name, last_name, email, role, status, permissions, last_login
+        """, update_values)
+        
+        updated_user = cursor.fetchone()
+        db.commit()
+        
+        cursor.close()
+        db.close()
+        
+        return jsonify({
+            'id': updated_user['id'],
+            'name': f"{updated_user['first_name']} {updated_user['last_name']}",
+            'email': updated_user['email'],
+            'role': updated_user['role'],
+            'status': updated_user.get('status','active'),
+            'permissions': updated_user.get('permissions',[]),
+            'lastLogin': updated_user.get('last_login')
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"message": f"Error updating user: {str(e)}"}), 500
+
+@app.route('/users/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    """Delete user - SuperAdmin only"""
+    try:
+        # Get token from Authorization header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"message": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        decoded = decode_token(token)
+        
+        if not decoded:
+            return jsonify({"message": "Invalid token"}), 401
+        
+        # Check if user is superadmin
+        email = decoded.get('email')
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT role FROM login_users WHERE email = %s", (email,))
+        user = cursor.fetchone()
+        
+        if not user or user['role'] != 'superadmin':
+            return jsonify({"message": "Unauthorized - SuperAdmin access required"}), 403
+        
+        # Check if user exists
+        cursor.execute("SELECT id, email FROM login_users WHERE id = %s", (user_id,))
+        user_to_delete = cursor.fetchone()
+        if not user_to_delete:
+            return jsonify({"message": "User not found"}), 404
+        
+        # Delete user
+        cursor.execute("DELETE FROM login_users WHERE id = %s", (user_id,))
+        db.commit()
+        
+        cursor.close()
+        db.close()
+        
+        return jsonify({"message": f"User {user_to_delete['email']} deleted successfully"}), 200
+        
+    except Exception as e:
+        return jsonify({"message": f"Error deleting user: {str(e)}"}), 500
+
+@app.route('/users/<int:user_id>/role', methods=['PATCH'])
+def update_user_role(user_id):
+    """Update user role - SuperAdmin only"""
+    try:
+        # Get token from Authorization header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"message": "No token provided"}), 401
+        
+        token = auth_header.split(' ')[1]
+        decoded = decode_token(token)
+        
+        if not decoded:
+            return jsonify({"message": "Invalid token"}), 401
+        
+        # Check if user is superadmin
+        email = decoded.get('email')
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT role FROM login_users WHERE email = %s", (email,))
+        user = cursor.fetchone()
+        
+        if not user or user['role'] != 'superadmin':
+            return jsonify({"message": "Unauthorized - SuperAdmin access required"}), 403
+        
+        # Get request data
+        data = request.get_json()
+        new_role = data.get('role', '').strip()
+        
+        # Validation
+        if new_role not in ['user', 'admin', 'superadmin']:
+            return jsonify({"message": "Invalid role"}), 400
+        
+        # Check if user exists
+        cursor.execute("SELECT id FROM login_users WHERE id = %s", (user_id,))
+        if not cursor.fetchone():
+            return jsonify({"message": "User not found"}), 404
+        
+        # Update role
+        cursor.execute("""
+            UPDATE login_users 
+            SET role = %s
+            WHERE id = %s
+            RETURNING id, first_name, last_name, email, role, status, permissions, last_login
+        """, (new_role, user_id))
+        
+        updated_user = cursor.fetchone()
+        db.commit()
+        
+        cursor.close()
+        db.close()
+        
+        return jsonify({
+            'id': updated_user['id'],
+            'name': f"{updated_user['first_name']} {updated_user['last_name']}",
+            'email': updated_user['email'],
+            'role': updated_user['role'],
+            'status': updated_user.get('status','active'),
+            'permissions': updated_user.get('permissions',[]),
+            'lastLogin': updated_user.get('last_login')
+        }), 200
+    except Exception as e:
+        return jsonify({"message": f"Error updating user role: {str(e)}"}), 500
+
+# ==================== ADMIN MANAGEMENT ENDPOINTS ====================
+
+@app.route('/admins', methods=['GET'])
+def list_admins():
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"message": "No token provided"}), 401
+        token = auth_header.split(' ')[1]
+        decoded = decode_token(token)
+        if not decoded:
+            return jsonify({"message": "Invalid token"}), 401
+        email = decoded.get('email')
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT role FROM login_users WHERE email = %s", (email,))
+        me = cursor.fetchone()
+        if not me or me['role'] != 'superadmin':
+            return jsonify({"message": "Unauthorized - SuperAdmin access required"}), 403
+
+        cursor.execute("""
+            SELECT id, first_name, last_name, email, role, status, permissions, 
+                   to_char(last_login, 'YYYY-MM-DD') as last_login
+            FROM login_users 
+            WHERE role = 'admin'
+            ORDER BY id DESC
+        """)
+        admins = cursor.fetchall()
+        cursor.close(); db.close()
+        return jsonify([
+            {
+                'id': a['id'],
+                'name': f"{a['first_name']} {a['last_name']}",
+                'email': a['email'],
+                'permissions': a.get('permissions', []),
+                'lastLogin': a.get('last_login'),
+                'status': a.get('status','active')
+            } for a in admins
+        ])
+    except Exception as e:
+        return jsonify({"message": f"Error listing admins: {str(e)}"}), 500
+
+
+@app.route('/admins', methods=['POST'])
+def create_admin():
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"message": "No token provided"}), 401
+        token = auth_header.split(' ')[1]
+        decoded = decode_token(token)
+        if not decoded:
+            return jsonify({"message": "Invalid token"}), 401
+        email = decoded.get('email')
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT role FROM login_users WHERE email = %s", (email,))
+        me = cursor.fetchone()
+        if not me or me['role'] != 'superadmin':
+            return jsonify({"message": "Unauthorized - SuperAdmin access required"}), 403
+
+        data = request.get_json()
+        name = data.get('name','').strip()
+        email_new = data.get('email','').strip()
+        password = data.get('password','').strip()
+        permissions = data.get('permissions', [])
+        if not all([name, email_new, password]):
+            return jsonify({"message": "Name, email and password are required"}), 400
+
+        cursor.execute("SELECT 1 FROM login_users WHERE email=%s", (email_new,))
+        if cursor.fetchone():
+            return jsonify({"message": "Email already exists"}), 409
+
+        name_parts = name.split(' ', 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+        hash_password = bcrypt.hashpw(password.encode('UTF-8'), bcrypt.gensalt()).decode('UTF-8')
+
+        cursor.execute("""
+            INSERT INTO login_users (first_name, last_name, email, hash_password, role, permissions, status)
+            VALUES (%s, %s, %s, %s, 'admin', %s::jsonb, 'active')
+            RETURNING id, first_name, last_name, email, permissions, status, last_login
+        """, (first_name, last_name, email_new, hash_password, json.dumps(permissions)))
+        new_admin = cursor.fetchone()
+        db.commit()
+        cursor.close(); db.close()
+        return jsonify({
+            'id': new_admin['id'],
+            'name': f"{new_admin['first_name']} {new_admin['last_name']}",
+            'email': new_admin['email'],
+            'permissions': new_admin.get('permissions', []),
+            'status': new_admin.get('status','active'),
+            'lastLogin': new_admin.get('last_login')
+        }), 201
+    except Exception as e:
+        return jsonify({"message": f"Error creating admin: {str(e)}"}), 500
+
+
+@app.route('/admins/<int:admin_id>/toggle', methods=['PATCH'])
+def toggle_admin_status(admin_id):
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"message": "No token provided"}), 401
+        token = auth_header.split(' ')[1]
+        decoded = decode_token(token)
+        if not decoded:
+            return jsonify({"message": "Invalid token"}), 401
+        email = decoded.get('email')
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT role FROM login_users WHERE email = %s", (email,))
+        me = cursor.fetchone()
+        if not me or me['role'] != 'superadmin':
+            return jsonify({"message": "Unauthorized - SuperAdmin access required"}), 403
+
+        cursor.execute("SELECT status FROM login_users WHERE id=%s AND role='admin'", (admin_id,))
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({"message": "Admin not found"}), 404
+        new_status = 'inactive' if row['status'] == 'active' else 'active'
+        cursor.execute("""
+            UPDATE login_users SET status=%s WHERE id=%s AND role='admin'
+            RETURNING id, first_name, last_name, email, permissions, status, last_login
+        """, (new_status, admin_id))
+        updated = cursor.fetchone(); db.commit(); cursor.close(); db.close()
+        return jsonify({
+            'id': updated['id'],
+            'name': f"{updated['first_name']} {updated['last_name']}",
+            'email': updated['email'],
+            'permissions': updated.get('permissions', []),
+            'status': updated.get('status','active'),
+            'lastLogin': updated.get('last_login')
+        })
+    except Exception as e:
+        return jsonify({"message": f"Error toggling admin: {str(e)}"}), 500
+
+
+@app.route('/admins/<int:admin_id>/permissions', methods=['PUT'])
+def update_admin_permissions(admin_id):
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({"message": "No token provided"}), 401
+        token = auth_header.split(' ')[1]
+        decoded = decode_token(token)
+        if not decoded:
+            return jsonify({"message": "Invalid token"}), 401
+        email = decoded.get('email')
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT role FROM login_users WHERE email = %s", (email,))
+        me = cursor.fetchone()
+        if not me or me['role'] != 'superadmin':
+            return jsonify({"message": "Unauthorized - SuperAdmin access required"}), 403
+
+        data = request.get_json()
+        permissions = data.get('permissions', [])
+        cursor.execute("""
+            UPDATE login_users SET permissions=%s::jsonb WHERE id=%s AND role='admin'
+            RETURNING id, first_name, last_name, email, permissions, status, last_login
+        """, (json.dumps(permissions), admin_id))
+        updated = cursor.fetchone(); db.commit(); cursor.close(); db.close()
+        if not updated:
+            return jsonify({"message": "Admin not found"}), 404
+        return jsonify({
+            'id': updated['id'],
+            'name': f"{updated['first_name']} {updated['last_name']}",
+            'email': updated['email'],
+            'permissions': updated.get('permissions', []),
+            'status': updated.get('status','active'),
+            'lastLogin': updated.get('last_login')
+        })
+    except Exception as e:
+        return jsonify({"message": f"Error updating permissions: {str(e)}"}), 500
+        
+    except Exception as e:
+        return jsonify({"message": f"Error updating role: {str(e)}"}), 500
 
 
 if __name__ == '__main__':
