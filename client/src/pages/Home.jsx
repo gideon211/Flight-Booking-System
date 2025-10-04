@@ -7,6 +7,8 @@ import Airlines from "../components/Airlines";
 import Loader from "../components/Loader";
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
+import api from "../api/axios";
+
 
 const Home = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -30,13 +32,18 @@ const Home = () => {
         setIsLoggedIn(!!token);
     }, []);
 
-    
-    useEffect(() => {
-        fetch("/flights.json")
-        .then((res) => res.json())
-        .then((data) => setFlights(data));
-    }, []);
+   useEffect(() => {
+  const fetchFlights = async () => {
+    try {
+      const res = await api.get("/flights");  // Flask backend endpoint
+      setFlights(res.data);
+    } catch (error) {
+      console.error("Error fetching flights:", error);
+    }
+  };
 
+  fetchFlights();
+}, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -89,7 +96,21 @@ const Home = () => {
 
             <Navbar />
 
-            
+                    
+            <div className="fixed bottom-6 right-6 z-50">
+            <button
+                onClick={() => navigate("/superadmin-login")}
+                className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500
+                        hover:from-pink-600 hover:via-purple-600 hover:to-blue-600
+                        text-white font-bold text-xl shadow-xl flex items-center justify-center
+                        transition-all duration-300 transform hover:scale-110 hover:rotate-6"
+            >
+                🔑
+            </button>
+            </div>
+
+
+
             <div
                 className="relative flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat min-h-[500px]"
                 style={{

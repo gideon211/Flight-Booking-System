@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import Login from "../pages/login";
+import Login from "../pages/Login";
 import Signup from "../pages/signup";
 import Home from "../pages/Home"
 import Availableflights from "../pages/Availableflights";
@@ -9,6 +9,7 @@ import TravelerPage from "../pages/traveler";
 import PaymentPage from "../pages/payment";
 import TicketSection from "../pages/ticketsection";
 import AdminFlights from "../pages/admin/pages/AdminFlights";
+import SuperAdminLogin from "../pages/AdminLogin";
 
 export default function AppRoutes() {
     return (
@@ -24,6 +25,7 @@ export default function AppRoutes() {
             <Route path="/payment" element={<PaymentPage />} />
             <Route path="/ticketsection" element={<TicketSection />} />
             <Route path="/AdminFlights" element={<AdminFlights />} />
+            <Route path="/superadmin-login" element={<SuperAdminLogin />} />
         </Routes>
     );
 }
