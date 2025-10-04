@@ -46,7 +46,6 @@ JWT_ALGORITHM = "HS256"
 JWT_EXP_DELTA_MINUTES = 60
 
 
-# Ensure admin-related columns exist on startup
 def ensure_admin_columns():
     try:
         db = database_connection()
@@ -65,7 +64,7 @@ def ensure_admin_columns():
         """)
         db.commit()
     except Exception:
-        # Silent fail to avoid blocking app start; operational errors will surface on use
+        
         try:
             db.rollback()
         except Exception:
@@ -195,7 +194,7 @@ def login():
 
         role = user.get('role','user')
 
-        # Track last login for admins and superadmins
+      
         try:
             cursor.execute("""
                 UPDATE login_users SET last_login = NOW()
@@ -887,13 +886,13 @@ def search_flights():
             db.close()
 
 
-# ==================== USER MANAGEMENT ENDPOINTS ====================
+
 
 @app.route('/users', methods=['GET'])
 def get_all_users():
     """Get all users - SuperAdmin only"""
     try:
-        # Get token from Authorization header
+        
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return jsonify({"message": "No token provided"}), 401
@@ -904,7 +903,7 @@ def get_all_users():
         if not decoded:
             return jsonify({"message": "Invalid token"}), 401
         
-        # Check if user is superadmin
+        
         email = decoded.get('email')
         db = database_connection()
         cursor = db.cursor(cursor_factory=RealDictCursor)
@@ -914,7 +913,7 @@ def get_all_users():
         if not user or user['role'] != 'superadmin':
             return jsonify({"message": "Unauthorized - SuperAdmin access required"}), 403
         
-        # Get all users
+        #
         cursor.execute("""
             SELECT id, first_name, last_name, email, role, status, permissions, last_login
             FROM login_users
@@ -932,7 +931,7 @@ def get_all_users():
         cursor.close()
         db.close()
         
-        # Format response
+        
         users_list = []
         for user in users:
             users_list.append({
@@ -954,7 +953,7 @@ def get_all_users():
 def create_user():
     """Create new user - SuperAdmin only"""
     try:
-        # Get token from Authorization header
+        
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return jsonify({"message": "No token provided"}), 401
@@ -965,7 +964,7 @@ def create_user():
         if not decoded:
             return jsonify({"message": "Invalid token"}), 401
         
-        # Check if user is superadmin
+       
         email = decoded.get('email')
         db = database_connection()
         cursor = db.cursor(cursor_factory=RealDictCursor)
@@ -975,34 +974,34 @@ def create_user():
         if not user or user['role'] != 'superadmin':
             return jsonify({"message": "Unauthorized - SuperAdmin access required"}), 403
         
-        # Get request data
+        
         data = request.get_json()
         name = data.get('name', '').strip()
         email_new = data.get('email', '').strip()
         password = data.get('password', '').strip()
         role = data.get('role', 'user').strip()
         
-        # Validation
+        
         if not all([name, email_new, password]):
             return jsonify({"message": "Name, email, and password are required"}), 400
         
         if role not in ['user', 'admin', 'superadmin']:
             return jsonify({"message": "Invalid role"}), 400
         
-        # Check if email already exists
+        
         cursor.execute("SELECT email FROM login_users WHERE email = %s", (email_new,))
         if cursor.fetchone():
             return jsonify({"message": "Email already exists"}), 409
         
-        # Split name into first and last name
+        
         name_parts = name.split(' ', 1)
         first_name = name_parts[0]
         last_name = name_parts[1] if len(name_parts) > 1 else ''
         
-        # Hash password
+        
         hash_password = bcrypt.hashpw(password.encode('UTF-8'), bcrypt.gensalt()).decode('UTF-8')
         
-        # Insert new user
+        
         cursor.execute("""
             INSERT INTO login_users (first_name, last_name, email, hash_password, role)
             VALUES (%s, %s, %s, %s, %s)
@@ -1032,7 +1031,7 @@ def create_user():
 def update_user(user_id):
     """Update user - SuperAdmin only"""
     try:
-        # Get token from Authorization header
+    
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return jsonify({"message": "No token provided"}), 401
@@ -1043,7 +1042,7 @@ def update_user(user_id):
         if not decoded:
             return jsonify({"message": "Invalid token"}), 401
         
-        # Check if user is superadmin
+        
         email = decoded.get('email')
         db = database_connection()
         cursor = db.cursor(cursor_factory=RealDictCursor)
@@ -1053,36 +1052,36 @@ def update_user(user_id):
         if not user or user['role'] != 'superadmin':
             return jsonify({"message": "Unauthorized - SuperAdmin access required"}), 403
         
-        # Get request data
+
         data = request.get_json()
         name = data.get('name', '').strip()
         email_new = data.get('email', '').strip()
         password = data.get('password', '').strip()
         role = data.get('role', '').strip()
         
-        # Validation
+        
         if not all([name, email_new]):
             return jsonify({"message": "Name and email are required"}), 400
         
         if role and role not in ['user', 'admin', 'superadmin']:
             return jsonify({"message": "Invalid role"}), 400
         
-        # Check if user exists
+        
         cursor.execute("SELECT id FROM login_users WHERE id = %s", (user_id,))
         if not cursor.fetchone():
             return jsonify({"message": "User not found"}), 404
         
-        # Check if email already exists (excluding current user)
+        
         cursor.execute("SELECT id FROM login_users WHERE email = %s AND id != %s", (email_new, user_id))
         if cursor.fetchone():
             return jsonify({"message": "Email already exists"}), 409
         
-        # Split name into first and last name
+        
         name_parts = name.split(' ', 1)
         first_name = name_parts[0]
         last_name = name_parts[1] if len(name_parts) > 1 else ''
         
-        # Build update query
+        
         update_fields = ["first_name = %s", "last_name = %s", "email = %s"]
         update_values = [first_name, last_name, email_new]
         
@@ -1097,7 +1096,7 @@ def update_user(user_id):
         
         update_values.append(user_id)
         
-        # Update user
+        
         cursor.execute(f"""
             UPDATE login_users 
             SET {', '.join(update_fields)}
@@ -1128,7 +1127,7 @@ def update_user(user_id):
 def delete_user(user_id):
     """Delete user - SuperAdmin only"""
     try:
-        # Get token from Authorization header
+        
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return jsonify({"message": "No token provided"}), 401
@@ -1139,7 +1138,7 @@ def delete_user(user_id):
         if not decoded:
             return jsonify({"message": "Invalid token"}), 401
         
-        # Check if user is superadmin
+        
         email = decoded.get('email')
         db = database_connection()
         cursor = db.cursor(cursor_factory=RealDictCursor)
@@ -1149,13 +1148,13 @@ def delete_user(user_id):
         if not user or user['role'] != 'superadmin':
             return jsonify({"message": "Unauthorized - SuperAdmin access required"}), 403
         
-        # Check if user exists
+        
         cursor.execute("SELECT id, email FROM login_users WHERE id = %s", (user_id,))
         user_to_delete = cursor.fetchone()
         if not user_to_delete:
             return jsonify({"message": "User not found"}), 404
         
-        # Delete user
+        
         cursor.execute("DELETE FROM login_users WHERE id = %s", (user_id,))
         db.commit()
         
@@ -1171,7 +1170,7 @@ def delete_user(user_id):
 def update_user_role(user_id):
     """Update user role - SuperAdmin only"""
     try:
-        # Get token from Authorization header
+        
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return jsonify({"message": "No token provided"}), 401
@@ -1182,7 +1181,7 @@ def update_user_role(user_id):
         if not decoded:
             return jsonify({"message": "Invalid token"}), 401
         
-        # Check if user is superadmin
+    
         email = decoded.get('email')
         db = database_connection()
         cursor = db.cursor(cursor_factory=RealDictCursor)
@@ -1192,20 +1191,20 @@ def update_user_role(user_id):
         if not user or user['role'] != 'superadmin':
             return jsonify({"message": "Unauthorized - SuperAdmin access required"}), 403
         
-        # Get request data
+        
         data = request.get_json()
         new_role = data.get('role', '').strip()
         
-        # Validation
+        
         if new_role not in ['user', 'admin', 'superadmin']:
             return jsonify({"message": "Invalid role"}), 400
         
-        # Check if user exists
+        
         cursor.execute("SELECT id FROM login_users WHERE id = %s", (user_id,))
         if not cursor.fetchone():
             return jsonify({"message": "User not found"}), 404
         
-        # Update role
+        
         cursor.execute("""
             UPDATE login_users 
             SET role = %s
@@ -1231,7 +1230,6 @@ def update_user_role(user_id):
     except Exception as e:
         return jsonify({"message": f"Error updating user role: {str(e)}"}), 500
 
-# ==================== ADMIN MANAGEMENT ENDPOINTS ====================
 
 @app.route('/admins', methods=['GET'])
 def list_admins():
