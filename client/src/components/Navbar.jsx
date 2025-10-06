@@ -107,14 +107,14 @@ const Navbar = () => {
                             {!user ? (
                                 <div className="flex flex-col font-medium">
                                     <Link
-                                    to="/Login"
+                                    to="/login"
                                     className="px-4 py-3 hover:bg-gray-200 transition"
                                     >
                                     Login
                                     </Link>
 
                                     <Link
-                                    to="/SignUp"
+                                    to="/signup"
                                     className="px-4 py-3 hover:bg-gray-200 transition"
                                     >
                                     Register

@@ -8,6 +8,7 @@ import FlightsDashboard from "./pages/Availableflights";
 import AdminFlights from "./pages/admin/pages/AdminFlights";
 import SuperAdminDashboard from "./pages/admin/pages/SuperAdminDashboard";
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import SuperAdminLogin from "./pages/AdminLogin";
 
 const App = () => {
@@ -16,6 +17,7 @@ const App = () => {
       {/* Public routes */}
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
       <Route path="/superadmin-login" element={<SuperAdminLogin />} />
 
       {/* Normal User Dashboard */}

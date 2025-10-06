@@ -1,13 +1,13 @@
 import { Routes, Route } from "react-router-dom";
 import Login from "../pages/Login";
-import Signup from "../pages/signup";
+import Signup from "../pages/Signup";
 import Home from "../pages/Home"
 import Availableflights from "../pages/Availableflights";
 import ItineraryPage from "../pages/Itinerary"
 import EmailPage from "../pages/email";
 import TravelerPage from "../pages/traveler";
 import PaymentPage from "../pages/payment";
-import TicketSection from "../pages/ticketsection";
+import TicketSection from "../pages/Ticketsection";
 import AdminFlights from "../pages/admin/pages/AdminFlights";
 import SuperAdminLogin from "../pages/AdminLogin";
 
