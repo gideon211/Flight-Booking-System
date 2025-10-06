@@ -94,10 +94,10 @@ const Navbar = () => {
                     className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition cursor-pointer"
                     >
                     <span className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center font-bold text-black">
-                    {user ? user.name?.[0] || "U" : "?"}
+                    {user ? (user.firstname?.[0] || user.name?.[0] || "U") : "?"}
                     </span>
                     <span className="hidden sm:inline font-medium">
-                    {user ? user.name : "Account"}
+                    {user ? (user.firstname && user.lastname ? `${user.firstname} ${user.lastname}` : user.name || "Account") : "Account"}
                     </span>
                     </button>
 
@@ -131,7 +131,11 @@ const Navbar = () => {
                             ) : (
                                 <div>
                                     <div className="px-4 py-3 border-b">
-                                        <p className="font-semibold">{user.name}</p>
+                                        <p className="font-semibold">
+                                            {user.firstname && user.lastname 
+                                                ? `${user.firstname} ${user.lastname}` 
+                                                : user.name || "User"}
+                                        </p>
                                         <p className="text-sm text-gray-500">{user.email}</p>
                                     </div>
                                         {/* Admin Dashboard (only for admins) */}
