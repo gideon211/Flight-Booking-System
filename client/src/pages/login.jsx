@@ -14,7 +14,6 @@ const login = () => {
     const [error, setError] = useState("");
     const { setUser } = useContext(AuthContext);
 
-
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
@@ -23,9 +22,18 @@ const login = () => {
 
         try {
             const data = await loginUser({email, password});
-            localStorage.setItem("token", data.token);
+            localStorage.setItem("access_token", data.token);
+            localStorage.setItem("user", JSON.stringify(data.user));
             setUser(data.user);
-            navigate("/Home")
+            
+            // Redirect based on user role
+            if (data.user.role === "admin") {
+                navigate("/admin-dashboard");
+            } else if (data.user.role === "superadmin") {
+                navigate("/superadmin-dashboard");
+            } else {
+                navigate("/flights-dashboard");
+            }
         } catch (err) {
             setError(err.response?.data?.message || err.message || "Login failed")
     
@@ -33,9 +41,6 @@ const login = () => {
             setLoading(false);
         }
     };
-
-
-
 
     return (
         <div className='w-full h-screen bg-gray-100 flex justify-center items-center bg-[url("https://images.unsplash.com/photo-1549897411-b06572cdf806?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")] bg-cover bg-center'>
@@ -82,7 +87,7 @@ const login = () => {
                     </form>
 
                     <div className='space-y-5'>
-                        <p className='text-center text-sm font-medium'>OR SIGN UP <span className='font-semibold underline cursor-pointer'><Link to="/Signup">HERE</Link></span></p>
+                        <p className='text-center text-sm font-medium'>OR SIGN UP <span className='font-semibold underline cursor-pointer'><Link to="/signup">HERE</Link></span></p>
 
                     </div>
 

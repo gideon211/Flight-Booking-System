@@ -31,7 +31,7 @@ const AvailableFlights = () => {
                 <p className="text-sm">Available Flights</p>
             </div>
             <button
-            onClick={() => navigate("/Home")}
+            onClick={() => navigate("/")}
             className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-2 rounded-md font-semibold shadow cursor-pointer"
             >
             Modify Search

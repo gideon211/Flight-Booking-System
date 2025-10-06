@@ -45,8 +45,7 @@ const Navbar = () => {
     };
 
     const handleFlightsClick = () => { 
-        navigate("/Availableflights", { state: { results: flights } });
-
+        navigate("/flights-dashboard");
     }
 
     return (
@@ -122,7 +121,7 @@ const Navbar = () => {
 
                                     <div className="flex flex-col">
                                         <Link
-                                        to="/TicketSection"
+                                        to="/ticketsection"
                                         className="px-4 py-3 hover:bg-gray-200 transition"
                                         >
                                         My Tickets
@@ -138,7 +137,7 @@ const Navbar = () => {
                                         {/* Admin Dashboard (only for admins) */}
                                         {user.role === "admin" && (
                                             <Link
-                                            to="/dashboard"
+                                            to="/admin-dashboard"
                                             className="block px-4 py-3 hover:bg-gray-200 transition text-blue-600 font-semibold"
                                             >
                                             Dashboard

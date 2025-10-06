@@ -21,7 +21,7 @@ const HomeFlight = () => {
     }, []);
 
     const handleBook = (flight) => {
-        navigate("/Availableflights", {
+        navigate("/flights-dashboard", {
             state: { flight },
         });
     };

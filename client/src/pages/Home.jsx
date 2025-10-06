@@ -79,7 +79,7 @@ const Home = () => {
                 );
             });
             setLoading(false);
-            navigate("/Availableflights", {
+            navigate("/flights-dashboard", {
                 state: { results: filtered, ...formData },
             });
         }, 2000);
