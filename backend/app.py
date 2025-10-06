@@ -181,7 +181,7 @@ def login():
     try:
         db = database_connection()
         cursor = db.cursor(cursor_factory=RealDictCursor)
-        cursor.execute("SELECT hash_password,role,email FROM login_users WHERE email = %s", (email,))
+        cursor.execute("SELECT hash_password,role,email,first_name,last_name FROM login_users WHERE email = %s", (email,))
         user = cursor.fetchone()
         
         if not user:
@@ -212,7 +212,9 @@ def login():
                             "access_token": access_token,
                            "user":{
                                "email":user["email"],
-                               "role":role
+                               "role":role,
+                               "firstname":user.get("first_name"),
+                               "lastname":user.get("last_name")
                            }})
 
         
@@ -293,7 +295,14 @@ def me():
     db.close()
 
     if user:
-        return jsonify({"user": user}), 200
+        # Format response to match login endpoint
+        user_data = {
+            "email": user["email"],
+            "role": user["role"],
+            "firstname": user.get("first_name"),
+            "lastname": user.get("last_name")
+        }
+        return jsonify({"user": user_data}), 200
     return jsonify({"user": None}), 404
 
 
