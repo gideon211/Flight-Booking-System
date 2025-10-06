@@ -22,15 +22,17 @@ export const signupUser = async (userData) => {
 };
 
 
-export const logoutUser = async () => {
-    try {
-        const res = await api.post("/logout");
-        return res.data;
-    } catch (error) {
-    throw error;
-    }
-};
 
+export const logoutUser = async () => {
+  try {
+    const res = await api.post("/logout");
+    localStorage.removeItem("access_token");
+    return res.data;
+  } catch (error) {
+    localStorage.removeItem("access_token");
+    throw error;
+  }
+};
 
 export const getCurrentUser = async () => {
     try {

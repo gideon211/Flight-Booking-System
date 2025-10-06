@@ -7,72 +7,82 @@ import Airlines from "../components/Airlines";
 import Loader from "../components/Loader";
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
+import api from "../api/axios";
+
 
 const Home = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [flights, setFlights] = useState([]);
-  const [formData, setFormData] = useState({
-    tripType: "oneway",
-    from: "",
-    to: "",
-    departureDate: "",
-    returnDate: "",
-    passengers: 1,
-    cabin: "",
-    currency: "USD",
-  });
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [flights, setFlights] = useState([]);
+    const [formData, setFormData] = useState({
+        tripType: "oneway", // match radio values
+        from: "",
+        to: "",
+        departureDate: "",
+        returnDate: "",
+        passengers: 1,
+        cabin: "",
+        currency: "USD",
+    });
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
-  }, []);
+    
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        setIsLoggedIn(!!token);
+    }, []);
 
-  useEffect(() => {
-    fetch("/flights.json")
-      .then((res) => res.json())
-      .then((data) => setFlights(data));
-  }, []);
+   useEffect(() => {
+  const fetchFlights = async () => {
+    try {
+      const res = await api.get("/flights");  // Flask backend endpoint
+      setFlights(res.data);
+    } catch (error) {
+      console.error("Error fetching flights:", error);
+    }
+  };
+
+  fetchFlights();
+}, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setTimeout(() => {
-      const filtered = flights.filter((flight) => {
-        return (
-          (!formData.tripType ||
-            flight.tripType.toLowerCase() ===
-              formData.tripType.toLowerCase()) &&
-          (!formData.from ||
-            flight.origin.city
-              .toLowerCase()
-              .includes(formData.from.toLowerCase())) &&
-          (!formData.to ||
-            flight.destination.city
-              .toLowerCase()
-              .includes(formData.to.toLowerCase())) &&
-          (!formData.departureDate ||
-            flight.departureDate === formData.departureDate) &&
-          (formData.tripType !== "RoundTrip" ||
-            !formData.returnDate ||
-            flight.returnDate === formData.returnDate) &&
-          (!formData.cabin ||
-            flight.cabin.toLowerCase() === formData.cabin.toLowerCase()) &&
-          flight.seatsAvailable >= Number(formData.passengers || 1)
-        );
-      });
-      setLoading(false);
-      navigate("/Availableflights", {
-        state: { results: filtered, ...formData },
-      });
-    }, 2000);
-  };
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setTimeout(() => {
+            const filtered = flights.filter((flight) => {
+                return (
+                    (!formData.tripType ||
+                        flight.tripType.toLowerCase() ===
+                        formData.tripType.toLowerCase()) &&
+                    (!formData.from ||
+                        flight.origin.city
+                        .toLowerCase()
+                        .includes(formData.from.toLowerCase())) &&
+                    (!formData.to ||
+                        flight.destination.city
+                        .toLowerCase()
+                        .includes(formData.to.toLowerCase())) &&
+                    (!formData.departureDate ||
+                        flight.departureDate === formData.departureDate) &&
+                    (formData.tripType !== "RoundTrip" ||
+                        !formData.returnDate ||
+                        flight.returnDate === formData.returnDate) &&
+                    (!formData.cabin ||
+                        flight.cabin.toLowerCase() === formData.cabin.toLowerCase()) &&
+                    flight.seatsAvailable >= Number(formData.passengers || 1)
+                );
+            });
+            setLoading(false);
+            navigate("/flights-dashboard", {
+                state: { results: filtered, ...formData },
+            });
+        }, 2000);
+    };
 
   return (
     <div className="w-full min-h-screen flex flex-col bg-blue-50">
@@ -82,21 +92,32 @@ const Home = () => {
         </div>
       )}
 
-      <Navbar />
+            <Navbar />
 
-     
-      <div className="relative min-h-[300px] md:min-h-[500px] flex items-center justify-center">
-        {/* Background Image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage:
-              "url('https://pixels-cache.icelandair.com/upload/w_780%2Cg_auto%2Cc_fill%2Cf_auto%2Cq_auto/icelandair/blt356056608d00502b.jpg')",
-          }}
-        ></div>
+                    
+            <div className="fixed bottom-6 right-6 z-50">
+            <button
+                onClick={() => navigate("/superadmin-login")}
+                className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500
+                        hover:from-pink-600 hover:via-purple-600 hover:to-blue-600
+                        text-white font-bold text-xl shadow-xl flex items-center justify-center
+                        transition-all duration-300 transform hover:scale-110 hover:rotate-6"
+            >
+                🔑
+            </button>
+            </div>
 
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black/40"></div>
+
+
+            <div
+                className="relative flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat min-h-[500px]"
+                style={{
+                backgroundImage:
+                    "url('https://pixels-cache.icelandair.com/upload/w_780%2Cg_auto%2Cc_fill%2Cf_auto%2Cq_auto/icelandair/blt356056608d00502b.jpg')",
+                }}
+            >
+                
+            <div className="absolute inset-0 bg-black/10 bg-opacity-40"></div>
 
         {/* Content */}
         <div className="relative z-10 w-full flex flex-col items-center px-4">

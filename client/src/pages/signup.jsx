@@ -41,7 +41,7 @@ const Signup = () => {
         confirmpassword: formData.confirmPassword,
       })
 
-      localStorage.setItem("token", data.token)
+      localStorage.setItem("access_token", data.token)
       navigate("/login")
     } catch (err) {
       console.error("Signup error:", err)
@@ -155,7 +155,7 @@ const Signup = () => {
 
                     <div className="space-y-4">
                         <p className="text-center font-semibold">
-                        OR <Link to="/Login" className="underline">LOGIN</Link>
+                        OR <Link to="/login" className="underline">LOGIN</Link>
                         </p>
                         <button className="w-full p-4 bg-white border shadow-md rounded-md flex justify-center items-center space-x-3">
                         <FontAwesomeIcon icon={faGoogle} size="md" />

@@ -21,20 +21,20 @@ const AvailableFlights = () => {
     <div className="bg-blue-50 min-h-screen flex flex-col">
       <Navbar />
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-400 to-blue-300 text-white shadow rounded p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center mx-4 md:mx-6 mt-6 gap-4">
-        <div>
-          <p className="font-medium text-2xl">
-            {from.toUpperCase()} → {to.toUpperCase()}
-          </p>
-          <p className="text-sm">Available Flights</p>
-        </div>
-        <button
-          onClick={() => navigate("/Home")}
-          className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-2 rounded-md font-semibold shadow cursor-pointer"
-        >
-          Modify Search
-        </button>
+   
+      <div className="bg-gradient-to-r from-blue-400 to-blue-300 text-white shadow rounded p-6 flex justify-between items-center mx-6 mt-6">
+            <div>
+                <p className="font-medium text-2xl">
+                    {from.toUpperCase()} → {to.toUpperCase()}
+                </p>
+                <p className="text-sm">Available Flights</p>
+            </div>
+            <button
+            onClick={() => navigate("/")}
+            className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-2 rounded-md font-semibold shadow cursor-pointer"
+            >
+            Modify Search
+            </button>
       </div>
 
       {/* Main Content */}

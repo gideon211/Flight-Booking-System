@@ -1,4 +1,7 @@
 flask
 bcrypt
-mysql.connector
+python-dotenv
 flask-cors
+psycopg2-binary
+PyJWT
+requests
