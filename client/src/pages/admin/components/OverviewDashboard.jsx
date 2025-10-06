@@ -31,7 +31,7 @@ const OverviewDashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState("All");
 
   useEffect(() => {
-    fetch("/flightSs.json")
+    fetch("/flightss.json")
       .then((res) => res.json())
       .then((data) => setFlights(data))
       .catch((err) => console.error(err));

@@ -9,323 +9,307 @@ import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
 const Home = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [flights, setFlights] = useState([]);
-    const [formData, setFormData] = useState({
-        tripType: "oneway", // match radio values
-        from: "",
-        to: "",
-        departureDate: "",
-        returnDate: "",
-        passengers: 1,
-        cabin: "",
-        currency: "USD",
-    });
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [flights, setFlights] = useState([]);
+  const [formData, setFormData] = useState({
+    tripType: "oneway",
+    from: "",
+    to: "",
+    departureDate: "",
+    returnDate: "",
+    passengers: 1,
+    cabin: "",
+    currency: "USD",
+  });
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-    
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        setIsLoggedIn(!!token);
-    }, []);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
 
-    
-    useEffect(() => {
-        fetch("/flights.json")
-        .then((res) => res.json())
-        .then((data) => setFlights(data));
-    }, []);
+  useEffect(() => {
+    fetch("/flights.json")
+      .then((res) => res.json())
+      .then((data) => setFlights(data));
+  }, []);
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setTimeout(() => {
+      const filtered = flights.filter((flight) => {
+        return (
+          (!formData.tripType ||
+            flight.tripType.toLowerCase() ===
+              formData.tripType.toLowerCase()) &&
+          (!formData.from ||
+            flight.origin.city
+              .toLowerCase()
+              .includes(formData.from.toLowerCase())) &&
+          (!formData.to ||
+            flight.destination.city
+              .toLowerCase()
+              .includes(formData.to.toLowerCase())) &&
+          (!formData.departureDate ||
+            flight.departureDate === formData.departureDate) &&
+          (formData.tripType !== "RoundTrip" ||
+            !formData.returnDate ||
+            flight.returnDate === formData.returnDate) &&
+          (!formData.cabin ||
+            flight.cabin.toLowerCase() === formData.cabin.toLowerCase()) &&
+          flight.seatsAvailable >= Number(formData.passengers || 1)
+        );
+      });
+      setLoading(false);
+      navigate("/Availableflights", {
+        state: { results: filtered, ...formData },
+      });
+    }, 2000);
+  };
 
+  return (
+    <div className="w-full min-h-screen flex flex-col bg-blue-50">
+      {loading && (
+        <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
+          <Loader />
+        </div>
+      )}
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setTimeout(() => {
-            const filtered = flights.filter((flight) => {
-                return (
-                    (!formData.tripType ||
-                        flight.tripType.toLowerCase() ===
-                        formData.tripType.toLowerCase()) &&
-                    (!formData.from ||
-                        flight.origin.city
-                        .toLowerCase()
-                        .includes(formData.from.toLowerCase())) &&
-                    (!formData.to ||
-                        flight.destination.city
-                        .toLowerCase()
-                        .includes(formData.to.toLowerCase())) &&
-                    (!formData.departureDate ||
-                        flight.departureDate === formData.departureDate) &&
-                    (formData.tripType !== "RoundTrip" ||
-                        !formData.returnDate ||
-                        flight.returnDate === formData.returnDate) &&
-                    (!formData.cabin ||
-                        flight.cabin.toLowerCase() === formData.cabin.toLowerCase()) &&
-                    flight.seatsAvailable >= Number(formData.passengers || 1)
-                );
-            });
-            setLoading(false);
-            navigate("/Availableflights", {
-                state: { results: filtered, ...formData },
-            });
-        }, 2000);
-    };
+      <Navbar />
 
-    return (
-        <div className="w-full min-h-screen flex flex-col bg-blue-50">
-        
-            {loading && (
-                <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
-                    <Loader />
-                </div>
-            )}
+     
+      <div className="relative min-h-[300px] md:min-h-[500px] flex items-center justify-center">
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage:
+              "url('https://pixels-cache.icelandair.com/upload/w_780%2Cg_auto%2Cc_fill%2Cf_auto%2Cq_auto/icelandair/blt356056608d00502b.jpg')",
+          }}
+        ></div>
 
-            <Navbar />
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black/40"></div>
 
-            
-            <div
-                className="relative flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat min-h-[500px]"
-                style={{
-                backgroundImage:
-                    "url('https://pixels-cache.icelandair.com/upload/w_780%2Cg_auto%2Cc_fill%2Cf_auto%2Cq_auto/icelandair/blt356056608d00502b.jpg')",
-                }}
-            >
-                
-            <div className="absolute inset-0 bg-black/10 bg-opacity-40"></div>
+        {/* Content */}
+        <div className="relative z-10 w-full flex flex-col items-center px-4">
+          <h1 className="text-2xl sm:text-3xl mt-4 md:text-4xl lg:text-5xl font-bold text-white text-center leading-tight mb-6">
+            Buy A Ticket Now
+          </h1>
 
-            
-            <div className="z-10 text-center text-white px-4 mb-6">
-            <h1 className="text-3xl md:text-4xl font-bold">
-                Flights to Ghana starting
-            </h1>
-            </div>
-
-        
-            <form
+          <form
             onSubmit={handleSubmit}
-            className="z-10 bg-white shadow-lg p-6 md:p-8 max-w-4xl w-full"
-            >
-        
-                <div className="flex gap-4 mb-6">
-                    <label className="flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer bg-yellow-100">
-                        <input
-                            type="radio"
-                            name="tripType"
-                            value="oneway"
-                            checked={formData.tripType === "oneway"}
-                            onChange={handleChange}
-                            className="accent-yellow-500"
-                        />
-                        <span className="font-medium">One Way</span>
-                    </label>
+            className="bg-white shadow-lg p-4 sm:p-6 md:p-8 rounded-md max-w-4xl w-full"
+          >
+            {/* Trip type and currency */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-center">
+              <label className="flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer bg-yellow-100">
+                <input
+                  type="radio"
+                  name="tripType"
+                  value="oneway"
+                  checked={formData.tripType === "oneway"}
+                  onChange={handleChange}
+                  className="accent-yellow-500"
+                />
+                <span className="font-medium">One Way</span>
+              </label>
 
+              <label className="flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer bg-yellow-100">
+                <input
+                  type="radio"
+                  name="tripType"
+                  value="round"
+                  checked={formData.tripType === "round"}
+                  onChange={handleChange}
+                  className="accent-yellow-500"
+                />
+                <span className="font-medium">Round Trip</span>
+              </label>
 
-                    <label className="flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer bg-yellow-100">
-                        <input
-                            type="radio"
-                            name="tripType"
-                            value="round"
-                            checked={formData.tripType === "round"}
-                            onChange={handleChange}
-                            className="accent-yellow-500"
-                        />
-                        <span className="font-medium">Round Trip</span>
-                    </label>
+              <select
+                name="currency"
+                value={formData.currency}
+                onChange={handleChange}
+                className="border bg-yellow-100 border-white/40 px-3 py-2 rounded-full text-sm cursor-pointer outline-none"
+              >
+                <option className="bg-white" value="GHC">
+                  GHC
+                </option>
+                <option className="bg-white" value="USD">
+                  USD
+                </option>
+                <option className="bg-white" value="EUR">
+                  EUR
+                </option>
+              </select>
+            </div>
 
+            {/* Form fields grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <input
+                type="text"
+                name="from"
+                value={formData.from}
+                onChange={handleChange}
+                placeholder="Origin"
+                className="w-full border border-blue-200 rounded-lg px-3 py-3 outline-none"
+              />
 
-                    <select
-                    name="currency"
-                    value={formData.currency}
+              <input
+                type="text"
+                name="to"
+                value={formData.to}
+                onChange={handleChange}
+                placeholder="Destination"
+                className="w-full border border-blue-200 rounded-lg px-3 py-3 outline-none"
+              />
+
+              <div>
+                <label
+                  htmlFor="departure"
+                  className="block text-sm font-medium mb-1 text-center"
+                >
+                  Departure
+                </label>
+                <Flatpickr
+                  id="departure"
+                  name="departureDate"
+                  placeholder="departure date"
+                  value={formData.departureDate}
+                  options={{ dateFormat: "d-m-Y" }}
+                  onChange={(selectedDates, dateStr) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      departureDate: dateStr,
+                    }));
+                  }}
+                  className="w-full border rounded-lg px-3 py-3 border-blue-200 outline-none text-center"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="return"
+                  className="block text-sm font-medium mb-1 text-center"
+                >
+                  Return
+                </label>
+                <Flatpickr
+                  id="return"
+                  name="returnDate"
+                  value={formData.returnDate}
+                  options={{ dateFormat: "d-m-Y" }}
+                  onChange={(selectedDates, dateStr) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      returnDate: dateStr,
+                    }));
+                  }}
+                  className="w-full border border-blue-200 outline-none rounded-lg px-3 py-3 text-center"
+                  placeholder="return date"
+                />
+              </div>
+            </div>
+
+            {/* Passengers, Cabin, Button */}
+            <div className="mt-6 flex flex-col md:flex-row gap-4 items-center">
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+                <div>
+                  <label
+                    htmlFor="passengers"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Passengers
+                  </label>
+                  <input
+                    type="number"
+                    id="passengers"
+                    name="passengers"
+                    min="1"
+                    value={formData.passengers}
                     onChange={handleChange}
-                    className="border bg-yellow-100 border-white/40 px-2 py-2 rounded-full text-sm cursor-pointer outline-none"
-                    >
-                        <option className="bg-white" value="GHC">
-                            GHC
-                        </option>
-                        <option className="bg-white" value="USD">
-                            USD
-                        </option>
-                        <option className="bg-white" value="EUR">
-                            EUR
-                        </option>
-                    </select>
+                    className="w-full border border-blue-200 rounded-lg px-3 py-3 outline-none"
+                  />
                 </div>
 
-        
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">    
-                    <div className="mt-6">
-                        <input
-                        type="text"
-                        name="from"
-                        value={formData.from}
-                        onChange={handleChange}
-                        placeholder="Origin"
-                        className="w-full border border-blue-200 outline-none rounded-lg px-3 py-3"
-                    />
-                    </div>
-
-                    <div className="mt-6">
-                        <input
-                        type="text"
-                        name="to"
-                        value={formData.to}
-                        onChange={handleChange}
-                        placeholder="Destination"
-                        className="w-full border border-blue-200 rounded-lg px-3 py-3 outline-none"
-                        />
-                    </div>
-
-                    <div>
-                        <label
-                        htmlFor="departure"
-                        className="block text-sm font-medium mb-1 text-center"
-                        >
-                        Departure
-                        </label>
-                        <Flatpickr
-                        id="departure"
-                        name="departureDate"
-                        placeholder="departure date"
-                        value={formData.departureDate} 
-                        options={{ dateFormat: "d-m-Y" }}
-                        onChange={(selectedDates, dateStr) => {
-                            setFormData((prev) => ({
-                                ...prev,
-                                departureDate: dateStr,
-                            }));
-                        }}
-                        className="w-full border rounded-lg px-3 py-3 border-blue-200 outline-none text-center"
-                        />
-
-
-                    </div>
-
-                    <div>
-                        <label
-                        htmlFor="return"
-                        className="block text-sm font-medium mb-1 text-center"
-                        >
-                        Return
-                        </label>
-                            <Flatpickr
-                            id="return"
-                            name="returnDate"
-                            value={formData.returnDate}
-                            options={{ dateFormat: "d-m-Y" }}
-                            onChange={(selectedDates, dateStr) => {
-                                setFormData((prev) => ({
-                                ...prev,
-                                returnDate: dateStr,
-                                }));
-                            }}
-                            className="w-full border border-blue-200 outline-none rounded-lg px-3 py-3 text-center "
-                            placeholder="return date"
-                        />
-
-
-                    </div>
+                <div>
+                  <label
+                    htmlFor="cabin"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Cabin Class
+                  </label>
+                  <select
+                    id="cabin"
+                    name="cabin"
+                    value={formData.cabin}
+                    onChange={handleChange}
+                    className="w-full border-2 rounded-lg px-3 py-3 outline-none border-blue-200"
+                  >
+                    <option>Economy</option>
+                    <option>Premium</option>
+                    <option>Business</option>
+                    <option>First Class</option>
+                  </select>
                 </div>
+              </div>
 
-                <div className="mt-6 flex flex-col md:flex-row gap-4 items-center">
-                    <div className="flex-1 grid grid-cols-2 gap-4 w-full">
-                
-                        <div>
-                            <label
-                            htmlFor="passengers"
-                            className="block text-sm font-medium mb-1"
-                            >
-                            Passengers
-                            </label>
-                            <input
-                            type="number"
-                            id="passengers"
-                            name="passengers"
-                            min="1"
-                            value={formData.passengers}
-                            onChange={handleChange}
-                            className="w-full border border-blue-200 rounded-lg px-3 py-3 outline-none"
-                            />
-                        </div>
-
-                    
-                        <div>
-                            <label
-                            htmlFor="cabin"
-                            className="block text-sm font-medium mb-1"
-                            >
-                            Cabin Class
-                            </label>
-                            <select
-                            id="cabin"
-                            name="cabin"
-                            value={formData.cabin}
-                            onChange={handleChange}
-                            className="w-full border-2 rounded-lg px-3 py-3 outline-none border-blue-200"
-                            >
-                            <option>Economy</option>
-                            <option>Premium</option>
-                            <option>Business</option>
-                            <option>First Class</option>
-                            </select>
-                        </div>
-
-                    </div>
-
-            
-                    <button
-                    type="submit"
-                    className="bg-yellow-500 hover:bg-yellow-600 cursor-pointer mt-4 text-black px-10 py-4 rounded-md font-semibold shadow-lg w-full md:w-auto"
-                    >
-                    Search Flights
-                    </button>
-                </div>
-            </form>
-        </div>
-
-
-            <div className="mt-[0rem]">
-            <List />
+              <button
+                type="submit"
+                className="bg-yellow-500 hover:bg-yellow-600 cursor-pointer mt-4 md:mt-0 text-black px-8 py-3 rounded-md font-semibold shadow-lg w-full md:w-auto"
+              >
+                Search Flights
+              </button>
             </div>
-
-
-            <div className="flex flex-col md:flex-row gap-8 justify-center items-stretch mb-16 mt-12 px-6 w-full">
-                <div className="border-none bg- p-8  w-full md:w-[40rem] flex flex-col justify-center">
-                    <h2 className="text-lg font-semibold mb-2">
-                        Great Offers & Amazing Deals
-                    </h2>
-                    <p className="text-gray-600 mb-4 text-sm">
-                        Get personalised recommendations and private deals
-                    </p>
-
-                    <form className="flex">
-                        <input
-                        type="email"
-                        name="emailid"
-                        id="emailid"
-                        placeholder="Enter Email Address"
-                        className="flex-grow border border-blue-300 rounded-l-md px-4 py-2 outline-none placeholder:text-sm"
-                        />
-                        <button
-                        type="submit"
-                        className="bg-yellow-500 text-white px-6 py-2 rounded-r-md hover:bg-yellow-600 transition text-sm"
-                        >
-                        Subscribe
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-        <Airlines />
-        <Footer />
+          </form>
         </div>
-    );
+      </div>
+
+      {/* Flight List */}
+      <div className="mt-4 sm:mt-6 md:mt-8">
+        <List />
+      </div>
+
+      {/* Deals Section */}
+      <div className="flex flex-col md:flex-row gap-8 justify-center items-stretch mb-16 mt-12 px-6 w-full">
+        <div className="border-none bg-white p-6 sm:p-8  shadow w-full md:w-[40rem] flex flex-col justify-center">
+          <h2 className="text-lg font-semibold mb-2">
+            Great Offers & Amazing Deals
+          </h2>
+          <p className="text-gray-600 mb-4 text-sm">
+            Get personalised recommendations and private deals
+          </p>
+
+          <form className="flex flex-col sm:flex-row">
+            <input
+              type="email"
+              name="emailid"
+              id="emailid"
+              placeholder="Enter Email Address"
+              className="flex-grow border border-blue-300 rounded-md sm:rounded-l-md sm:rounded-r-none px-4 py-2 outline-none placeholder:text-sm mb-3 sm:mb-0"
+            />
+            <button
+              type="submit"
+              className="bg-yellow-500 text-white px-6 py-2 rounded-md sm:rounded-l-none sm:rounded-r-md hover:bg-yellow-600 transition text-sm"
+            >
+              Subscribe
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <Airlines />
+      <Footer />
+    </div>
+  );
 };
 
 export default Home;
