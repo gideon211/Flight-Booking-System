@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Bar, Line, Pie } from "react-chartjs-2";
+import api from "../../../api/axios";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -26,51 +27,46 @@ ChartJS.register(
 );
 
 const OverviewDashboard = () => {
-  const [flights, setFlights] = useState([]);
-  const [bookings, setBookings] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState("All");
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/flightss.json")
-      .then((res) => res.json())
-      .then((data) => setFlights(data))
-      .catch((err) => console.error(err));
-
-    fetch("/bookings.json")
-      .then((res) => res.json())
-      .then((data) => setBookings(data))
-      .catch((err) => console.error(err));
+    fetchDashboardStats();
   }, []);
 
+  const fetchDashboardStats = async () => {
+    try {
+      const response = await api.get("/admin/dashboard/stats");
+      setStats(response.data);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching dashboard stats:", err);
+      setError("Failed to load dashboard statistics");
+      setLoading(false);
+    }
+  };
 
-  const monthFilteredBookings = bookings.filter((b) => {
-    if (selectedMonth === "All") return true;
-    const month = new Date(b.timestamp).getMonth();
-    return month === parseInt(selectedMonth);
-  });
+  if (loading) {
+    return <div className="p-6 text-center">Loading dashboard...</div>;
+  }
 
-  const monthFilteredFlights = flights.filter((f) => {
-    if (selectedMonth === "All") return true;
-    const month = new Date(f.departureDateTime).getMonth();
-    return month === parseInt(selectedMonth);
-  });
+  if (error) {
+    return <div className="p-6 text-center text-red-600">{error}</div>;
+  }
 
-
-  const totalFlights = monthFilteredFlights.length;
-  const totalBookings = monthFilteredBookings.length;
-  const cancelledBookings = monthFilteredBookings.filter((b) => b.status === "Cancelled").length;
-  const upcomingFlights = monthFilteredFlights.filter((f) => new Date(f.departureDateTime) > new Date()).length;
-  const totalRevenue = monthFilteredBookings.reduce((acc, b) => acc + parseFloat(b.amount), 0);
+  if (!stats) {
+    return <div className="p-6 text-center">No data available</div>;
+  }
 
 
-  const routeCounts = {};
-  monthFilteredBookings.forEach((b) => (routeCounts[b.flight] = (routeCounts[b.flight] || 0) + 1));
+  // Prepare chart data from backend stats
   const bookingsPerRouteData = {
-    labels: Object.keys(routeCounts),
+    labels: stats.bookingsPerRoute.map(r => `${r.city_origin} → ${r.city_destination}`),
     datasets: [
       {
         label: "Bookings per Route",
-        data: Object.values(routeCounts),
+        data: stats.bookingsPerRoute.map(r => r.count),
         backgroundColor: "rgba(59, 130, 246, 0.5)",
         borderColor: "rgba(59, 130, 246, 1)",
         borderWidth: 1,
@@ -78,17 +74,12 @@ const OverviewDashboard = () => {
     ],
   };
 
-  const revenuePerMonth = {};
-  monthFilteredBookings.forEach((b) => {
-    const month = new Date(b.timestamp).toLocaleString("default", { month: "short", year: "numeric" });
-    revenuePerMonth[month] = (revenuePerMonth[month] || 0) + parseFloat(b.amount);
-  });
   const revenueChartData = {
-    labels: Object.keys(revenuePerMonth),
+    labels: stats.revenuePerMonth.map(r => r.month),
     datasets: [
       {
-        label: "Revenue",
-        data: Object.values(revenuePerMonth),
+        label: "Revenue (GHS)",
+        data: stats.revenuePerMonth.map(r => parseFloat(r.revenue)),
         borderColor: "rgba(16, 185, 129,1)",
         backgroundColor: "rgba(16, 185, 129,0.5)",
         fill: true,
@@ -96,15 +87,12 @@ const OverviewDashboard = () => {
     ],
   };
 
-
-  const statusCounts = { Scheduled: 0, Completed: 0, Cancelled: 0, Delayed: 0 };
-  monthFilteredFlights.forEach((f) => (statusCounts[f.status] = (statusCounts[f.status] || 0) + 1));
   const flightStatusData = {
-    labels: Object.keys(statusCounts),
+    labels: stats.flightStatusDistribution.map(s => s.flight_status),
     datasets: [
       {
         label: "Flight Status",
-        data: Object.values(statusCounts),
+        data: stats.flightStatusDistribution.map(s => s.count),
         backgroundColor: ["#60a5fa", "#34d399", "#f87171", "#fbbf24"],
       },
     ],
@@ -112,43 +100,26 @@ const OverviewDashboard = () => {
 
     return (
         <div className="p-6 space-y-6">
-            <div className="mb-4">
-                <label className="mr-2 font-medium">Filter by Month:</label>
-                <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="border p-1 rounde border-red-200 rounded outline-none cursor-pointer"
-                >
-                    <option value="All">All</option>
-                    {[...Array(12)].map((_, i) => (
-                        <option key={i} value={i} className="bg-red-50 hover:bg-red-100">
-                        {new Date(0, i).toLocaleString("default", { month: "long" })}
-                        </option>
-                    ))}
-                </select>
-            </div>
-
-
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                <div className="bg-red-500 text-white p-4 rounded shadow text-center border border-red-200">
-                    <p className="text-black text-xl">Total Flights</p>
-                    <p className="text-2xl font-bold">{totalFlights}</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div className="bg-blue-500 text-white p-4 rounded shadow text-center">
+                    <p className="text-white text-sm font-medium">Total Flights</p>
+                    <p className="text-3xl font-bold">{stats.totalFlights}</p>
                 </div>
-                <div className="bg-red-500 text-white p-4 rounded shadow text-center border border-red-200">
-                    <p className="text-black text-xl">Total Bookings</p>
-                    <p className="text-2xl font-bold">{totalBookings}</p>
+                <div className="bg-green-500 text-white p-4 rounded shadow text-center">
+                    <p className="text-white text-sm font-medium">Total Bookings</p>
+                    <p className="text-3xl font-bold">{stats.totalBookings}</p>
                 </div>
-                <div className="bg-red-500 text-white p-4 rounded shadow text-center border border-red-200">
-                    <p className="text-black text-xl">Total Revenue</p>
-                    <p className="text-2xl font-medium">${totalRevenue.toFixed(2)}</p>
+                <div className="bg-purple-500 text-white p-4 rounded shadow text-center">
+                    <p className="text-white text-sm font-medium">Total Revenue</p>
+                    <p className="text-3xl font-bold">GHS {stats.totalRevenue.toFixed(2)}</p>
                 </div>
-                <div className="bg-red-500 text-white p-4 rounded shadow text-center border border-red-200">
-                    <p className="text-black text-xl">CANCELLED BOOKINGS</p>
-                    <p className="text-2xl font-medium">{cancelledBookings}</p>
+                <div className="bg-red-500 text-white p-4 rounded shadow text-center">
+                    <p className="text-white text-sm font-medium">Cancelled</p>
+                    <p className="text-3xl font-bold">{stats.cancelledBookings}</p>
                 </div>
-                <div className="bg-red-500 text-white p-4 rounded shadow text-center border border-red-200">
-                    <p className="text-black text-xl">Upcoming Flights</p>
-                    <p className="text-2xl font-medium">{upcomingFlights}</p>
+                <div className="bg-yellow-500 text-white p-4 rounded shadow text-center">
+                    <p className="text-white text-sm font-medium">Upcoming Flights</p>
+                    <p className="text-3xl font-bold">{stats.upcomingFlights}</p>
                 </div>
             </div>
 

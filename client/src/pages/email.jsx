@@ -74,7 +74,7 @@ const EmailPage = () => {
 
                                 <div>
                                     <button
-                                    onClick={() => navigate("/traveler", { state: { flight } })}
+                                    onClick={() => navigate("/traveler", { state: { flight, email } })}
                                     className="bg-yellow-400 hover:bg-yellow-500 px-8 py-3 rounded font-medium text-black cursor-pointer"
                                     >
                                     CONTINUE
@@ -117,12 +117,14 @@ const EmailPage = () => {
                     <div className="text-sm text-gray-700 mb-2">
                         <p className="text-xl"> {flight.airline}</p>
                         <p className="text-md">
-                        {flight.origin.city} ({flight.origin.code}){" "}
-                        <strong>{flight.departureTime}</strong> →{" "}
-                        {flight.destination.city} ({flight.destination.code}){" "}
-                        <strong>{flight.arrivalTime}</strong>
+                        {flight.departure_city_code || flight.origin?.city} →{" "}
+                        {flight.arrival_city_code || flight.destination?.city}
                         </p>
-                        <p>{flight.departureDate}</p>
+                        <p className="text-sm">
+                        {flight.departure_datetime 
+                            ? new Date(flight.departure_datetime).toLocaleDateString()
+                            : flight.departureDate}
+                        </p>
                     </div>
                     <div className="border-t pt-2 text-sm space-y-1 border-gray-300">
                         <p className="mt-4 text-lg">

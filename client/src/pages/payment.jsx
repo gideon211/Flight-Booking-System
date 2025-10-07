@@ -1,10 +1,13 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import api from "../api/axios";
 
 const PaymentPage = () => {
     const location = useLocation();
-    const { flight, email, name } = location.state || {};
+    const navigate = useNavigate();
+    const { flight, email, traveler } = location.state || {};
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const [method, setMethod] = useState("card");
     const [formData, setFormData] = useState({
@@ -29,9 +32,39 @@ const PaymentPage = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        alert(`Payment initiated with method: ${method}\nDetails: ${JSON.stringify(formData, null, 2)}`);
+        setLoading(true);
+        setError("");
+
+        try {
+            // Call booking API
+            const bookingData = {
+                flight_id: flight.flight_id,
+                first_name: traveler?.firstName || "",
+                last_name: traveler?.lastName || "",
+            };
+
+            const response = await api.post("/bookflight", bookingData);
+
+            if (response.data) {
+                // Navigate to success page with booking details
+                navigate("/ticketsection", {
+                    state: {
+                        booking: response.data.booking,
+                        flight,
+                        traveler,
+                        email,
+                        paymentMethod: method
+                    }
+                });
+            }
+        } catch (err) {
+            console.error("Booking error:", err);
+            setError(err.response?.data?.message || "Booking failed. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -40,6 +73,13 @@ const PaymentPage = () => {
             <div className="bg-blue-500 text-white px-4 py-2 rounded-t-lg font-medium -mx-6 -mt-6 mb-6">
                     4. Payment Methods <span className="font-normal">Safe Secured</span>
             </div>
+
+            {/* Error Message */}
+            {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    {error}
+                </div>
+            )}
 
             {/* Tabs */}
             <div className="flex gap-2 mb-6">

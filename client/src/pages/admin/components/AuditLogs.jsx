@@ -17,48 +17,30 @@ const AuditLogs = () => {
 
     const fetchLogs = async () => {
         try {
-            // Mock data - replace with actual API call
-            const mockLogs = [
-                {
-                    id: 1,
-                    timestamp: "2024-01-20 10:30:15",
-                    user: "admin@example.com",
-                    action: "CREATE_FLIGHT",
-                    details: "Created flight FL001 from NYC to LAX",
-                    ipAddress: "192.168.1.100",
-                    status: "SUCCESS"
-                },
-                {
-                    id: 2,
-                    timestamp: "2024-01-20 09:15:22",
-                    user: "superadmin@example.com",
-                    action: "DELETE_USER",
-                    details: "Deleted user john@example.com",
-                    ipAddress: "192.168.1.101",
-                    status: "SUCCESS"
-                },
-                {
-                    id: 3,
-                    timestamp: "2024-01-20 08:45:33",
-                    user: "admin@example.com",
-                    action: "UPDATE_BOOKING",
-                    details: "Updated booking status to CONFIRMED",
-                    ipAddress: "192.168.1.100",
-                    status: "SUCCESS"
-                },
-                {
-                    id: 4,
-                    timestamp: "2024-01-19 16:20:45",
-                    user: "user@example.com",
-                    action: "LOGIN",
-                    details: "User login attempt",
-                    ipAddress: "192.168.1.102",
-                    status: "FAILED"
-                }
-            ];
-            setLogs(mockLogs);
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (filter.action) params.append('action', filter.action);
+            if (filter.user) params.append('user', filter.user);
+            if (filter.dateFrom) params.append('dateFrom', filter.dateFrom);
+            if (filter.dateTo) params.append('dateTo', filter.dateTo);
+            
+            const response = await api.get(`/admin/audit-logs?${params.toString()}`);
+            
+            // Transform backend data to match frontend format
+            const transformedLogs = response.data.map(log => ({
+                id: log.id,
+                timestamp: new Date(log.timestamp).toLocaleString(),
+                user: log.user_email,
+                action: log.action,
+                details: log.details,
+                ipAddress: log.ip_address,
+                status: log.status
+            }));
+            
+            setLogs(transformedLogs);
         } catch (error) {
             console.error("Error fetching logs:", error);
+            setLogs([]);
         } finally {
             setLoading(false);
         }
@@ -114,7 +96,7 @@ const AuditLogs = () => {
 
             {/* Filters */}
             <div className="bg-white rounded-lg shadow p-4">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Action
@@ -161,6 +143,27 @@ const AuditLogs = () => {
                             className="w-full border border-gray-300 rounded px-3 py-2"
                         />
                     </div>
+                </div>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => {
+                            setLoading(true);
+                            fetchLogs();
+                        }}
+                        className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition"
+                    >
+                        Apply Filters
+                    </button>
+                    <button
+                        onClick={() => {
+                            setFilter({ action: "", user: "", dateFrom: "", dateTo: "" });
+                            setLoading(true);
+                            fetchLogs();
+                        }}
+                        className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
+                    >
+                        Clear Filters
+                    </button>
                 </div>
             </div>
 

@@ -5,10 +5,18 @@ const ItineraryPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const flight = location.state?.flight;
-    const from = location.state?.from ?? "ACCRA";
-    const to = location.state?.to ?? "KUMASI";
+    const from = location.state?.from ?? flight?.departure_city_code ?? "ACCRA";
+    const to = location.state?.to ?? flight?.arrival_city_code ?? "KUMASI";
 
     if (!flight) return <p>No flight selected.</p>;
+
+    // Format times for display
+    const departureTime = flight.departure_datetime 
+        ? new Date(flight.departure_datetime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        : flight.departureTime;
+    const arrivalTime = flight.arrival_datetime 
+        ? new Date(flight.arrival_datetime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        : flight.arrivalTime;
 
     return (
         <div>
@@ -50,7 +58,7 @@ const ItineraryPage = () => {
                                         </p>
                                         <p className="text-sm text-gray-600">{flight.airline}</p>
                                         <p className="text-xs text-gray-500">
-                                        {flight.code} {flight.cabin}
+                                        {flight.flight_id || flight.code} {flight.cabin_class || flight.cabin}
                                         </p>  
                                     </div>
                                 </div>
@@ -64,13 +72,13 @@ const ItineraryPage = () => {
                     
                         <div className="flex justify-between items-center mb-4">
                             <div>
-                                <p className="font-medium">{flight.departureTime}</p>
-                                <p className="text-xs text-gray-500">{flight.fromAirport}</p>
+                                <p className="font-medium">{departureTime}</p>
+                                <p className="text-xs text-gray-500">{flight.departure_city_code || flight.fromAirport}</p>
                             </div>
 
                             <div className="text-right">
-                                <p className="font-medium">{flight.arrivalTime}</p>
-                                <p className="text-xs text-gray-500">{flight.toAirport}</p>
+                                <p className="font-medium">{arrivalTime}</p>
+                                <p className="text-xs text-gray-500">{flight.arrival_city_code || flight.toAirport}</p>
                             </div>
                         </div>
 

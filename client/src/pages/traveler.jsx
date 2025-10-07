@@ -15,7 +15,11 @@ const TravelerPage = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         navigate("/payment", {
-        state: { flight, email, traveler: { title, firstName, lastName, dob, mobile } },
+            state: { 
+                flight, 
+                email, 
+                traveler: { title, firstName, lastName, dob, mobile } 
+            },
         });
     };
 
@@ -142,7 +146,6 @@ const TravelerPage = () => {
                             
                             <div className="text-right">
                                 <button
-                                onClick={() => navigate("/payment", { state: { flight } })}
                                 type="submit"
                                 className="bg-yellow-400 hover:bg-yellow-500 text-black font-medium px-8 py-3 rounded"
                                 >
@@ -167,12 +170,14 @@ const TravelerPage = () => {
                         <div className="text-sm text-gray-700 mb-2">
                             <p>{flight.airline}</p>
                             <p>
-                            {flight.origin.city} ({flight.origin.code}){" "}
-                            <strong>{flight.departureTime}</strong> →{" "}
-                            {flight.destination.city} ({flight.destination.code}){" "}
-                            <strong>{flight.arrivalTime}</strong>
+                            {flight.departure_city_code || flight.origin?.city} →{" "}
+                            {flight.arrival_city_code || flight.destination?.city}
                             </p>
-                            <p>{flight.departureDate}</p>
+                            <p>
+                            {flight.departure_datetime 
+                                ? new Date(flight.departure_datetime).toLocaleDateString()
+                                : flight.departureDate}
+                            </p>
                         </div>
                         <div className="border-t pt-2 text-sm space-y-1">
                             <p>

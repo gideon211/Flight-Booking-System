@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import List from "../components/HomeFlight";
@@ -24,12 +24,35 @@ const Home = () => {
         currency: "USD",
     });
     const [loading, setLoading] = useState(false);
+    const [originSuggestions, setOriginSuggestions] = useState([]);
+    const [destinationSuggestions, setDestinationSuggestions] = useState([]);
+    const [showOriginDropdown, setShowOriginDropdown] = useState(false);
+    const [showDestinationDropdown, setShowDestinationDropdown] = useState(false);
+    const originRef = useRef(null);
+    const destinationRef = useRef(null);
     const navigate = useNavigate();
 
     
     useEffect(() => {
         const token = localStorage.getItem("token");
         setIsLoggedIn(!!token);
+    }, []);
+
+    // Close dropdowns when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (originRef.current && !originRef.current.contains(event.target)) {
+                setShowOriginDropdown(false);
+            }
+            if (destinationRef.current && !destinationRef.current.contains(event.target)) {
+                setShowDestinationDropdown(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
     }, []);
 
    useEffect(() => {
@@ -45,43 +68,87 @@ const Home = () => {
   fetchFlights();
 }, []);
 
+  // Fetch city suggestions based on user input
+  const fetchCitySuggestions = async (query, isOrigin) => {
+    if (!query || query.length < 2) {
+      if (isOrigin) {
+        setOriginSuggestions([]);
+        setShowOriginDropdown(false);
+      } else {
+        setDestinationSuggestions([]);
+        setShowDestinationDropdown(false);
+      }
+      return;
+    }
+
+    try {
+      const res = await api.get(`/cities/search?q=${encodeURIComponent(query)}`);
+      if (isOrigin) {
+        setOriginSuggestions(res.data);
+        setShowOriginDropdown(true);
+      } else {
+        setDestinationSuggestions(res.data);
+        setShowDestinationDropdown(true);
+      }
+    } catch (error) {
+      console.error("Error fetching city suggestions:", error);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Trigger city search for origin and destination fields
+    if (name === "from") {
+      fetchCitySuggestions(value, true);
+    } else if (name === "to") {
+      fetchCitySuggestions(value, false);
+    }
   };
 
-    const handleSubmit = (e) => {
+  const selectCity = (cityName, isOrigin) => {
+    if (isOrigin) {
+      setFormData((prev) => ({ ...prev, from: cityName }));
+      setShowOriginDropdown(false);
+      setOriginSuggestions([]);
+    } else {
+      setFormData((prev) => ({ ...prev, to: cityName }));
+      setShowDestinationDropdown(false);
+      setDestinationSuggestions([]);
+    }
+  };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setTimeout(() => {
-            const filtered = flights.filter((flight) => {
-                return (
-                    (!formData.tripType ||
-                        flight.tripType.toLowerCase() ===
-                        formData.tripType.toLowerCase()) &&
-                    (!formData.from ||
-                        flight.origin.city
-                        .toLowerCase()
-                        .includes(formData.from.toLowerCase())) &&
-                    (!formData.to ||
-                        flight.destination.city
-                        .toLowerCase()
-                        .includes(formData.to.toLowerCase())) &&
-                    (!formData.departureDate ||
-                        flight.departureDate === formData.departureDate) &&
-                    (formData.tripType !== "RoundTrip" ||
-                        !formData.returnDate ||
-                        flight.returnDate === formData.returnDate) &&
-                    (!formData.cabin ||
-                        flight.cabin.toLowerCase() === formData.cabin.toLowerCase()) &&
-                    flight.seatsAvailable >= Number(formData.passengers || 1)
-                );
+        
+        try {
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (formData.from) params.append('origin', formData.from);
+            if (formData.to) params.append('destination', formData.to);
+            if (formData.departureDate) params.append('date', formData.departureDate);
+            if (formData.tripType) params.append('trip_type', formData.tripType);
+            if (formData.cabin) params.append('cabin', formData.cabin);
+            if (formData.passengers) params.append('passengers', formData.passengers);
+
+            // Call backend search endpoint
+            const response = await api.get(`/flights/search?${params.toString()}`);
+            
+            // Navigate to available flights with results
+            navigate("/Availableflights", {
+                state: { results: response.data, ...formData },
             });
+        } catch (error) {
+            console.error("Error searching flights:", error);
+            // Navigate with empty results on error
+            navigate("/Availableflights", {
+                state: { results: [], ...formData },
+            });
+        } finally {
             setLoading(false);
-            navigate("/flights-dashboard", {
-                state: { results: filtered, ...formData },
-            });
-        }, 2000);
+        }
     };
 
   return (
@@ -175,23 +242,61 @@ const Home = () => {
 
             {/* Form fields grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <input
-                type="text"
-                name="from"
-                value={formData.from}
-                onChange={handleChange}
-                placeholder="Origin"
-                className="w-full border border-blue-200 rounded-lg px-3 py-3 outline-none"
-              />
+              {/* Origin Input with Autocomplete */}
+              <div className="relative" ref={originRef}>
+                <input
+                  type="text"
+                  name="from"
+                  value={formData.from}
+                  onChange={handleChange}
+                  onFocus={() => formData.from.length >= 2 && setShowOriginDropdown(true)}
+                  placeholder="Origin"
+                  className="w-full border border-blue-200 rounded-lg px-3 py-3 outline-none"
+                  autoComplete="off"
+                />
+                {showOriginDropdown && originSuggestions.length > 0 && (
+                  <div className="absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+                    {originSuggestions.map((city, index) => (
+                      <div
+                        key={index}
+                        onClick={() => selectCity(city.city, true)}
+                        className="px-4 py-2 hover:bg-blue-100 cursor-pointer border-b last:border-b-0"
+                      >
+                        <div className="font-medium">{city.city}</div>
+                        <div className="text-xs text-gray-500">{city.country}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-              <input
-                type="text"
-                name="to"
-                value={formData.to}
-                onChange={handleChange}
-                placeholder="Destination"
-                className="w-full border border-blue-200 rounded-lg px-3 py-3 outline-none"
-              />
+              {/* Destination Input with Autocomplete */}
+              <div className="relative" ref={destinationRef}>
+                <input
+                  type="text"
+                  name="to"
+                  value={formData.to}
+                  onChange={handleChange}
+                  onFocus={() => formData.to.length >= 2 && setShowDestinationDropdown(true)}
+                  placeholder="Destination"
+                  className="w-full border border-blue-200 rounded-lg px-3 py-3 outline-none"
+                  autoComplete="off"
+                />
+                {showDestinationDropdown && destinationSuggestions.length > 0 && (
+                  <div className="absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+                    {destinationSuggestions.map((city, index) => (
+                      <div
+                        key={index}
+                        onClick={() => selectCity(city.city, false)}
+                        className="px-4 py-2 hover:bg-blue-100 cursor-pointer border-b last:border-b-0"
+                      >
+                        <div className="font-medium">{city.city}</div>
+                        <div className="text-xs text-gray-500">{city.country}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <div>
                 <label

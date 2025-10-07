@@ -58,7 +58,7 @@ const Navbar = () => {
         <li onClick={handleFlightsClick} className="hover:text-yellow-300 cursor-pointer transition">
           Flights
         </li>
-        <li className="hover:text-yellow-300 cursor-pointer transition">{t("Hotels")}</li>
+        <li onClick={() => navigate("/hotels")} className="hover:text-yellow-300 cursor-pointer transition">{t("Hotels")}</li>
         <li className="hover:text-yellow-300 cursor-pointer transition">{t("Packages")}</li>
         <li className="hover:text-yellow-300 cursor-pointer transition">{t("Car Rentals")}</li>
       </ul>

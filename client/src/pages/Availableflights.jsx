@@ -14,7 +14,7 @@ const AvailableFlights = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleSelect = (flight) => {
-    navigate(`/itinerary/${flight.flightId}`, { state: { flight } });
+    navigate(`/itinerary/${flight.flight_id}`, { state: { flight } });
   };
 
   return (
@@ -90,7 +90,7 @@ const AvailableFlights = () => {
             <div className="space-y-4">
               {results.map((flight) => (
                 <div
-                  key={flight.flightId}
+                  key={flight.flight_id}
                   className="flex flex-col sm:flex-row justify-between items-center bg-white p-4  shadow-md gap-4"
                 >
                   {/* Flight Info */}
@@ -102,23 +102,29 @@ const AvailableFlights = () => {
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-lg truncate">{flight.airline}</p>
-                      <p className="text-sm text-gray-500 truncate">{flight.cabin}</p>
+                      <p className="text-sm text-gray-500 truncate">{flight.cabin_class}</p>
+                      <p className="text-xs text-gray-400 truncate">{flight.flight_id}</p>
                     </div>
                   </div>
 
                   {/* Time & Duration (hidden on mobile) */}
                   <div className="text-center flex-1 mt-2 sm:mt-0 hidden sm:block">
-                    <p className="font-medium text-lg truncate">{flight.airline}</p>
-                    <p className="text-sm text-gray-500 truncate">{flight.cabin}</p>
                     <p className="font-medium text-sm sm:text-base">
-                      {flight.departureTime} → {flight.arrivalTime}
+                      {new Date(flight.departure_datetime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                      {flight.arrival_datetime && (
+                        <> → {new Date(flight.arrival_datetime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</>
+                      )}
                     </p>
-                    <p className="text-sm text-gray-500">{flight.duration}</p>
+                    <p className="text-sm text-gray-500">{flight.flight_duration ? `${flight.flight_duration} hrs` : 'N/A'}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {flight.departure_city_code} → {flight.arrival_city_code}
+                    </p>
                   </div>
 
                   {/* Price & Action */}
                   <div className="text-center sm:text-right flex-shrink-0 mt-2 sm:mt-0 w-full sm:w-auto">
                     <p className="font-medium text-blue-600 hidden sm:block">GHS {flight.price}</p>
+                    <p className="text-xs text-gray-400 hidden sm:block mb-2">{flight.seats_available} seats left</p>
                     <button
                       onClick={() => handleSelect(flight)}
                       className="mt-2 bg-yellow-500 text-black px-5 py-2 rounded-md font-medium hover:bg-yellow-600 shadow cursor-pointer w-full sm:w-auto"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -21,6 +21,12 @@ const UserDashboard = () => {
         cabin: "Economy",
     });
     const [loading, setLoading] = useState(false);
+    const [originSuggestions, setOriginSuggestions] = useState([]);
+    const [destinationSuggestions, setDestinationSuggestions] = useState([]);
+    const [showOriginDropdown, setShowOriginDropdown] = useState(false);
+    const [showDestinationDropdown, setShowDestinationDropdown] = useState(false);
+    const originRef = useRef(null);
+    const destinationRef = useRef(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -35,40 +41,105 @@ const UserDashboard = () => {
         fetchFlights();
     }, []);
 
+    // Close dropdowns when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (originRef.current && !originRef.current.contains(event.target)) {
+                setShowOriginDropdown(false);
+            }
+            if (destinationRef.current && !destinationRef.current.contains(event.target)) {
+                setShowDestinationDropdown(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
+    // Fetch city suggestions based on user input
+    const fetchCitySuggestions = async (query, isOrigin) => {
+        if (!query || query.length < 2) {
+            if (isOrigin) {
+                setOriginSuggestions([]);
+                setShowOriginDropdown(false);
+            } else {
+                setDestinationSuggestions([]);
+                setShowDestinationDropdown(false);
+            }
+            return;
+        }
+
+        try {
+            const res = await api.get(`/cities/search?q=${encodeURIComponent(query)}`);
+            if (isOrigin) {
+                setOriginSuggestions(res.data);
+                setShowOriginDropdown(true);
+            } else {
+                setDestinationSuggestions(res.data);
+                setShowDestinationDropdown(true);
+            }
+        } catch (error) {
+            console.error("Error fetching city suggestions:", error);
+        }
+    };
+
+    const selectCity = (cityName, isOrigin) => {
+        if (isOrigin) {
+            setFormData((prev) => ({ ...prev, from: cityName }));
+            setShowOriginDropdown(false);
+            setOriginSuggestions([]);
+        } else {
+            setFormData((prev) => ({ ...prev, to: cityName }));
+            setShowDestinationDropdown(false);
+            setDestinationSuggestions([]);
+        }
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
+
+        // Trigger city search for origin and destination fields
+        if (name === "from") {
+            fetchCitySuggestions(value, true);
+        } else if (name === "to") {
+            fetchCitySuggestions(value, false);
+        }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         
-        setTimeout(() => {
-            const filtered = flights.filter((flight) => {
-                return (
-                    (!formData.from ||
-                        flight.origin.city
-                            .toLowerCase()
-                            .includes(formData.from.toLowerCase())) &&
-                    (!formData.to ||
-                        flight.destination.city
-                            .toLowerCase()
-                            .includes(formData.to.toLowerCase())) &&
-                    (!formData.cabin ||
-                        flight.cabin.toLowerCase() === formData.cabin.toLowerCase()) &&
-                    flight.seatsAvailable >= Number(formData.passengers || 1)
-                );
-            });
+        try {
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (formData.from) params.append('origin', formData.from);
+            if (formData.to) params.append('destination', formData.to);
+            if (formData.departureDate) params.append('date', formData.departureDate);
+            if (formData.tripType) params.append('trip_type', formData.tripType);
+            if (formData.cabin) params.append('cabin', formData.cabin);
+            if (formData.passengers) params.append('passengers', formData.passengers);
+
+            // Call backend search endpoint
+            const response = await api.get(`/flights/search?${params.toString()}`);
             
-            setSearchResults(filtered);
+            setSearchResults(response.data);
             setShowResults(true);
+        } catch (error) {
+            console.error("Error searching flights:", error);
+            // If error or no results, show empty array
+            setSearchResults([]);
+            setShowResults(true);
+        } finally {
             setLoading(false);
-        }, 1500);
+        }
     };
 
     const handleSelectFlight = (flight) => {
-        navigate(`/itinerary/${flight.flightId}`, { 
+        navigate(`/itinerary/${flight.flight_id}`, { 
             state: { 
                 flight,
                 from: formData.from,
@@ -123,30 +194,64 @@ const UserDashboard = () => {
 
                         {/* Search Fields */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                            <div>
+                            {/* Origin Input with Autocomplete */}
+                            <div className="relative" ref={originRef}>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">From</label>
                                 <input
                                     type="text"
                                     name="from"
                                     value={formData.from}
                                     onChange={handleChange}
+                                    onFocus={() => formData.from.length >= 2 && setShowOriginDropdown(true)}
                                     placeholder="Origin City"
                                     className="w-full border border-gray-300 rounded-lg px-3 py-3 outline-none text-gray-800"
+                                    autoComplete="off"
                                     required
                                 />
+                                {showOriginDropdown && originSuggestions.length > 0 && (
+                                    <div className="absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+                                        {originSuggestions.map((city, index) => (
+                                            <div
+                                                key={index}
+                                                onClick={() => selectCity(city.city, true)}
+                                                className="px-4 py-2 hover:bg-blue-100 cursor-pointer border-b last:border-b-0"
+                                            >
+                                                <div className="font-medium">{city.city}</div>
+                                                <div className="text-xs text-gray-500">{city.country}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
-                            <div>
+                            {/* Destination Input with Autocomplete */}
+                            <div className="relative" ref={destinationRef}>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
                                 <input
                                     type="text"
                                     name="to"
                                     value={formData.to}
                                     onChange={handleChange}
+                                    onFocus={() => formData.to.length >= 2 && setShowDestinationDropdown(true)}
                                     placeholder="Destination City"
                                     className="w-full border border-gray-300 rounded-lg px-3 py-3 outline-none text-gray-800"
+                                    autoComplete="off"
                                     required
                                 />
+                                {showDestinationDropdown && destinationSuggestions.length > 0 && (
+                                    <div className="absolute z-50 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+                                        {destinationSuggestions.map((city, index) => (
+                                            <div
+                                                key={index}
+                                                onClick={() => selectCity(city.city, false)}
+                                                className="px-4 py-2 hover:bg-blue-100 cursor-pointer border-b last:border-b-0"
+                                            >
+                                                <div className="font-medium">{city.city}</div>
+                                                <div className="text-xs text-gray-500">{city.country}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             <div>
@@ -241,7 +346,7 @@ const UserDashboard = () => {
                         <div className="space-y-4">
                             {searchResults.map((flight) => (
                                 <div
-                                    key={flight.flightId}
+                                    key={flight.flight_id}
                                     className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition"
                                 >
                                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -253,18 +358,24 @@ const UserDashboard = () => {
                                             />
                                             <div>
                                                 <p className="font-semibold text-lg">{flight.airline}</p>
-                                                <p className="text-sm text-gray-500">{flight.code}</p>
-                                                <p className="text-sm text-gray-600">{flight.cabin}</p>
+                                                <p className="text-sm text-gray-500">{flight.flight_id}</p>
+                                                <p className="text-sm text-gray-600">{flight.cabin_class}</p>
                                             </div>
                                         </div>
 
                                         <div className="flex-1 text-center">
                                             <p className="font-medium text-lg">
-                                                {flight.departureTime} → {flight.arrivalTime}
+                                                {new Date(flight.departure_datetime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                                {flight.arrival_datetime && (
+                                                    <> → {new Date(flight.arrival_datetime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</>
+                                                )}
                                             </p>
-                                            <p className="text-sm text-gray-500">{flight.duration}</p>
+                                            <p className="text-sm text-gray-500">{flight.flight_duration ? `${flight.flight_duration} hrs` : 'N/A'}</p>
                                             <p className="text-xs text-gray-400 mt-1">
-                                                {flight.origin.city} → {flight.destination.city}
+                                                {flight.departure_city_code} → {flight.arrival_city_code}
+                                            </p>
+                                            <p className="text-xs text-gray-400">
+                                                {flight.origin_country} → {flight.destination_country}
                                             </p>
                                         </div>
 
@@ -272,7 +383,8 @@ const UserDashboard = () => {
                                             <p className="text-2xl font-bold text-blue-600">
                                                 GHS {flight.price}
                                             </p>
-                                            <p className="text-xs text-gray-500 mb-3">per person</p>
+                                            <p className="text-xs text-gray-500 mb-1">per person</p>
+                                            <p className="text-xs text-gray-400 mb-3">{flight.seats_available} seats left</p>
                                             <button
                                                 onClick={() => handleSelectFlight(flight)}
                                                 className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-2 rounded-lg font-medium shadow cursor-pointer transition"
@@ -302,37 +414,79 @@ const UserDashboard = () => {
 
             {!showResults && (
                 <div className="flex-1 p-6 max-w-6xl mx-auto w-full">
-                    <div className="bg-white rounded-lg shadow-md p-12 text-center">
-                        <h3 className="text-2xl font-bold mb-4 text-gray-800">
-                            Welcome to Your Flight Dashboard
+                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <h3 className="text-2xl font-bold mb-2 text-gray-800">
+                            Available Flights
                         </h3>
-                        <p className="text-gray-600 mb-6">
-                            Search for flights above to start booking your next journey
+                        <p className="text-gray-600">
+                            {flights.length} flights available
                         </p>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                            <div className="p-6 bg-blue-50 rounded-lg">
-                                <div className="text-4xl mb-3">✈️</div>
-                                <h4 className="font-semibold mb-2">Search Flights</h4>
-                                <p className="text-sm text-gray-600">
-                                    Find the best flights for your destination
-                                </p>
-                            </div>
-                            <div className="p-6 bg-blue-50 rounded-lg">
-                                <div className="text-4xl mb-3">💳</div>
-                                <h4 className="font-semibold mb-2">Secure Payment</h4>
-                                <p className="text-sm text-gray-600">
-                                    Multiple payment options available
-                                </p>
-                            </div>
-                            <div className="p-6 bg-blue-50 rounded-lg">
-                                <div className="text-4xl mb-3">🎫</div>
-                                <h4 className="font-semibold mb-2">Get Your Ticket</h4>
-                                <p className="text-sm text-gray-600">
-                                    Instant confirmation and e-ticket
-                                </p>
-                            </div>
-                        </div>
                     </div>
+
+                    {flights.length > 0 ? (
+                        <div className="space-y-4">
+                            {flights.map((flight) => (
+                                <div
+                                    key={flight.flight_id}
+                                    className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition"
+                                >
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                        <div className="flex items-center gap-4">
+                                            <img
+                                                src="https://static.vecteezy.com/system/resources/thumbnails/005/145/664/small_2x/flying-airplane-air-transportation-airline-plane-illustration-vector.jpg"
+                                                alt={flight.airline}
+                                                className="w-20 h-20 object-cover rounded"
+                                            />
+                                            <div>
+                                                <p className="font-semibold text-lg">{flight.airline}</p>
+                                                <p className="text-sm text-gray-500">{flight.flight_id}</p>
+                                                <p className="text-sm text-gray-600">{flight.cabin_class}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex-1 text-center">
+                                            <p className="font-medium text-lg">
+                                                {new Date(flight.departure_datetime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                                {flight.arrival_datetime && (
+                                                    <> → {new Date(flight.arrival_datetime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</>
+                                                )}
+                                            </p>
+                                            <p className="text-sm text-gray-500">{flight.flight_duration ? `${flight.flight_duration} hrs` : 'N/A'}</p>
+                                            <p className="text-xs text-gray-400 mt-1">
+                                                {flight.departure_city_code} → {flight.arrival_city_code}
+                                            </p>
+                                            <p className="text-xs text-gray-400">
+                                                {flight.origin_country} → {flight.destination_country}
+                                            </p>
+                                        </div>
+
+                                        <div className="text-right">
+                                            <p className="text-2xl font-bold text-blue-600">
+                                                GHS {flight.price}
+                                            </p>
+                                            <p className="text-xs text-gray-500 mb-1">per person</p>
+                                            <p className="text-xs text-gray-400 mb-3">{flight.seats_available} seats left</p>
+                                            <button
+                                                onClick={() => handleSelectFlight(flight)}
+                                                className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-2 rounded-lg font-medium shadow cursor-pointer transition"
+                                            >
+                                                Book Now
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-lg shadow-md p-12 text-center">
+                            <p className="text-gray-600 text-lg mb-4">
+                                No flights available at the moment.
+                            </p>
+                            <p className="text-sm text-gray-500">
+                                Please check back later or use the search above to find specific flights.
+                            </p>
+                        </div>
+                    )}
                 </div>
             )}
 
