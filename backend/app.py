@@ -79,7 +79,59 @@ def ensure_admin_columns():
         except Exception:
             pass
 
+def ensure_audit_logs_table():
+    """Create audit_logs table if it doesn't exist"""
+    try:
+        db = database_connection()
+        cursor = db.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS audit_logs (
+                id SERIAL PRIMARY KEY,
+                timestamp TIMESTAMP DEFAULT NOW(),
+                user_email VARCHAR(255),
+                action VARCHAR(100),
+                details TEXT,
+                ip_address VARCHAR(45),
+                status VARCHAR(20),
+                resource_type VARCHAR(50),
+                resource_id VARCHAR(100)
+            );
+        """)
+        db.commit()
+    except Exception as e:
+        print(f"Error creating audit_logs table: {e}")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+    finally:
+        try:
+            cursor.close()
+        except Exception:
+            pass
+        try:
+            db.close()
+        except Exception:
+            pass
+
+def log_audit(user_email, action, details, status="SUCCESS", resource_type=None, resource_id=None):
+    """Helper function to log audit events"""
+    try:
+        ip_address = request.remote_addr if request else "SYSTEM"
+        db = database_connection()
+        cursor = db.cursor()
+        cursor.execute("""
+            INSERT INTO audit_logs (user_email, action, details, ip_address, status, resource_type, resource_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (user_email, action, details, ip_address, status, resource_type, resource_id))
+        db.commit()
+        cursor.close()
+        db.close()
+    except Exception as e:
+        print(f"Error logging audit: {e}")
+
 ensure_admin_columns()
+ensure_audit_logs_table()
 
 
 def database_connection():
@@ -135,6 +187,9 @@ def signup():
         )
         db.commit()
 
+        # Log audit
+        log_audit(email, "SIGNUP", f"New user registered: {firstname} {lastname}", "SUCCESS", "USER", email)
+
         access_token = generate_access_token(email,role='user')
         refresh_token = generate_refresh_token(email,role='user')
         secure_cookie, samesite_cookie = get_cookie_settings()
@@ -185,11 +240,13 @@ def login():
         user = cursor.fetchone()
         
         if not user:
+            log_audit(email, "LOGIN", "Login attempt - user not found", "FAILED", "AUTH", email)
             return jsonify({"message": "User not found"}), 404
 
         hash_password = user['hash_password'].encode('utf-8') if isinstance(user['hash_password'], str) else user['hash_password']
         
         if not bcrypt.checkpw(password.encode('utf-8'), hash_password):
+            log_audit(email, "LOGIN", "Login attempt - incorrect password", "FAILED", "AUTH", email)
             return jsonify({"message": "Incorrect password"}), 404
 
         role = user.get('role','user')
@@ -204,6 +261,9 @@ def login():
         except Exception:
             db.rollback()
         
+        # Log successful login
+        log_audit(email, "LOGIN", f"User logged in successfully - Role: {role}", "SUCCESS", "AUTH", email)
+
         access_token = generate_access_token(email,role)
         refresh_token = generate_refresh_token(email,role)
         secure_cookie, samesite_cookie = get_cookie_settings()
@@ -456,11 +516,22 @@ def create_flight():
         new_flight = cursor.fetchone()
         db.commit()
         
+        # Log audit
+        log_audit(
+            decoded.get('email'), 
+            "CREATE_FLIGHT", 
+            f"Created flight {data['flight_id']} from {departure_city['city_name']} to {arrival_city['city_name']}", 
+            "SUCCESS", 
+            "FLIGHT", 
+            data['flight_id']
+        )
+        
         return jsonify({"message": "Flight created successfully",
                         "flight":new_flight}), 201
 
     except Exception as e:
         db.rollback()
+        log_audit(decoded.get('email') if decoded else "UNKNOWN", "CREATE_FLIGHT", f"Failed to create flight: {str(e)}", "FAILED", "FLIGHT", data.get('flight_id'))
         return jsonify({"error": str(e)}), 500
     
     finally:
@@ -508,6 +579,10 @@ def create_1admin():
             VALUES (%s, %s, %s, %s, %s)
         """, (firstname, lastname, email, hash_password, "admin"))
         db.commit()
+        
+        # Log audit
+        log_audit(decoded.get('email'), "CREATE_ADMIN", f"Created admin account for {email}", "SUCCESS", "USER", email)
+        
         return jsonify({"message": "Admin created successfully"}), 201
                 
     except Exception as e :
@@ -557,10 +632,14 @@ def delete_admin():
         cursor.execute("DELETE FROM login_users WHERE email = %s", (email,))
         db.commit()
 
+        # Log audit
+        log_audit(decoded.get('email'), "DELETE_ADMIN", f"Deleted admin account {email}", "SUCCESS", "USER", email)
+
         return jsonify({"message": f"Admin with email {email} deleted successfully"}), 200
 
     except Exception as e:
         db.rollback()
+        log_audit(decoded.get('email'), "DELETE_ADMIN", f"Failed to delete admin: {str(e)}", "FAILED", "USER", email)
         return jsonify({"error": str(e)}), 500
 
     finally:
@@ -624,10 +703,21 @@ def book_flight():
         booking = cursor.fetchone()
         db.commit()
 
+        # Log audit
+        log_audit(
+            user_email, 
+            "CREATE_BOOKING", 
+            f"Booked flight {flight_id} for {user_name}", 
+            "SUCCESS", 
+            "BOOKING", 
+            str(booking['booking_id'])
+        )
+
         return jsonify({"message": "Flight booked successfully", "booking": booking}), 201
 
     except Exception as e:
         db.rollback()
+        log_audit(user_email, "CREATE_BOOKING", f"Failed to book flight: {str(e)}", "FAILED", "BOOKING", flight_id)
         return jsonify({"error": str(e)}), 500
 
     finally:
@@ -746,10 +836,21 @@ def cancel_booking():
         updated = cursor.fetchone()
         db.commit()
 
+        # Log audit
+        log_audit(
+            user_email, 
+            "CANCEL_BOOKING", 
+            f"Cancelled booking {booking_id}", 
+            "SUCCESS", 
+            "BOOKING", 
+            str(booking_id)
+        )
+
         return jsonify({"message": "Booking cancelled", "booking": updated}), 200
 
     except Exception as e:
         db.rollback()
+        log_audit(user_email, "CANCEL_BOOKING", f"Failed to cancel booking: {str(e)}", "FAILED", "BOOKING", str(booking_id))
         return jsonify({"error": str(e)}), 500
 
     finally:
@@ -1463,9 +1564,190 @@ def update_admin_permissions(admin_id):
         })
     except Exception as e:
         return jsonify({"message": f"Error updating permissions: {str(e)}"}), 500
-        
+
+
+@app.route('/admin/dashboard/stats', methods=['GET'])
+def admin_dashboard_stats():
+    """Get dashboard statistics for admin"""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid or expired token"}), 401
+
+    if decoded.get("role") not in ["admin", "superadmin"]:
+        return jsonify({"message": "Forbidden: Admins only"}), 403
+
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+
+        # Total flights
+        cursor.execute("SELECT COUNT(*) as count FROM flights")
+        total_flights = cursor.fetchone()['count']
+
+        # Total bookings
+        cursor.execute("SELECT COUNT(*) as count FROM bookings")
+        total_bookings = cursor.fetchone()['count']
+
+        # Total revenue
+        cursor.execute("SELECT SUM(price) as revenue FROM bookings WHERE status = 'confirmed'")
+        revenue_result = cursor.fetchone()
+        total_revenue = float(revenue_result['revenue']) if revenue_result['revenue'] else 0
+
+        # Cancelled bookings
+        cursor.execute("SELECT COUNT(*) as count FROM bookings WHERE status = 'cancelled'")
+        cancelled_bookings = cursor.fetchone()['count']
+
+        # Upcoming flights
+        cursor.execute("SELECT COUNT(*) as count FROM flights WHERE departure_datetime > NOW() AND flight_status = 'active'")
+        upcoming_flights = cursor.fetchone()['count']
+
+        # Bookings per route
+        cursor.execute("""
+            SELECT city_origin, city_destination, COUNT(*) as count
+            FROM bookings
+            GROUP BY city_origin, city_destination
+            ORDER BY count DESC
+            LIMIT 10
+        """)
+        bookings_per_route = cursor.fetchall()
+
+        # Revenue per month
+        cursor.execute("""
+            SELECT 
+                TO_CHAR(booking_date, 'Mon YYYY') as month,
+                SUM(price) as revenue
+            FROM bookings
+            WHERE status = 'confirmed'
+            GROUP BY TO_CHAR(booking_date, 'Mon YYYY'), DATE_TRUNC('month', booking_date)
+            ORDER BY DATE_TRUNC('month', booking_date)
+            LIMIT 12
+        """)
+        revenue_per_month = cursor.fetchall()
+
+        # Flight status distribution
+        cursor.execute("""
+            SELECT flight_status, COUNT(*) as count
+            FROM flights
+            GROUP BY flight_status
+        """)
+        flight_status_dist = cursor.fetchall()
+
+        cursor.close()
+        db.close()
+
+        return jsonify({
+            "totalFlights": total_flights,
+            "totalBookings": total_bookings,
+            "totalRevenue": total_revenue,
+            "cancelledBookings": cancelled_bookings,
+            "upcomingFlights": upcoming_flights,
+            "bookingsPerRoute": bookings_per_route,
+            "revenuePerMonth": revenue_per_month,
+            "flightStatusDistribution": flight_status_dist
+        }), 200
+
     except Exception as e:
-        return jsonify({"message": f"Error updating role: {str(e)}"}), 500
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/admin/flights', methods=['GET'])
+def get_all_flights():
+    """Get all flights for admin management"""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid or expired token"}), 401
+
+    if decoded.get("role") not in ["admin", "superadmin"]:
+        return jsonify({"message": "Forbidden: Admins only"}), 403
+
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+
+        cursor.execute("""
+            SELECT flight_id, trip_type, airline, departure_city_code, arrival_city_code,
+                   departure_datetime, arrival_datetime, price, cabin_class, seats_available,
+                   flight_status, flight_duration, origin_country, destination_country
+            FROM flights
+            ORDER BY departure_datetime DESC
+        """)
+        flights = cursor.fetchall()
+
+        cursor.close()
+        db.close()
+
+        return jsonify(flights), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/admin/audit-logs', methods=['GET'])
+def get_audit_logs():
+    """Get audit logs with optional filters - SuperAdmin only"""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid or expired token"}), 401
+
+    if decoded.get("role") != "superadmin":
+        return jsonify({"message": "Forbidden: SuperAdmin only"}), 403
+
+    try:
+        # Get filter parameters
+        action = request.args.get('action', '')
+        user = request.args.get('user', '')
+        date_from = request.args.get('dateFrom', '')
+        date_to = request.args.get('dateTo', '')
+        limit = request.args.get('limit', '100')
+
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+
+        # Build query with filters
+        query = "SELECT * FROM audit_logs WHERE 1=1"
+        params = []
+
+        if action:
+            query += " AND action ILIKE %s"
+            params.append(f"%{action}%")
+
+        if user:
+            query += " AND user_email ILIKE %s"
+            params.append(f"%{user}%")
+
+        if date_from:
+            query += " AND timestamp >= %s"
+            params.append(date_from)
+
+        if date_to:
+            query += " AND timestamp <= %s"
+            params.append(date_to)
+
+        query += " ORDER BY timestamp DESC LIMIT %s"
+        params.append(int(limit))
+
+        cursor.execute(query, tuple(params))
+        logs = cursor.fetchall()
+
+        cursor.close()
+        db.close()
+
+        return jsonify(logs), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
