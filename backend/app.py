@@ -845,21 +845,25 @@ def search_flights():
     destination = request.args.get('destination')
     date = request.args.get('date')  
     trip_type = request.args.get('trip_type')
+    cabin = request.args.get('cabin')
+    passengers = request.args.get('passengers', '1')
 
     query = """
-        SELECT flight_id, trip_type, airline, departure_city, arrival_city,
-               departure_datetime, price, cabin_class, seats_available, flight_status
+        SELECT flight_id, trip_type, airline, departure_city_code, arrival_city_code,
+               departure_datetime, arrival_datetime, price, cabin_class, seats_available, 
+               flight_status, flight_duration, flight_distance, gate, terminal,
+               origin_country, destination_country
         FROM flights
         WHERE seats_available > 0 AND flight_status = 'active'
     """
     params = []
 
     if origin:
-        query += " AND departure_city ILIKE %s"
+        query += " AND departure_city_code ILIKE %s"
         params.append(f"%{origin}%")
 
     if destination:
-        query += " AND arrival_city ILIKE %s"
+        query += " AND arrival_city_code ILIKE %s"
         params.append(f"%{destination}%")
 
     if date:
@@ -870,6 +874,14 @@ def search_flights():
         query += " AND trip_type ILIKE %s"
         params.append(trip_type)
 
+    if cabin:
+        query += " AND cabin_class ILIKE %s"
+        params.append(cabin)
+
+    if passengers:
+        query += " AND seats_available >= %s"
+        params.append(int(passengers))
+
     query += " ORDER BY departure_datetime ASC"
 
     try:
@@ -879,8 +891,9 @@ def search_flights():
         cursor.execute(query, tuple(params))
         flights = cursor.fetchall()
 
+        # Return empty array instead of 404 for better frontend handling
         if not flights:
-            return jsonify({"message":"No flights found for your search"}),404
+            return jsonify([]), 200
         
         return jsonify(flights), 200
         
@@ -888,6 +901,43 @@ def search_flights():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'db' in locals():
+            db.close()
+
+
+@app.route('/cities/search', methods=['GET'])
+def search_cities():
+    """Search cities by name for autocomplete"""
+    search_query = request.args.get('q', '').strip()
+    
+    if not search_query:
+        return jsonify([]), 200
+    
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute("""
+            SELECT DISTINCT city_name, country
+            FROM cities
+            WHERE city_name ILIKE %s
+            ORDER BY city_name
+            LIMIT 10
+        """, (f"%{search_query}%",))
+        
+        cities = cursor.fetchall()
+        
+        # Format the response
+        city_list = [{"city": city["city_name"], "country": city["country"]} for city in cities]
+        
+        return jsonify(city_list), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
     finally:
         if 'cursor' in locals():
             cursor.close()
