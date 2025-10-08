@@ -130,9 +130,6 @@ def log_audit(user_email, action, details, status="SUCCESS", resource_type=None,
     except Exception as e:
         print(f"Error logging audit: {e}")
 
-ensure_admin_columns()
-ensure_audit_logs_table()
-
 
 def database_connection():
     try:
@@ -145,6 +142,9 @@ def database_connection():
     except psycopg2.Error as e:
         print("Database connection failed:", e)
         raise
+
+ensure_admin_columns()
+ensure_audit_logs_table()
 
 
 
@@ -378,9 +378,13 @@ def create_flight():
     decoded = decode_token(access_token)
     if not decoded:
         return jsonify({"message": "Invalid or expired token"}), 401
+    
+    # Debug logging
+    print(f"DEBUG: Decoded token: {decoded}")
+    print(f"DEBUG: User role: {decoded.get('role')}")
      
     if decoded.get("role") != "admin":
-        return jsonify({"message": "Forbidden: Admins only"}), 403
+        return jsonify({"message": f"Forbidden: Admins only. Your role is: {decoded.get('role')}"}), 403
     
     data = request.get_json()
     required_fields = [
@@ -436,36 +440,73 @@ def create_flight():
         airline_id = airline["airline_id"]
 
         
-        headers = {
-            'Authorization': API_KEY,
-            'Content-Type': 'application/json'
-        }
+        # Calculate flight distance and duration
+        if API_KEY and API_KEY != "YOUR_OPENROUTESERVICE_API_KEY_HERE":
+            # Use OpenRouteService API if key is configured
+            headers = {
+                'Authorization': API_KEY,
+                'Content-Type': 'application/json'
+            }
 
-        
-        body = {
-            "coordinates": [
-            [departure_city["longitude"],departure_city["latitude"]],      
-            [arrival_city["longitude"],arrival_city["latitude"]]
-            ]
-        }
-        
-        api_response = requests.post(
-            'https://api.openrouteservice.org/v2/directions/driving-car',
-            json=body,
-            headers=headers
-        )
+            body = {
+                "coordinates": [
+                [departure_city["longitude"],departure_city["latitude"]],      
+                [arrival_city["longitude"],arrival_city["latitude"]]
+                ]
+            }
+            
+            try:
+                api_response = requests.post(
+                    'https://api.openrouteservice.org/v2/directions/driving-car',
+                    json=body,
+                    headers=headers,
+                    timeout=10
+                )
 
-        api_data = api_response.json()
-        distance_meters = api_data['routes'][0]['summary']['distance']
-        duration_seconds = api_data['routes'][0]['summary']['duration']
-        flight_distance = round(distance_meters/1000,2)
-        flight_duration = round(duration_seconds/3600,2)
+                api_data = api_response.json()
+                
+                # Check if API call was successful
+                if 'routes' not in api_data or not api_data['routes']:
+                    # Handle different error response formats
+                    if isinstance(api_data.get('error'), dict):
+                        error_msg = api_data['error'].get('message', 'Failed to calculate route')
+                    elif isinstance(api_data.get('error'), str):
+                        error_msg = api_data['error']
+                    else:
+                        error_msg = str(api_data)
+                    print(f"OpenRouteService API Error: {api_data}")
+                    # Fall back to estimated values
+                    flight_distance = 1000.0
+                    flight_duration = 2.0
+                else:
+                    distance_meters = api_data['routes'][0]['summary']['distance']
+                    duration_seconds = api_data['routes'][0]['summary']['duration']
+                    flight_distance = round(distance_meters/1000,2)
+                    flight_duration = round(duration_seconds/3600,2)
+            except Exception as e:
+                print(f"Error calling OpenRouteService API: {e}")
+                # Use estimated values as fallback
+                flight_distance = 1000.0
+                flight_duration = 2.0
+        else:
+            # Use estimated values when API key is not configured
+            print("API_KEY not configured, using estimated distance/duration")
+            flight_distance = 1000.0
+            flight_duration = 2.0
 
 
         cursor.execute("SELECT flight_id FROM flights WHERE flight_id = %s", (data["flight_id"],))
         if cursor.fetchone():
             return jsonify({"message": "Flight ID already exists"}), 409
 
+        # Sanitize optional fields - convert empty strings to None
+        return_datetime = data.get("return_datetime") or None
+        gate = data.get("gate") or None
+        terminal = data.get("terminal") or None
+        baggage_allowance = data.get("baggage_allowance") or None
+        flight_description = data.get("flight_description") or None
+        airline_logo = data.get("airline_logo") or None
+        transits = data.get("transits") or None
 
         cursor.execute("""
              INSERT INTO flights (
@@ -498,20 +539,20 @@ def create_flight():
                 departure_city["city_name"],
                 arrival_city["city_name"],
                 data.get("is_directs", True),                
-                data.get("transits"),                        
+                transits,                        
                 data["departure_datetime"],
-                data.get("return_datetime"),
+                return_datetime,
                 float(data["price"]),
                 data["cabin_class"],
                 int(data["seats_available"]),
                 flight_duration,
                 flight_distance,
                 data["flight_status"],
-                data.get("gate"),
-                data.get("terminal"),
-                data.get("baggage_allowance"),
-                data.get("flight_description"),
-                data.get("airline_logo")
+                gate,
+                terminal,
+                baggage_allowance,
+                flight_description,
+                airline_logo
             ))
         new_flight = cursor.fetchone()
         db.commit()
@@ -669,9 +710,17 @@ def book_flight():
     first_name = data.get("first_name")
     last_name = data.get("last_name")
     flight_id = data.get('flight_id')
+    email = data.get('email')
+    phone = data.get('phone')
+    num_seats = data.get('num_seats', 1)
+    cabin_class = data.get('cabin_class')
+    extra_baggage = data.get('extra_baggage', 0)
+    meal_preference = data.get('meal_preference', 'Standard')
+    payment_method = data.get('payment_method')
+    payment_amount = data.get('payment_amount')
 
-    if not all([first_name, last_name, flight_id]):
-            return jsonify({"message": "First name, Last name and Flight ID are required"}), 400
+    if not all([first_name, last_name, flight_id, payment_method, payment_amount]):
+            return jsonify({"message": "Required fields missing"}), 400
 
     user_name = f"{first_name} {last_name}"
 
@@ -685,35 +734,55 @@ def book_flight():
         if not flight:
             return jsonify({"message": "Flight not found"}), 404
 
+        # Create booking
         cursor.execute("""
             INSERT INTO bookings (user_name, user_email, flight_id, city_origin, city_destination, price, booking_date, status)
             VALUES (%s, %s, %s, %s, %s, %s, NOW(), %s)
-            RETURNING *
+            RETURNING booking_id, *
         """, (
             user_name,
-            user_email,
+            user_email or email,
             flight_id,
             flight["departure_city_code"],
             flight["arrival_city_code"],
-            flight["price"],
+            payment_amount,
             "confirmed"
         ))
 
-
         booking = cursor.fetchone()
+        booking_id = booking['booking_id']
+
+        # Create payment record
+        cursor.execute("""
+            INSERT INTO payments (passenger_id, booking_id, amount, payment_method, payment_status, created_at)
+            VALUES (%s, %s, %s, %s, %s, NOW())
+            RETURNING payment_id, *
+        """, (
+            user_email or email,  # Using email as passenger_id
+            booking_id,
+            payment_amount,
+            payment_method,
+            'completed'  # Mark as completed for now
+        ))
+
+        payment = cursor.fetchone()
         db.commit()
 
         # Log audit
         log_audit(
             user_email, 
             "CREATE_BOOKING", 
-            f"Booked flight {flight_id} for {user_name}", 
+            f"Booked flight {flight_id} for {user_name} with payment {payment_method}", 
             "SUCCESS", 
             "BOOKING", 
-            str(booking['booking_id'])
+            str(booking_id)
         )
 
-        return jsonify({"message": "Flight booked successfully", "booking": booking}), 201
+        return jsonify({
+            "message": "Flight booked successfully", 
+            "booking": booking,
+            "payment": payment
+        }), 201
 
     except Exception as e:
         db.rollback()
@@ -940,6 +1009,33 @@ def user_history():
 
 
 
+@app.route('/flights', methods=['GET'])
+def get_all_flights_public():
+    """Get all active flights - Public endpoint"""
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+
+        cursor.execute("""
+            SELECT flight_id, trip_type, airline, departure_city_code, arrival_city_code,
+                   departure_datetime, return_datetime as arrival_datetime, price, cabin_class, seats_available,
+                   flight_status, flight_duration, flight_distance, origin_country, destination_country
+            FROM flights
+            WHERE flight_status IN ('active', 'scheduled') AND seats_available > 0
+            ORDER BY departure_datetime ASC
+            LIMIT 50
+        """)
+        flights = cursor.fetchall()
+
+        cursor.close()
+        db.close()
+
+        return jsonify(flights), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/flights/search', methods=['GET'])
 def search_flights():
     origin = request.args.get('origin')
@@ -951,20 +1047,24 @@ def search_flights():
 
     query = """
         SELECT flight_id, trip_type, airline, departure_city_code, arrival_city_code,
-               departure_datetime, arrival_datetime, price, cabin_class, seats_available, 
+               departure_datetime, return_datetime as arrival_datetime, price, cabin_class, seats_available, 
                flight_status, flight_duration, flight_distance, gate, terminal,
                origin_country, destination_country
         FROM flights
-        WHERE seats_available > 0 AND flight_status = 'active'
+        WHERE seats_available > 0 AND flight_status IN ('active', 'scheduled')
     """
     params = []
 
     if origin:
-        query += " AND departure_city_code ILIKE %s"
+        # Search by both city code and city name
+        query += " AND (departure_city_code ILIKE %s OR departure_city_code IN (SELECT city_code FROM cities WHERE city_name ILIKE %s))"
+        params.append(f"%{origin}%")
         params.append(f"%{origin}%")
 
     if destination:
-        query += " AND arrival_city_code ILIKE %s"
+        # Search by both city code and city name
+        query += " AND (arrival_city_code ILIKE %s OR arrival_city_code IN (SELECT city_code FROM cities WHERE city_name ILIKE %s))"
+        params.append(f"%{destination}%")
         params.append(f"%{destination}%")
 
     if date:
@@ -1674,7 +1774,7 @@ def get_all_flights():
 
         cursor.execute("""
             SELECT flight_id, trip_type, airline, departure_city_code, arrival_city_code,
-                   departure_datetime, arrival_datetime, price, cabin_class, seats_available,
+                   departure_datetime, return_datetime as arrival_datetime, price, cabin_class, seats_available,
                    flight_status, flight_duration, origin_country, destination_country
             FROM flights
             ORDER BY departure_datetime DESC
@@ -1688,6 +1788,196 @@ def get_all_flights():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route('/admin/flights/<flight_id>/status', methods=['PUT'])
+def update_flight_status(flight_id):
+    """Update flight status - Admin only"""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid or expired token"}), 401
+
+    if decoded.get("role") not in ["admin", "superadmin"]:
+        return jsonify({"message": "Forbidden: Admins only"}), 403
+
+    data = request.get_json()
+    new_status = data.get('status')
+
+    if not new_status or new_status not in ['scheduled', 'active', 'cancelled', 'completed']:
+        return jsonify({"message": "Invalid status"}), 400
+
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+
+        # Update flight status
+        cursor.execute("""
+            UPDATE flights
+            SET flight_status = %s
+            WHERE flight_id = %s
+            RETURNING flight_id, flight_status
+        """, (new_status, flight_id))
+
+        updated_flight = cursor.fetchone()
+        
+        if not updated_flight:
+            return jsonify({"message": "Flight not found"}), 404
+
+        db.commit()
+        cursor.close()
+        db.close()
+
+        # Log audit
+        log_audit(
+            decoded.get('email'),
+            "UPDATE_FLIGHT_STATUS",
+            f"Changed flight {flight_id} status to {new_status}",
+            "SUCCESS",
+            "FLIGHT",
+            flight_id
+        )
+
+        return jsonify({
+            "message": "Flight status updated successfully",
+            "flight": updated_flight
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/hotels', methods=['GET'])
+def get_hotels():
+    """Get hotels with dummy data - Public endpoint"""
+    # Dummy hotel data
+    hotels = [
+        {
+            "id": 1,
+            "name": "Kempinski Hotel Gold Coast City",
+            "location": "Accra, Ghana",
+            "city": "Accra",
+            "country": "Ghana",
+            "rating": 5,
+            "price_per_night": 450.00,
+            "image_url": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500",
+            "amenities": ["Pool", "Spa", "Restaurant", "Gym", "WiFi", "Bar"],
+            "description": "Luxury 5-star hotel in the heart of Accra with stunning ocean views",
+            "available_rooms": 15
+        },
+        {
+            "id": 2,
+            "name": "Movenpick Ambassador Hotel",
+            "location": "Accra, Ghana",
+            "city": "Accra",
+            "country": "Ghana",
+            "rating": 5,
+            "price_per_night": 380.00,
+            "image_url": "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=500",
+            "amenities": ["Pool", "Restaurant", "Gym", "WiFi", "Conference Room"],
+            "description": "Premium hotel with excellent business facilities",
+            "available_rooms": 22
+        },
+        {
+            "id": 3,
+            "name": "Royal Senchi Resort",
+            "location": "Akosombo, Ghana",
+            "city": "Akosombo",
+            "country": "Ghana",
+            "rating": 4,
+            "price_per_night": 280.00,
+            "image_url": "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=500",
+            "amenities": ["Pool", "Restaurant", "Beach Access", "WiFi", "Spa"],
+            "description": "Beautiful resort on the Volta Lake with serene environment",
+            "available_rooms": 30
+        },
+        {
+            "id": 4,
+            "name": "Labadi Beach Hotel",
+            "location": "Accra, Ghana",
+            "city": "Accra",
+            "country": "Ghana",
+            "rating": 4,
+            "price_per_night": 320.00,
+            "image_url": "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=500",
+            "amenities": ["Beach Access", "Pool", "Restaurant", "Bar", "WiFi"],
+            "description": "Beachfront hotel with direct access to Labadi Beach",
+            "available_rooms": 18
+        },
+        {
+            "id": 5,
+            "name": "Golden Tulip Kumasi City",
+            "location": "Kumasi, Ghana",
+            "city": "Kumasi",
+            "country": "Ghana",
+            "rating": 4,
+            "price_per_night": 250.00,
+            "image_url": "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=500",
+            "amenities": ["Pool", "Restaurant", "Gym", "WiFi", "Parking"],
+            "description": "Modern hotel in the cultural capital of Ghana",
+            "available_rooms": 25
+        },
+        {
+            "id": 6,
+            "name": "Alisa Hotel North Ridge",
+            "location": "Accra, Ghana",
+            "city": "Accra",
+            "country": "Ghana",
+            "rating": 4,
+            "price_per_night": 290.00,
+            "image_url": "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=500",
+            "amenities": ["Pool", "Restaurant", "Gym", "WiFi", "Bar"],
+            "description": "Boutique hotel with personalized service",
+            "available_rooms": 12
+        },
+        {
+            "id": 7,
+            "name": "Coconut Grove Beach Resort",
+            "location": "Cape Coast, Ghana",
+            "city": "Cape Coast",
+            "country": "Ghana",
+            "rating": 3,
+            "price_per_night": 180.00,
+            "image_url": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=500",
+            "amenities": ["Beach Access", "Restaurant", "WiFi", "Bar"],
+            "description": "Cozy beachfront resort perfect for relaxation",
+            "available_rooms": 20
+        },
+        {
+            "id": 8,
+            "name": "Lancaster Kumasi",
+            "location": "Kumasi, Ghana",
+            "city": "Kumasi",
+            "country": "Ghana",
+            "rating": 3,
+            "price_per_night": 150.00,
+            "image_url": "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=500",
+            "amenities": ["Restaurant", "WiFi", "Parking", "Conference Room"],
+            "description": "Comfortable hotel with great value for money",
+            "available_rooms": 35
+        }
+    ]
+    
+    # Optional filters
+    city = request.args.get('city', '')
+    max_price = request.args.get('max_price', '')
+    min_rating = request.args.get('min_rating', '')
+    
+    filtered_hotels = hotels
+    
+    if city:
+        filtered_hotels = [h for h in filtered_hotels if city.lower() in h['city'].lower()]
+    
+    if max_price:
+        filtered_hotels = [h for h in filtered_hotels if h['price_per_night'] <= float(max_price)]
+    
+    if min_rating:
+        filtered_hotels = [h for h in filtered_hotels if h['rating'] >= int(min_rating)]
+    
+    return jsonify(filtered_hotels), 200
 
 
 @app.route('/admin/audit-logs', methods=['GET'])
