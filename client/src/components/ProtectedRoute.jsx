@@ -6,7 +6,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const user = JSON.parse(localStorage.getItem("user"));
 
   if (!token || !user) {
-    return <Navigate to="/superadmin-login" replace />; 
+    // Redirect to appropriate login page based on required role
+    if (allowedRoles && (allowedRoles.includes("admin") || allowedRoles.includes("superadmin"))) {
+      return <Navigate to="/superadmin-login" replace />;
+    }
+    return <Navigate to="/login" replace />; 
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {

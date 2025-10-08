@@ -42,7 +42,7 @@ const Navbar = () => {
   };
 
     const handleFlightsClick = () => { 
-        navigate("/flights-dashboard");
+        navigate("/user-dashboard");
     }
 
   return (
@@ -55,7 +55,7 @@ const Navbar = () => {
 
       {/* Desktop Menu */}
       <ul className="hidden md:flex gap-8 font-medium">
-        <li onClick={handleFlightsClick} className="hover:text-yellow-300 cursor-pointer transition">
+        <li onClick={() => navigate("/flights")} className="hover:text-yellow-300 cursor-pointer transition">
           Flights
         </li>
         <li onClick={() => navigate("/hotels")} className="hover:text-yellow-300 cursor-pointer transition">{t("Hotels")}</li>

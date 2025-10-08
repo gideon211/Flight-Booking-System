@@ -40,8 +40,15 @@ const FlightForm = () => {
         setError("");
         setSuccess("");
         
+        // Debug: Check user info
+        const user = JSON.parse(localStorage.getItem("user"));
+        const token = localStorage.getItem("access_token");
+        console.log("DEBUG: User from localStorage:", user);
+        console.log("DEBUG: Token exists:", !!token);
+        
         try {
             const response = await api.post("/admin/flights", formData);
+            console.log("DEBUG: Success response:", response.data);
             setSuccess("Flight created successfully!");
             
             // Reset form after success
@@ -67,7 +74,10 @@ const FlightForm = () => {
                 setSuccess("");
             }, 3000);
         } catch (err) {
-            setError(err.response?.data?.message || err.response?.data?.error || "Failed to create flight");
+            console.error("DEBUG: Full error:", err);
+            console.error("DEBUG: Error response:", err.response);
+            const errorMsg = err.response?.data?.message || err.response?.data?.error || err.message || "Failed to create flight";
+            setError(errorMsg);
         } finally {
             setLoading(false);
         }

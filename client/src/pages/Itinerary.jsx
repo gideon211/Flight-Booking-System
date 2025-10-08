@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 
 const ItineraryPage = () => {
@@ -7,6 +8,18 @@ const ItineraryPage = () => {
     const flight = location.state?.flight;
     const from = location.state?.from ?? flight?.departure_city_code ?? "ACCRA";
     const to = location.state?.to ?? flight?.arrival_city_code ?? "KUMASI";
+
+    // User selections
+    const [numSeats, setNumSeats] = useState(1);
+    const [selectedClass, setSelectedClass] = useState(flight?.cabin_class || 'Economy');
+    const [extraBaggage, setExtraBaggage] = useState(0);
+    const [mealPreference, setMealPreference] = useState('Standard');
+
+    // Pricing
+    const basePrice = parseFloat(flight?.price || 0);
+    const classUpgradePrice = selectedClass === 'Business' ? 200 : selectedClass === 'First Class' ? 500 : 0;
+    const baggagePrice = extraBaggage * 50; // GHS 50 per extra bag
+    const totalPrice = (basePrice + classUpgradePrice + baggagePrice) * numSeats;
 
     if (!flight) return <p>No flight selected.</p>;
 
@@ -83,9 +96,124 @@ const ItineraryPage = () => {
                         </div>
 
                     
-                        <div className="flex items-center gap-4 mb-4 text-sm text-gray-700">
-                            <span>🧳 Baggage: 23kg</span>
-                            <span>Adult</span>
+                        {/* Customization Options */}
+                        <div className="border-t border-gray-200 pt-4 mb-4">
+                            <h3 className="font-semibold text-gray-800 mb-3">Customize Your Booking</h3>
+                            
+                            {/* Number of Seats */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Number of Passengers
+                                </label>
+                                <select
+                                    value={numSeats}
+                                    onChange={(e) => setNumSeats(parseInt(e.target.value))}
+                                    className="border-2 border-blue-200 rounded px-4 py-2 w-full md:w-48 outline-none"
+                                >
+                                    {[...Array(Math.min(flight.seats_available || 9, 9))].map((_, i) => (
+                                        <option key={i + 1} value={i + 1}>
+                                            {i + 1} {i === 0 ? 'Passenger' : 'Passengers'}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {flight.seats_available} seats available on this flight
+                                </p>
+                            </div>
+
+                            {/* Cabin Class Selection */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Cabin Class
+                                </label>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div
+                                        onClick={() => setSelectedClass('Economy')}
+                                        className={`border-2 p-3 rounded cursor-pointer transition ${
+                                            selectedClass === 'Economy'
+                                                ? 'border-blue-500 bg-blue-50'
+                                                : 'border-gray-200 hover:border-blue-300'
+                                        }`}
+                                    >
+                                        <p className="font-semibold">✈️ Economy</p>
+                                        <p className="text-xs text-gray-600">Base price</p>
+                                    </div>
+                                    <div
+                                        onClick={() => setSelectedClass('Business')}
+                                        className={`border-2 p-3 rounded cursor-pointer transition ${
+                                            selectedClass === 'Business'
+                                                ? 'border-blue-500 bg-blue-50'
+                                                : 'border-gray-200 hover:border-blue-300'
+                                        }`}
+                                    >
+                                        <p className="font-semibold">💼 Business</p>
+                                        <p className="text-xs text-gray-600">+GHS 200</p>
+                                    </div>
+                                    <div
+                                        onClick={() => setSelectedClass('First Class')}
+                                        className={`border-2 p-3 rounded cursor-pointer transition ${
+                                            selectedClass === 'First Class'
+                                                ? 'border-blue-500 bg-blue-50'
+                                                : 'border-gray-200 hover:border-blue-300'
+                                        }`}
+                                    >
+                                        <p className="font-semibold">👑 First Class</p>
+                                        <p className="text-xs text-gray-600">+GHS 500</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Extra Baggage */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Extra Baggage (GHS 50 per bag)
+                                </label>
+                                <select
+                                    value={extraBaggage}
+                                    onChange={(e) => setExtraBaggage(parseInt(e.target.value))}
+                                    className="border-2 border-blue-200 rounded px-4 py-2 w-full md:w-48 outline-none"
+                                >
+                                    <option value={0}>No extra baggage</option>
+                                    <option value={1}>1 extra bag (+GHS 50)</option>
+                                    <option value={2}>2 extra bags (+GHS 100)</option>
+                                    <option value={3}>3 extra bags (+GHS 150)</option>
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Standard: {flight.baggage_allowance || '23kg'} included
+                                </p>
+                            </div>
+
+                            {/* Meal Preference */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Meal Preference
+                                </label>
+                                <select
+                                    value={mealPreference}
+                                    onChange={(e) => setMealPreference(e.target.value)}
+                                    className="border-2 border-blue-200 rounded px-4 py-2 w-full md:w-64 outline-none"
+                                >
+                                    <option value="Standard">Standard Meal</option>
+                                    <option value="Vegetarian">Vegetarian</option>
+                                    <option value="Vegan">Vegan</option>
+                                    <option value="Halal">Halal</option>
+                                    <option value="Kosher">Kosher</option>
+                                    <option value="Gluten-Free">Gluten-Free</option>
+                                    <option value="No Meal">No Meal Preference</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Additional Information */}
+                        <div className="bg-blue-50 p-4 rounded mb-4">
+                            <h4 className="font-semibold text-gray-800 mb-2 text-sm">What's Included:</h4>
+                            <ul className="text-sm text-gray-700 space-y-1">
+                                <li>✓ {flight.baggage_allowance || '23kg'} checked baggage</li>
+                                <li>✓ 7kg cabin baggage</li>
+                                <li>✓ In-flight meal and beverages</li>
+                                <li>✓ In-flight entertainment</li>
+                                <li>✓ Travel insurance (optional)</li>
+                            </ul>
                         </div>
 
                     
@@ -105,13 +233,36 @@ const ItineraryPage = () => {
                             </div>
                             <div className="items-end flex flex-col">
                                 
-                                <div className="flex gap-4 items-center font-semibold mb-4">
-                                    <span>Grand Total:</span>
-                                    <span className="text-red-600">GHS {flight.price}</span>
+                                <div className="text-right mb-4">
+                                    <p className="text-sm text-gray-600">Base Price: GHS {basePrice.toFixed(2)}</p>
+                                    {classUpgradePrice > 0 && (
+                                        <p className="text-sm text-gray-600">Class Upgrade: +GHS {classUpgradePrice.toFixed(2)}</p>
+                                    )}
+                                    {baggagePrice > 0 && (
+                                        <p className="text-sm text-gray-600">Extra Baggage: +GHS {baggagePrice.toFixed(2)}</p>
+                                    )}
+                                    {numSeats > 1 && (
+                                        <p className="text-sm text-gray-600">× {numSeats} passengers</p>
+                                    )}
+                                    <div className="flex gap-4 items-center font-semibold mt-2">
+                                        <span>Grand Total:</span>
+                                        <span className="text-red-600 text-xl">GHS {totalPrice.toFixed(2)}</span>
+                                    </div>
                                 </div>
 
                                 <button
-                                    onClick={() => navigate("/email", { state: { flight } })}
+                                    onClick={() => navigate("/email", { 
+                                        state: { 
+                                            flight,
+                                            bookingDetails: {
+                                                numSeats,
+                                                selectedClass,
+                                                extraBaggage,
+                                                mealPreference,
+                                                totalPrice
+                                            }
+                                        } 
+                                    })}
                                     className="bg-yellow-400 hover:bg-yellow-500 px-8 py-3 rounded font-medium text-black cursor-pointer"
                                 >
                                     CONTINUE

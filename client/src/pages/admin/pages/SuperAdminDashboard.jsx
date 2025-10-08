@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import OverviewDashboard from "../components/OverviewDashboard";
 import UserManagement from "../components/UserManagement";
 import AdminManagement from "../components/AdminManagement";
@@ -7,12 +8,27 @@ import AuditLogs from "../components/AuditLogs";
 
 const SuperAdminDashboard = () => {
     const [activeTab, setActiveTab] = useState("overview");
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        localStorage.removeItem('user');
+        sessionStorage.clear();
+        navigate('/');
+    };
 
     return (
         <div className="p-6 bg-gray-100 min-h-screen">
-            <div className="mb-6">
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">SuperAdmin Dashboard</h1>
-                <p className="text-gray-600">Manage users, admins, and system settings</p>
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-800 mb-2">SuperAdmin Dashboard</h1>
+                    <p className="text-gray-600">Manage users, admins, and system settings</p>
+                </div>
+                <button
+                    onClick={handleLogout}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow transition"
+                >
+                    Logout
+                </button>
             </div>
 
             <div className="flex gap-4 mb-6 flex-wrap">

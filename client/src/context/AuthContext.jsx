@@ -36,8 +36,19 @@ export const AuthProvider = ({ children }) => {
 
 
     const logout = async () => {
-        await api.post("/logout");
+        try {
+            await api.post("/logout");
+        } catch (error) {
+            console.error("Logout error:", error);
+        }
+        
+        // Clear all stored data
         setUser(null);
+        localStorage.clear();  // Clear ALL localStorage
+        sessionStorage.clear(); // Clear ALL sessionStorage
+        
+        // Force complete page reload to clear all React state
+        window.location.replace("/");
     };
 
     return (

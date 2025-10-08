@@ -148,6 +148,15 @@ const UserDashboard = () => {
         });
     };
 
+    const handleLogout = () => {
+        // Clear any stored tokens or user data
+        localStorage.removeItem('user');
+        sessionStorage.clear();
+        
+        // Navigate to home page
+        navigate('/');
+    };
+
     return (
         <div className="min-h-screen bg-blue-50 flex flex-col">
             {loading && (
@@ -161,8 +170,18 @@ const UserDashboard = () => {
             {/* Search Section */}
             <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-12 px-6">
                 <div className="max-w-6xl mx-auto">
-                    <h1 className="text-3xl font-bold mb-2">Search & Book Flights</h1>
-                    <p className="text-blue-100 mb-6">Find the best deals for your next trip</p>
+                    <div className="flex justify-between items-center mb-4">
+                        <div>
+                            <h1 className="text-3xl font-bold mb-2">Search & Book Flights</h1>
+                            <p className="text-blue-100">Find the best deals for your next trip</p>
+                        </div>
+                        <button
+                            onClick={handleLogout}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow-lg transition"
+                        >
+                            Logout
+                        </button>
+                    </div>
 
                     <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl p-6">
                         {/* Trip Type */}
@@ -271,23 +290,24 @@ const UserDashboard = () => {
                                 />
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Return</label>
-                                <Flatpickr
-                                    name="returnDate"
-                                    value={formData.returnDate}
-                                    options={{ dateFormat: "Y-m-d", minDate: formData.departureDate || "today" }}
-                                    onChange={(selectedDates, dateStr) => {
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            returnDate: dateStr,
-                                        }));
-                                    }}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-3 outline-none text-gray-800"
-                                    placeholder="Select date"
-                                    disabled={formData.tripType === "oneway"}
-                                />
-                            </div>
+                            {formData.tripType === "round" && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Return</label>
+                                    <Flatpickr
+                                        name="returnDate"
+                                        value={formData.returnDate}
+                                        options={{ dateFormat: "Y-m-d", minDate: formData.departureDate || "today" }}
+                                        onChange={(selectedDates, dateStr) => {
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                returnDate: dateStr,
+                                            }));
+                                        }}
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-3 outline-none text-gray-800"
+                                        placeholder="Select date"
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
@@ -412,81 +432,70 @@ const UserDashboard = () => {
                 </div>
             )}
 
-            {!showResults && (
+            {!showResults && flights.length > 0 && (
                 <div className="flex-1 p-6 max-w-6xl mx-auto w-full">
                     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                         <h3 className="text-2xl font-bold mb-2 text-gray-800">
                             Available Flights
                         </h3>
                         <p className="text-gray-600">
-                            {flights.length} flights available
+                            {flights.length} flight{flights.length !== 1 ? 's' : ''} available
                         </p>
                     </div>
 
-                    {flights.length > 0 ? (
-                        <div className="space-y-4">
-                            {flights.map((flight) => (
-                                <div
-                                    key={flight.flight_id}
-                                    className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition"
-                                >
-                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                        <div className="flex items-center gap-4">
-                                            <img
-                                                src="https://static.vecteezy.com/system/resources/thumbnails/005/145/664/small_2x/flying-airplane-air-transportation-airline-plane-illustration-vector.jpg"
-                                                alt={flight.airline}
-                                                className="w-20 h-20 object-cover rounded"
-                                            />
-                                            <div>
-                                                <p className="font-semibold text-lg">{flight.airline}</p>
-                                                <p className="text-sm text-gray-500">{flight.flight_id}</p>
-                                                <p className="text-sm text-gray-600">{flight.cabin_class}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex-1 text-center">
-                                            <p className="font-medium text-lg">
-                                                {new Date(flight.departure_datetime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                                                {flight.arrival_datetime && (
-                                                    <> → {new Date(flight.arrival_datetime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</>
-                                                )}
-                                            </p>
-                                            <p className="text-sm text-gray-500">{flight.flight_duration ? `${flight.flight_duration} hrs` : 'N/A'}</p>
-                                            <p className="text-xs text-gray-400 mt-1">
-                                                {flight.departure_city_code} → {flight.arrival_city_code}
-                                            </p>
-                                            <p className="text-xs text-gray-400">
-                                                {flight.origin_country} → {flight.destination_country}
-                                            </p>
-                                        </div>
-
-                                        <div className="text-right">
-                                            <p className="text-2xl font-bold text-blue-600">
-                                                GHS {flight.price}
-                                            </p>
-                                            <p className="text-xs text-gray-500 mb-1">per person</p>
-                                            <p className="text-xs text-gray-400 mb-3">{flight.seats_available} seats left</p>
-                                            <button
-                                                onClick={() => handleSelectFlight(flight)}
-                                                className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-2 rounded-lg font-medium shadow cursor-pointer transition"
-                                            >
-                                                Book Now
-                                            </button>
+                    <div className="space-y-4">
+                        {flights.map((flight) => (
+                            <div
+                                key={flight.flight_id}
+                                className="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition"
+                            >
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                    <div className="flex items-center gap-4">
+                                        <img
+                                            src="https://static.vecteezy.com/system/resources/thumbnails/005/145/664/small_2x/flying-airplane-air-transportation-airline-plane-illustration-vector.jpg"
+                                            alt={flight.airline}
+                                            className="w-20 h-20 object-cover rounded"
+                                        />
+                                        <div>
+                                            <p className="font-semibold text-lg">{flight.airline}</p>
+                                            <p className="text-sm text-gray-500">{flight.flight_id}</p>
+                                            <p className="text-sm text-gray-600">{flight.cabin_class}</p>
                                         </div>
                                     </div>
+
+                                    <div className="flex-1 text-center">
+                                        <p className="font-medium text-lg">
+                                            {new Date(flight.departure_datetime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                            {flight.arrival_datetime && (
+                                                <> → {new Date(flight.arrival_datetime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</>
+                                            )}
+                                        </p>
+                                        <p className="text-sm text-gray-500">{flight.flight_duration ? `${flight.flight_duration} hrs` : 'N/A'}</p>
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            {flight.departure_city_code} → {flight.arrival_city_code}
+                                        </p>
+                                        <p className="text-xs text-gray-400">
+                                            {flight.origin_country} → {flight.destination_country}
+                                        </p>
+                                    </div>
+
+                                    <div className="text-right">
+                                        <p className="text-2xl font-bold text-blue-600">
+                                            GHS {flight.price}
+                                        </p>
+                                        <p className="text-xs text-gray-500 mb-1">per person</p>
+                                        <p className="text-xs text-gray-400 mb-3">{flight.seats_available} seats left</p>
+                                        <button
+                                            onClick={() => handleSelectFlight(flight)}
+                                            className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-2 rounded-lg font-medium shadow cursor-pointer transition"
+                                        >
+                                            Book Now
+                                        </button>
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="bg-white rounded-lg shadow-md p-12 text-center">
-                            <p className="text-gray-600 text-lg mb-4">
-                                No flights available at the moment.
-                            </p>
-                            <p className="text-sm text-gray-500">
-                                Please check back later or use the search above to find specific flights.
-                            </p>
-                        </div>
-                    )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 

@@ -32,7 +32,7 @@ const login = () => {
             } else if (data.user.role === "superadmin") {
                 navigate("/superadmin-dashboard");
             } else {
-                navigate("/flights-dashboard");
+                navigate("/user-dashboard");
             }
         } catch (err) {
             setError(err.response?.data?.message || err.message || "Login failed")

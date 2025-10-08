@@ -5,6 +5,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 // Import your pages
 import Home from "./pages/Home";
 import UserDashboard from "./pages/UserDashboard";
+import FlightsDashboard from "./pages/FlightsDashboard";
 import AdminFlights from "./pages/admin/pages/AdminFlights";
 import SuperAdminDashboard from "./pages/admin/pages/SuperAdminDashboard";
 import Login from "./pages/Login";
@@ -15,6 +16,7 @@ import EmailPage from "./pages/email";
 import TravelerPage from "./pages/traveler";
 import PaymentPage from "./pages/payment";
 import TicketSection from "./pages/Ticketsection";
+import Hotels from "./pages/Hotels";
 
 const App = () => {
   return (
@@ -25,10 +27,12 @@ const App = () => {
       <Route path="/signup" element={<Signup />} />
       <Route path="/superadmin-login" element={<SuperAdminLogin />} />
       <Route path="/ticketsection" element={<TicketSection />} />
+      <Route path="/hotels" element={<Hotels />} />
+      <Route path="/flights" element={<FlightsDashboard />} />
 
       {/* Normal User Dashboard */}
       <Route
-        path="/flights-dashboard"
+        path="/user-dashboard"
         element={
           <ProtectedRoute allowedRoles={["user"]}>
             <UserDashboard />
