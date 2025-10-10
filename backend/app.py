@@ -41,35 +41,55 @@ CORS(
     methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
 )
 
-JWT_SECRET = os.getenv("JWT_KEY", "MY_SECRET_KEY")  
 JWT_ALGORITHM = "HS256"
 JWT_EXP_DELTA_MINUTES = 60
 
 
 def ensure_admin_columns():
+    """Ensure admin-related columns exist in login_users table"""
     try:
         db = database_connection()
         cursor = db.cursor()
-        cursor.execute("""
-            ALTER TABLE login_users
-            ADD COLUMN IF NOT EXISTS permissions JSONB DEFAULT '[]'::jsonb;
-        """)
-        cursor.execute("""
-            ALTER TABLE login_users
-            ADD COLUMN IF NOT EXISTS last_login TIMESTAMP NULL;
-        """)
-        cursor.execute("""
-            ALTER TABLE login_users
-            ADD COLUMN IF NOT EXISTS status VARCHAR(16) DEFAULT 'active';
-        """)
-        db.commit()
-    except Exception:
         
+        # Add role column if it doesn't exist
+        cursor.execute("""
+            ALTER TABLE login_users 
+            ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user'
+        """)
+        
+        # Add permissions column if it doesn't exist
+        cursor.execute("""
+            ALTER TABLE login_users 
+            ADD COLUMN IF NOT EXISTS permissions JSONB DEFAULT '[]'::jsonb
+        """)
+        
+        # Add last_login column if it doesn't exist
+        cursor.execute("""
+            ALTER TABLE login_users 
+            ADD COLUMN IF NOT EXISTS last_login TIMESTAMP NULL
+        """)
+        
+        # Add status column if it doesn't exist
+        cursor.execute("""
+            ALTER TABLE login_users 
+            ADD COLUMN IF NOT EXISTS status VARCHAR(16) DEFAULT 'active'
+        """)
+        
+        # Add created_at column if it doesn't exist
+        cursor.execute("""
+            ALTER TABLE login_users 
+            ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW()
+        """)
+        
+        db.commit()
+        cursor.close()
+        db.close()
+    except Exception as e:
+        print(f"Error ensuring admin columns: {e}")
         try:
             db.rollback()
         except Exception:
             pass
-    finally:
         try:
             cursor.close()
         except Exception:
@@ -140,19 +160,45 @@ def database_connection():
             dbname=os.getenv('DB_NAME')
         )
     except psycopg2.Error as e:
-        print("Database connection failed:", e)
+        print(f"Database connection failed: {e}")
+        print(f"Attempting to connect to: host={os.getenv('DB_HOST')}, user={os.getenv('DB_USER')}, db={os.getenv('DB_NAME')}")
         raise
 
-ensure_admin_columns()
-ensure_audit_logs_table()
+# Try to initialize database tables, but don't fail if database is not available
+try:
+    ensure_admin_columns()
+    ensure_audit_logs_table()
+    print("Database tables initialized successfully")
+except Exception as e:
+    print(f"Warning: Could not initialize database tables: {e}")
+    print("The API will still run, but database-dependent features may not work")
+
+@app.route('/', methods=['GET'])
+def root():
+    return jsonify({"message": "Flight Booking System API", "status": "running"}), 200
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint to verify database connectivity"""
+    try:
+        db = database_connection()
+        cursor = db.cursor()
+        cursor.execute("SELECT 1")
+        cursor.fetchone()
+        cursor.close()
+        db.close()
+        return jsonify({"status": "healthy", "database": "connected"}), 200
+    except Exception as e:
+        return jsonify({"status": "unhealthy", "database": "disconnected", "error": str(e)}), 500
 
 
 
 def get_cookie_settings():
     is_local = ("localhost" in request.host) or ("127.0.0.1" in request.host)
     secure_cookie = False if is_local else True
-    samesite_cookie = "Lax" if is_local else "None"
-    return secure_cookie, samesite_cookie
+    samesite_cookie = "Lax" if is_local else "None"  # Lax for local since same-origin now, None for production
+    domain_cookie = None  # No domain for same-origin
+    return secure_cookie, samesite_cookie, domain_cookie
 
 
 @app.route('/signup', methods=['POST'])
@@ -192,7 +238,7 @@ def signup():
 
         access_token = generate_access_token(email,role='user')
         refresh_token = generate_refresh_token(email,role='user')
-        secure_cookie, samesite_cookie = get_cookie_settings()
+        secure_cookie, samesite_cookie, domain_cookie = get_cookie_settings()
 
         user = {"first_name": firstname, "last_name": lastname, "email": email}
         response = jsonify({"message": "Signup successful", "status": "success", "user": user})
@@ -200,17 +246,19 @@ def signup():
         response.set_cookie(
             'refresh_token',
             refresh_token,
-            httponly=True, 
-            secure=True,
-            samesite='None',
+            httponly=True,
+            secure=secure_cookie,
+            samesite=samesite_cookie,
+            domain=domain_cookie,
             max_age=7 * 24 * 60 * 60
         )
         response.set_cookie(
             'access_token',
             access_token,
             httponly=True,
-            secure=True,
-            samesite='None',
+            secure=secure_cookie,
+            samesite=samesite_cookie,
+            domain=domain_cookie,
             max_age=15 * 60
         )
         return response, 201
@@ -266,7 +314,7 @@ def login():
 
         access_token = generate_access_token(email,role)
         refresh_token = generate_refresh_token(email,role)
-        secure_cookie, samesite_cookie = get_cookie_settings()
+        secure_cookie, samesite_cookie, domain_cookie = get_cookie_settings()
 
         response = jsonify({"message": "Login successful",
                             "access_token": access_token,
@@ -277,20 +325,24 @@ def login():
                                "lastname":user.get("last_name")
                            }})
 
-        
-        
+
+
         response.set_cookie('refresh_token', refresh_token,
-                            httponly=True, 
-                            secure=True, 
-                            samesite='None',
-                            max_age=7*24*60*60
+                            httponly=True,
+                            secure=secure_cookie,
+                            samesite=samesite_cookie,
+                            domain=domain_cookie,
+                            max_age=7*24*60*60,
+                            path='/'
                             )
-        
+
         response.set_cookie('access_token', access_token,
-                            httponly=True, 
-                            secure=True, 
-                            samesite='None', 
-                            max_age=15*60
+                            httponly=True,
+                            secure=secure_cookie,
+                            samesite=samesite_cookie,
+                            domain=domain_cookie,
+                            max_age=15*60,
+                            path='/'
                             )
         return response
 
@@ -303,35 +355,238 @@ def login():
             db.close()
 
 
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    """API version of login endpoint"""
+    return login()
+
+
+@app.route('/api/signup', methods=['POST'])
+def api_signup():
+    """API version of signup endpoint"""
+    return signup()
+
+
+@app.route('/api/logout', methods=['POST'])
+def api_logout():
+    """API version of logout endpoint"""
+    return logout()
+
+
+@app.route('/api/me', methods=['GET'])
+def api_me():
+    """API version of me endpoint"""
+    return me()
+
+
+@app.route('/api/refresh', methods=['POST'])
+def api_refresh():
+    """API version of refresh endpoint"""
+    return refresh()
+
+
+@app.route('/api/hotels', methods=['GET'])
+def api_get_hotels():
+    """API version of hotels endpoint"""
+    return get_hotels()
+
+
+@app.route('/api/flights', methods=['GET'])
+def api_get_all_flights_public():
+    """API version of public flights endpoint"""
+    return get_all_flights_public()
+
+
+@app.route('/api/flights/search', methods=['GET'])
+def api_search_flights():
+    """API version of flights search endpoint"""
+    return search_flights()
+
+
+@app.route('/api/bookflight', methods=['POST'])
+def api_book_flight():
+    """API version of book flight endpoint"""
+    return book_flight()
+
+
+@app.route('/api/mybookings', methods=['GET'])
+def api_my_bookings():
+    """API version of my bookings endpoint"""
+    return my_bookings()
+
+
+@app.route('/api/cancelbooking', methods=['POST'])
+def api_cancel_booking():
+    """API version of cancel booking endpoint"""
+    return cancel_booking()
+
+
+@app.route('/api/packages', methods=['GET'])
+def api_get_packages():
+    """API endpoint for travel packages"""
+    try:
+        # Dummy package data for now
+        packages = [
+            {
+                "id": 1,
+                "name": "Accra to London Adventure",
+                "description": "7-day package including flights, hotel, and tours",
+                "price": 2500,
+                "currency": "USD",
+                "duration": "7 days",
+                "includes": ["Round-trip flights", "4-star hotel", "City tours", "Breakfast"],
+                "image": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=500",
+                "destinations": ["London", "Accra"],
+                "rating": 4.5
+            },
+            {
+                "id": 2,
+                "name": "Dubai Luxury Getaway",
+                "description": "5-day luxury package with premium accommodations",
+                "price": 3200,
+                "currency": "USD", 
+                "duration": "5 days",
+                "includes": ["Round-trip flights", "5-star hotel", "Desert safari", "All meals"],
+                "image": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=500",
+                "destinations": ["Dubai", "Accra"],
+                "rating": 4.8
+            },
+            {
+                "id": 3,
+                "name": "New York City Explorer",
+                "description": "6-day package exploring the Big Apple",
+                "price": 2800,
+                "currency": "USD",
+                "duration": "6 days", 
+                "includes": ["Round-trip flights", "3-star hotel", "Broadway show", "City pass"],
+                "image": "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=500",
+                "destinations": ["New York", "Accra"],
+                "rating": 4.3
+            }
+        ]
+        
+        return jsonify(packages), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/car-rentals', methods=['GET'])
+def api_get_car_rentals():
+    """API endpoint for car rentals"""
+    try:
+        # Dummy car rental data for now
+        car_rentals = [
+            {
+                "id": 1,
+                "brand": "Toyota",
+                "model": "Camry",
+                "year": 2023,
+                "type": "Sedan",
+                "price_per_day": 45,
+                "currency": "USD",
+                "features": ["Air Conditioning", "GPS", "Bluetooth", "Automatic"],
+                "image": "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=500",
+                "location": "Accra",
+                "available": True,
+                "rating": 4.2
+            },
+            {
+                "id": 2,
+                "brand": "Honda",
+                "model": "CR-V",
+                "year": 2023,
+                "type": "SUV",
+                "price_per_day": 65,
+                "currency": "USD",
+                "features": ["Air Conditioning", "GPS", "4WD", "Bluetooth", "Automatic"],
+                "image": "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=500",
+                "location": "Accra",
+                "available": True,
+                "rating": 4.5
+            },
+            {
+                "id": 3,
+                "brand": "Nissan",
+                "model": "Altima",
+                "year": 2022,
+                "type": "Sedan",
+                "price_per_day": 40,
+                "currency": "USD",
+                "features": ["Air Conditioning", "GPS", "Bluetooth", "Automatic"],
+                "image": "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=500",
+                "location": "Kumasi",
+                "available": True,
+                "rating": 4.0
+            },
+            {
+                "id": 4,
+                "brand": "Ford",
+                "model": "Explorer",
+                "year": 2023,
+                "type": "SUV",
+                "price_per_day": 70,
+                "currency": "USD",
+                "features": ["Air Conditioning", "GPS", "4WD", "Bluetooth", "7-seater"],
+                "image": "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=500",
+                "location": "Accra",
+                "available": True,
+                "rating": 4.6
+            }
+        ]
+        
+        # Filter by location if provided
+        location = request.args.get('location')
+        if location:
+            car_rentals = [car for car in car_rentals if car['location'].lower() == location.lower()]
+            
+        # Filter by type if provided
+        car_type = request.args.get('type')
+        if car_type:
+            car_rentals = [car for car in car_rentals if car['type'].lower() == car_type.lower()]
+        
+        return jsonify(car_rentals), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/refresh', methods=['POST'])
 def refresh():
     refresh_token = request.cookies.get('refresh_token')
     if not refresh_token:
-        return jsonify({"message": "Refresh token missing"}), 401
+        return jsonify({"message": "Refresh token missing", "code": "NO_REFRESH_TOKEN"}), 401
 
     decoded = decode_token(refresh_token, is_refresh=True)
     if not decoded:
-        return jsonify({"message": "Invalid or expired refresh token"}), 401
+        return jsonify({"message": "Invalid or expired refresh token", "code": "INVALID_REFRESH_TOKEN"}), 401
 
-    new_access_token = generate_access_token(decoded['email'],decoded['role'])
-    secure_cookie, samesite_cookie = get_cookie_settings()
-    response = jsonify({"access_token": new_access_token})
-    response.set_cookie('access_token', new_access_token,
-                        httponly=True, 
-                        secure=True, 
-                        samesite='None',
-                        max_age=15*60
-                        )
-    return response
+    try:
+        new_access_token = generate_access_token(decoded['email'], decoded['role'])
+        secure_cookie, samesite_cookie, domain_cookie = get_cookie_settings()
+        response = jsonify({"message": "Token refreshed successfully"})
+        response.set_cookie('access_token', new_access_token,
+                            httponly=True,
+                            secure=secure_cookie,
+                            samesite=samesite_cookie,
+                            domain=domain_cookie,
+                            max_age=15*60,
+                            path='/'
+                            )
+        return response
+    except Exception as e:
+        return jsonify({"message": "Failed to generate new token", "error": str(e)}), 500
 
 
 @app.route('/logout', methods=['POST'])
 def logout():
-    secure_cookie, samesite_cookie = get_cookie_settings()
+    secure_cookie, samesite_cookie, domain_cookie = get_cookie_settings()
     response = jsonify({"message": "Logout successful", "status": "success"})
 
-    response.set_cookie('access_token', '', expires=0, httponly=True, secure=secure_cookie, samesite=samesite_cookie, path='/')
-    response.set_cookie('refresh_token', '', expires=0, httponly=True, secure=secure_cookie, samesite=samesite_cookie, path='/')
+    # Delete cookies by setting empty value with immediate expiration
+    response.delete_cookie('access_token', path='/', secure=secure_cookie, samesite=samesite_cookie, domain=domain_cookie)
+    response.delete_cookie('refresh_token', path='/', secure=secure_cookie, samesite=samesite_cookie, domain=domain_cookie)
+
     return response, 200
 
 
@@ -369,7 +624,7 @@ def me():
 
 
 
-@app.route("/admin/flights", methods=["POST"])
+@app.route("/api/admin/flights", methods=["POST"])
 def create_flight():
     access_token = request.cookies.get('access_token')
     if not access_token:
@@ -379,9 +634,6 @@ def create_flight():
     if not decoded:
         return jsonify({"message": "Invalid or expired token"}), 401
     
-    # Debug logging
-    print(f"DEBUG: Decoded token: {decoded}")
-    print(f"DEBUG: User role: {decoded.get('role')}")
      
     if decoded.get("role") != "admin":
         return jsonify({"message": f"Forbidden: Admins only. Your role is: {decoded.get('role')}"}), 403
@@ -431,6 +683,7 @@ def create_flight():
 
         if not arrival_city:
             return jsonify({"message":"Invalid arrival city name"}),400
+
         
         
         cursor.execute("SELECT airline_id FROM airlines WHERE airline_name = %s", (data["airline"],))
@@ -691,10 +944,37 @@ def delete_admin():
 
     
 
+@app.route('/test-booking', methods=['POST'])
+def test_booking():
+    """Test booking endpoint without authentication for debugging"""
+    data = request.get_json()
+    print(f"TEST BOOKING - Received data: {data}")
+    
+    # Simple validation
+    required_fields = ['flight_id', 'first_name', 'last_name', 'payment_method', 'payment_amount']
+    missing = [field for field in required_fields if not data.get(field)]
+    
+    if missing:
+        return jsonify({"message": f"Missing fields: {missing}"}), 400
+    
+    return jsonify({"message": "Test booking successful", "data": data}), 200
+
+@app.route('/api-health', methods=['GET'])
+def api_health():
+    return jsonify({"status": "healthy", "message": "Backend is running"}), 200
+
 @app.route('/bookflight', methods=['POST'])
 def book_flight():
+    print(f"BOOKING REQUEST - Started booking request")
+    print(f"BOOKING REQUEST - Headers: {dict(request.headers)}")
+    print(f"BOOKING REQUEST - Cookies: {request.cookies}")
+    print(f"BOOKING REQUEST - Method: {request.method}")
+    print(f"BOOKING REQUEST - URL: {request.url}")
+    print(f"BOOKING REQUEST - Data: {request.get_data()}")
+    
     access_token = request.cookies.get('access_token')
     if not access_token:
+        print(f"BOOKING ERROR - No access token found")
         return jsonify({"message": "No Token"}), 401
 
     decoded = decode_token(access_token)
@@ -719,8 +999,18 @@ def book_flight():
     payment_method = data.get('payment_method')
     payment_amount = data.get('payment_amount')
 
-    if not all([first_name, last_name, flight_id, payment_method, payment_amount]):
-            return jsonify({"message": "Required fields missing"}), 400
+    # Log booking attempt for audit
+    print(f"BOOKING ATTEMPT - User: {user_email}, Flight: {flight_id}, Amount: {payment_amount}")
+    
+    missing_fields = []
+    if not first_name: missing_fields.append("first_name")
+    if not last_name: missing_fields.append("last_name") 
+    if not flight_id: missing_fields.append("flight_id")
+    if not payment_method: missing_fields.append("payment_method")
+    if not payment_amount: missing_fields.append("payment_amount")
+    
+    if missing_fields:
+        return jsonify({"message": f"Required fields missing: {', '.join(missing_fields)}"}), 400
 
     user_name = f"{first_name} {last_name}"
 
@@ -733,6 +1023,7 @@ def book_flight():
         flight = cursor.fetchone()
         if not flight:
             return jsonify({"message": "Flight not found"}), 404
+
 
         # Create booking
         cursor.execute("""
@@ -752,21 +1043,47 @@ def book_flight():
         booking = cursor.fetchone()
         booking_id = booking['booking_id']
 
-        # Create payment record
+        # Create new payments table if it doesn't exist with simpler structure
         cursor.execute("""
-            INSERT INTO payments (passenger_id, booking_id, amount, payment_method, payment_status, created_at)
+            CREATE TABLE IF NOT EXISTS flight_payments (
+                payment_id SERIAL PRIMARY KEY,
+                booking_id INTEGER,
+                user_email VARCHAR(255),
+                amount DECIMAL(10, 2) NOT NULL,
+                payment_method VARCHAR(50) NOT NULL,
+                payment_status VARCHAR(20) DEFAULT 'pending',
+                payment_date TIMESTAMP DEFAULT NOW()
+            )
+        """)
+        
+        # Create payment record in new table
+        cursor.execute("""
+            INSERT INTO flight_payments (booking_id, user_email, amount, payment_method, payment_status, payment_date)
             VALUES (%s, %s, %s, %s, %s, NOW())
             RETURNING payment_id, *
         """, (
-            user_email or email,  # Using email as passenger_id
             booking_id,
+            user_email,
             payment_amount,
             payment_method,
             'completed'  # Mark as completed for now
         ))
 
         payment = cursor.fetchone()
+        
+        # Decrement available seats
+        cursor.execute("""
+            UPDATE flights 
+            SET seats_available = seats_available - %s 
+            WHERE flight_id = %s AND seats_available >= %s
+        """, (num_seats, flight_id, num_seats))
+        
+        if cursor.rowcount == 0:
+            db.rollback()
+            return jsonify({"message": "Not enough seats available"}), 400
+            
         db.commit()
+
 
         # Log audit
         log_audit(
@@ -785,9 +1102,13 @@ def book_flight():
         }), 201
 
     except Exception as e:
+        print(f"BOOKING ERROR - {str(e)}")
+        print(f"BOOKING ERROR - Error type: {type(e).__name__}")
+        import traceback
+        print(f"BOOKING ERROR - Traceback: {traceback.format_exc()}")
         db.rollback()
         log_audit(user_email, "CREATE_BOOKING", f"Failed to book flight: {str(e)}", "FAILED", "BOOKING", flight_id)
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"message": "Booking failed", "error": str(e), "details": str(type(e).__name__)}), 500
 
     finally:
         if 'cursor' in locals():
@@ -845,20 +1166,24 @@ def all_bookings():
 
     decoded = decode_token(access_token)
     if not decoded:
-        return jsonify({"message": "Invalid or expired token"}), 401
+        return jsonify({"message": "Invalid Token"}), 401
 
-    if decoded.get("role") not in ["admin", "superadmin"]:
-        return jsonify({"message": "Forbidden: Admins only"}), 403
+    user_role = decoded.get('role')
+    if user_role not in ['admin', 'superadmin']:
+        return jsonify({"message": "Access denied"}), 403
 
     try:
         db = database_connection()
         cursor = db.cursor(cursor_factory=RealDictCursor)
 
         cursor.execute("""
-            SELECT b.booking_id, b.user_email, b.flight_id, f.departure_city_code, f.arrival_city_code,
-                   f.departure_datetime, f.airline, b.status, b.booking_date
+            SELECT b.booking_id, b.user_email, b.user_name, b.flight_id, 
+                   f.departure_city_code, f.arrival_city_code, f.departure_datetime, 
+                   f.airline, b.status, b.booking_date, b.price,
+                   fp.amount as payment_amount, fp.payment_method, fp.payment_status
             FROM bookings b
             JOIN flights f ON b.flight_id = f.flight_id
+            LEFT JOIN flight_payments fp ON b.booking_id = fp.booking_id
             ORDER BY b.booking_date DESC
         """)
         bookings = cursor.fetchall()
@@ -871,6 +1196,12 @@ def all_bookings():
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'db' in locals(): db.close()
+
+
+@app.route('/api/admin/bookings', methods=['GET'])
+def api_all_bookings():
+    """API version of admin bookings endpoint"""
+    return all_bookings()
 
 
 @app.route('/cancelbooking', methods=['POST'])
@@ -900,10 +1231,11 @@ def cancel_booking():
         if not booking:
             return jsonify({"message": "Booking not found or not yours"}), 404
 
-        cursor.execute("UPDATE bookings SET status = %s WHERE booking_id = %s RETURNING *", 
-                       ("cancelled", booking_id))
+        cursor.execute("UPDATE bookings SET status = %s WHERE booking_id = %s RETURNING *",
+                        ("cancelled", booking_id))
         updated = cursor.fetchone()
         db.commit()
+
 
         # Log audit
         log_audit(
@@ -1036,6 +1368,55 @@ def get_all_flights_public():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route('/flights/test-search', methods=['GET'])
+def test_search():
+    """Test search with Accra to London"""
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("""
+            SELECT DISTINCT f.flight_id, f.departure_city_code, f.arrival_city_code, 
+                   f.departure_datetime, f.price, f.flight_status,
+                   dc.country as departure_country, ac.country as arrival_country
+            FROM flights f
+            LEFT JOIN cities dc ON f.departure_city_code = dc.city_name
+            LEFT JOIN cities ac ON f.arrival_city_code = ac.city_name
+            WHERE f.seats_available > 0 
+            AND f.flight_status IN ('active', 'Scheduled')
+            AND (f.departure_city_code ILIKE %s OR dc.city_name ILIKE %s)
+            AND (f.arrival_city_code ILIKE %s OR ac.city_name ILIKE %s)
+            ORDER BY f.departure_datetime ASC
+        """, ('%Accra%', '%Accra%', '%London%', '%London%'))
+        flights = cursor.fetchall()
+        cursor.close()
+        db.close()
+        return jsonify({
+            "search_params": {"origin": "Accra", "destination": "London"},
+            "found_flights": len(flights),
+            "flights": flights
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/flights/debug', methods=['GET'])
+def debug_flights():
+    """Get all flights for debugging"""
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("""
+            SELECT flight_id, departure_city_code, arrival_city_code, 
+                   departure_datetime, price, seats_available, flight_status
+            FROM flights 
+            ORDER BY flight_id ASC
+        """)
+        flights = cursor.fetchall()
+        cursor.close()
+        db.close()
+        return jsonify(flights), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/flights/search', methods=['GET'])
 def search_flights():
     origin = request.args.get('origin')
@@ -1046,24 +1427,27 @@ def search_flights():
     passengers = request.args.get('passengers', '1')
 
     query = """
-        SELECT flight_id, trip_type, airline, departure_city_code, arrival_city_code,
-               departure_datetime, return_datetime as arrival_datetime, price, cabin_class, seats_available, 
-               flight_status, flight_duration, flight_distance, gate, terminal,
-               origin_country, destination_country
-        FROM flights
-        WHERE seats_available > 0 AND flight_status IN ('active', 'scheduled')
+        SELECT DISTINCT f.flight_id, f.trip_type, f.airline, f.departure_city_code, f.arrival_city_code,
+               f.departure_datetime, f.return_datetime as arrival_datetime, f.price, f.cabin_class, f.seats_available, 
+               f.flight_status, f.flight_duration, f.flight_distance, f.gate, f.terminal,
+               f.origin_country, f.destination_country,
+               dc.country as departure_country, ac.country as arrival_country
+        FROM flights f
+        LEFT JOIN cities dc ON f.departure_city_code = dc.city_name
+        LEFT JOIN cities ac ON f.arrival_city_code = ac.city_name
+        WHERE f.seats_available > 0 AND f.flight_status IN ('active', 'Scheduled')
     """
     params = []
 
     if origin:
-        # Search by both city code and city name
-        query += " AND (departure_city_code ILIKE %s OR departure_city_code IN (SELECT city_code FROM cities WHERE city_name ILIKE %s))"
+        # Search by departure city name using cities table relationship
+        query += " AND (f.departure_city_code ILIKE %s OR dc.city_name ILIKE %s)"
         params.append(f"%{origin}%")
         params.append(f"%{origin}%")
 
     if destination:
-        # Search by both city code and city name
-        query += " AND (arrival_city_code ILIKE %s OR arrival_city_code IN (SELECT city_code FROM cities WHERE city_name ILIKE %s))"
+        # Search by arrival city name using cities table relationship
+        query += " AND (f.arrival_city_code ILIKE %s OR ac.city_name ILIKE %s)"
         params.append(f"%{destination}%")
         params.append(f"%{destination}%")
 
@@ -1089,8 +1473,14 @@ def search_flights():
         db = database_connection()
         cursor = db.cursor(cursor_factory=RealDictCursor)
 
+        # Debug: print the query and parameters
+        print(f"DEBUG SEARCH - Query: {query}")
+        print(f"DEBUG SEARCH - Params: {params}")
+        
         cursor.execute(query, tuple(params))
         flights = cursor.fetchall()
+
+        print(f"DEBUG SEARCH - Found {len(flights)} flights")
 
         # Return empty array instead of 404 for better frontend handling
         if not flights:
@@ -1685,56 +2075,88 @@ def admin_dashboard_stats():
         cursor = db.cursor(cursor_factory=RealDictCursor)
 
         # Total flights
-        cursor.execute("SELECT COUNT(*) as count FROM flights")
-        total_flights = cursor.fetchone()['count']
+        try:
+            cursor.execute("SELECT COUNT(*) as count FROM flights")
+            total_flights = cursor.fetchone()['count']
+        except Exception as e:
+            print(f"Error fetching total flights: {e}")
+            total_flights = 0
 
         # Total bookings
-        cursor.execute("SELECT COUNT(*) as count FROM bookings")
-        total_bookings = cursor.fetchone()['count']
+        try:
+            cursor.execute("SELECT COUNT(*) as count FROM bookings")
+            total_bookings = cursor.fetchone()['count']
+        except Exception as e:
+            print(f"Error fetching total bookings: {e}")
+            total_bookings = 0
 
         # Total revenue
-        cursor.execute("SELECT SUM(price) as revenue FROM bookings WHERE status = 'confirmed'")
-        revenue_result = cursor.fetchone()
-        total_revenue = float(revenue_result['revenue']) if revenue_result['revenue'] else 0
+        try:
+            cursor.execute("SELECT SUM(price) as revenue FROM bookings WHERE status = 'confirmed'")
+            revenue_result = cursor.fetchone()
+            total_revenue = float(revenue_result['revenue']) if revenue_result and revenue_result['revenue'] else 0
+        except Exception as e:
+            print(f"Error fetching total revenue: {e}")
+            total_revenue = 0
 
         # Cancelled bookings
-        cursor.execute("SELECT COUNT(*) as count FROM bookings WHERE status = 'cancelled'")
-        cancelled_bookings = cursor.fetchone()['count']
+        try:
+            cursor.execute("SELECT COUNT(*) as count FROM bookings WHERE status = 'cancelled'")
+            cancelled_bookings = cursor.fetchone()['count']
+        except Exception as e:
+            print(f"Error fetching cancelled bookings: {e}")
+            cancelled_bookings = 0
 
         # Upcoming flights
-        cursor.execute("SELECT COUNT(*) as count FROM flights WHERE departure_datetime > NOW() AND flight_status = 'active'")
-        upcoming_flights = cursor.fetchone()['count']
+        try:
+            cursor.execute("SELECT COUNT(*) as count FROM flights WHERE departure_datetime > NOW() AND flight_status = 'active'")
+            upcoming_flights = cursor.fetchone()['count']
+        except Exception as e:
+            print(f"Error fetching upcoming flights: {e}")
+            upcoming_flights = 0
 
         # Bookings per route
-        cursor.execute("""
-            SELECT city_origin, city_destination, COUNT(*) as count
-            FROM bookings
-            GROUP BY city_origin, city_destination
-            ORDER BY count DESC
-            LIMIT 10
-        """)
-        bookings_per_route = cursor.fetchall()
+        try:
+            cursor.execute("""
+                SELECT city_origin, city_destination, COUNT(*) as count
+                FROM bookings
+                GROUP BY city_origin, city_destination
+                ORDER BY count DESC
+                LIMIT 10
+            """)
+            bookings_per_route = cursor.fetchall()
+        except Exception as e:
+            print(f"Error fetching bookings per route: {e}")
+            bookings_per_route = []
 
         # Revenue per month
-        cursor.execute("""
-            SELECT 
-                TO_CHAR(booking_date, 'Mon YYYY') as month,
-                SUM(price) as revenue
-            FROM bookings
-            WHERE status = 'confirmed'
-            GROUP BY TO_CHAR(booking_date, 'Mon YYYY'), DATE_TRUNC('month', booking_date)
-            ORDER BY DATE_TRUNC('month', booking_date)
-            LIMIT 12
-        """)
-        revenue_per_month = cursor.fetchall()
+        try:
+            cursor.execute("""
+                SELECT 
+                    TO_CHAR(booking_date, 'Mon YYYY') as month,
+                    SUM(price) as revenue
+                FROM bookings
+                WHERE status = 'confirmed'
+                GROUP BY TO_CHAR(booking_date, 'Mon YYYY'), DATE_TRUNC('month', booking_date)
+                ORDER BY DATE_TRUNC('month', booking_date)
+                LIMIT 12
+            """)
+            revenue_per_month = cursor.fetchall()
+        except Exception as e:
+            print(f"Error fetching revenue per month: {e}")
+            revenue_per_month = []
 
         # Flight status distribution
-        cursor.execute("""
-            SELECT flight_status, COUNT(*) as count
-            FROM flights
-            GROUP BY flight_status
-        """)
-        flight_status_dist = cursor.fetchall()
+        try:
+            cursor.execute("""
+                SELECT flight_status, COUNT(*) as count
+                FROM flights
+                GROUP BY flight_status
+            """)
+            flight_status_dist = cursor.fetchall()
+        except Exception as e:
+            print(f"Error fetching flight status distribution: {e}")
+            flight_status_dist = []
 
         cursor.close()
         db.close()
@@ -1751,7 +2173,531 @@ def admin_dashboard_stats():
         }), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Dashboard stats error: {str(e)}")
+        return jsonify({"error": str(e), "message": "Failed to load dashboard statistics"}), 500
+
+
+@app.route('/api/admin/dashboard/stats', methods=['GET'])
+def api_admin_dashboard_stats():
+    """API version of admin dashboard stats endpoint"""
+    return admin_dashboard_stats()
+
+
+# API versions of user management endpoints with cookie authentication
+@app.route('/api/users', methods=['GET'])
+def api_get_all_users():
+    """Get all users - SuperAdmin only (API version with cookie auth)"""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid Token"}), 401
+
+    user_role = decoded.get('role')
+    if user_role != 'superadmin':
+        return jsonify({"message": "Access denied - SuperAdmin only"}), 403
+
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute("""
+            SELECT id, first_name, last_name, email, role, status, created_at
+            FROM login_users 
+            ORDER BY created_at DESC
+        """)
+        users = cursor.fetchall()
+        
+        # Format the response
+        formatted_users = []
+        for user in users:
+            # Manually create the name field
+            name = f"{user['first_name']} {user['last_name']}" if user['first_name'] and user['last_name'] else (user['first_name'] or user['last_name'] or 'Unknown')
+            
+            formatted_users.append({
+                'id': user['id'],
+                'name': name,
+                'email': user['email'],
+                'role': user['role'],
+                'status': user['status'],
+                'createdAt': user['created_at'].strftime('%Y-%m-%d') if user['created_at'] else 'N/A'
+            })
+        
+        return jsonify(formatted_users), 200
+
+    except Exception as e:
+        return jsonify({"message": f"Error fetching users: {str(e)}"}), 500
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'db' in locals(): db.close()
+
+
+@app.route('/api/users', methods=['POST'])
+def api_create_user():
+    """Create new user - SuperAdmin only (API version with cookie auth)"""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid Token"}), 401
+
+    user_role = decoded.get('role')
+    if user_role != 'superadmin':
+        return jsonify({"message": "Access denied - SuperAdmin only"}), 403
+
+    try:
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip()
+        password = data.get('password', '').strip()
+        role = data.get('role', 'user')
+
+        if not all([name, email, password]):
+            return jsonify({"message": "Name, email, and password are required"}), 400
+
+        # Split name into first and last name
+        name_parts = name.split(' ', 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        
+        # Check if user already exists
+        cursor.execute("SELECT id FROM login_users WHERE email = %s", (email,))
+        if cursor.fetchone():
+            return jsonify({"message": "User with this email already exists"}), 400
+
+        # Hash password
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        # Insert new user
+        cursor.execute("""
+            INSERT INTO login_users (first_name, last_name, email, hash_password, role, status)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id, first_name, last_name, email, role, status, created_at
+        """, (first_name, last_name, email, hashed_password, role, 'active'))
+        
+        new_user = cursor.fetchone()
+        db.commit()
+        
+        # Format response
+        response_user = {
+            'id': new_user['id'],
+            'name': f"{new_user['first_name']} {new_user['last_name']}",
+            'email': new_user['email'],
+            'role': new_user['role'],
+            'status': new_user['status'],
+            'createdAt': new_user['created_at'].strftime('%Y-%m-%d') if new_user['created_at'] else 'N/A'
+        }
+        
+        return jsonify(response_user), 201
+
+    except Exception as e:
+        if 'db' in locals():
+            db.rollback()
+        return jsonify({"message": f"Error creating user: {str(e)}"}), 500
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'db' in locals(): db.close()
+
+
+@app.route('/api/users/<int:user_id>', methods=['PUT'])
+def api_update_user(user_id):
+    """Update user - SuperAdmin only (API version with cookie auth)"""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid Token"}), 401
+
+    user_role = decoded.get('role')
+    if user_role != 'superadmin':
+        return jsonify({"message": "Access denied - SuperAdmin only"}), 403
+
+    try:
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip()
+        password = data.get('password', '').strip()
+        role = data.get('role', 'user')
+
+        if not all([name, email]):
+            return jsonify({"message": "Name and email are required"}), 400
+
+        # Split name into first and last name
+        name_parts = name.split(' ', 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        
+        # Check if user exists
+        cursor.execute("SELECT id FROM login_users WHERE id = %s", (user_id,))
+        if not cursor.fetchone():
+            return jsonify({"message": "User not found"}), 404
+
+        # Update user
+        if password:
+            hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            cursor.execute("""
+                UPDATE login_users 
+                SET first_name = %s, last_name = %s, email = %s, hash_password = %s, role = %s
+                WHERE id = %s
+                RETURNING id, first_name, last_name, email, role, status, created_at
+            """, (first_name, last_name, email, hashed_password, role, user_id))
+        else:
+            cursor.execute("""
+                UPDATE login_users 
+                SET first_name = %s, last_name = %s, email = %s, role = %s
+                WHERE id = %s
+                RETURNING id, first_name, last_name, email, role, status, created_at
+            """, (first_name, last_name, email, role, user_id))
+        
+        updated_user = cursor.fetchone()
+        db.commit()
+        
+        # Format response
+        response_user = {
+            'id': updated_user['id'],
+            'name': f"{updated_user['first_name']} {updated_user['last_name']}",
+            'email': updated_user['email'],
+            'role': updated_user['role'],
+            'status': updated_user['status'],
+            'createdAt': updated_user['created_at'].strftime('%Y-%m-%d') if updated_user['created_at'] else 'N/A'
+        }
+        
+        return jsonify(response_user), 200
+
+    except Exception as e:
+        if 'db' in locals():
+            db.rollback()
+        return jsonify({"message": f"Error updating user: {str(e)}"}), 500
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'db' in locals(): db.close()
+
+
+@app.route('/api/users/<int:user_id>', methods=['DELETE'])
+def api_delete_user(user_id):
+    """Delete user - SuperAdmin only (API version with cookie auth)"""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid Token"}), 401
+
+    user_role = decoded.get('role')
+    if user_role != 'superadmin':
+        return jsonify({"message": "Access denied - SuperAdmin only"}), 403
+
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        
+        # Check if user exists
+        cursor.execute("SELECT id FROM login_users WHERE id = %s", (user_id,))
+        if not cursor.fetchone():
+            return jsonify({"message": "User not found"}), 404
+
+        # Delete user
+        cursor.execute("DELETE FROM login_users WHERE id = %s", (user_id,))
+        db.commit()
+        
+        return jsonify({"message": "User deleted successfully"}), 200
+
+    except Exception as e:
+        if 'db' in locals():
+            db.rollback()
+        return jsonify({"message": f"Error deleting user: {str(e)}"}), 500
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'db' in locals(): db.close()
+
+
+@app.route('/api/users/<int:user_id>/role', methods=['PATCH'])
+def api_update_user_role(user_id):
+    """Update user role - SuperAdmin only (API version with cookie auth)"""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid Token"}), 401
+
+    user_role = decoded.get('role')
+    if user_role != 'superadmin':
+        return jsonify({"message": "Access denied - SuperAdmin only"}), 403
+
+    try:
+        data = request.get_json()
+        new_role = data.get('role')
+
+        if new_role not in ['user', 'admin', 'superadmin']:
+            return jsonify({"message": "Invalid role"}), 400
+
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        
+        # Update user role
+        cursor.execute("""
+            UPDATE login_users 
+            SET role = %s
+            WHERE id = %s
+            RETURNING id, first_name, last_name, email, role, status, created_at
+        """, (new_role, user_id))
+        
+        updated_user = cursor.fetchone()
+        if not updated_user:
+            return jsonify({"message": "User not found"}), 404
+            
+        db.commit()
+        
+        # Format response
+        response_user = {
+            'id': updated_user['id'],
+            'name': f"{updated_user['first_name']} {updated_user['last_name']}",
+            'email': updated_user['email'],
+            'role': updated_user['role'],
+            'status': updated_user['status'],
+            'createdAt': updated_user['created_at'].strftime('%Y-%m-%d') if updated_user['created_at'] else 'N/A'
+        }
+        
+        return jsonify(response_user), 200
+
+    except Exception as e:
+        if 'db' in locals():
+            db.rollback()
+        return jsonify({"message": f"Error updating user role: {str(e)}"}), 500
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'db' in locals(): db.close()
+
+
+# API versions of admin management endpoints with cookie authentication
+@app.route('/api/admins', methods=['GET'])
+def api_list_admins():
+    """Get all admins - SuperAdmin only (API version with cookie auth)"""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid Token"}), 401
+
+    user_role = decoded.get('role')
+    if user_role != 'superadmin':
+        return jsonify({"message": "Access denied - SuperAdmin only"}), 403
+
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        
+        cursor.execute("""
+            SELECT id, first_name, last_name, email, role, status, permissions, 
+                   last_login, created_at
+            FROM login_users 
+            WHERE role IN ('admin', 'superadmin')
+            ORDER BY created_at DESC
+        """)
+        admins = cursor.fetchall()
+        
+        # Format the response
+        formatted_admins = []
+        for admin in admins:
+            # Parse permissions JSON safely
+            permissions = admin['permissions'] if admin['permissions'] else []
+            if isinstance(permissions, str):
+                try:
+                    import json
+                    permissions = json.loads(permissions)
+                except Exception as e:
+                    print(f"Error parsing permissions for admin {admin['id']}: {e}")
+                    permissions = []
+            elif permissions is None:
+                permissions = []
+            
+            # Manually create the name field
+            name = f"{admin['first_name']} {admin['last_name']}" if admin['first_name'] and admin['last_name'] else (admin['first_name'] or admin['last_name'] or 'Unknown')
+            
+            formatted_admins.append({
+                'id': admin['id'],
+                'name': name,
+                'email': admin['email'],
+                'role': admin['role'],
+                'status': admin['status'],
+                'permissions': permissions,
+                'lastLogin': admin['last_login'].strftime('%Y-%m-%d %H:%M') if admin['last_login'] else 'Never',
+                'createdAt': admin['created_at'].strftime('%Y-%m-%d') if admin['created_at'] else 'N/A'
+            })
+        
+        return jsonify(formatted_admins), 200
+
+    except Exception as e:
+        return jsonify({"message": f"Error fetching admins: {str(e)}"}), 500
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'db' in locals(): db.close()
+
+
+@app.route('/api/admins', methods=['POST'])
+def api_create_admin():
+    """Create new admin - SuperAdmin only (API version with cookie auth)"""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid Token"}), 401
+
+    user_role = decoded.get('role')
+    if user_role != 'superadmin':
+        return jsonify({"message": "Access denied - SuperAdmin only"}), 403
+
+    try:
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        email = data.get('email', '').strip()
+        password = data.get('password', '').strip()
+        permissions = data.get('permissions', [])
+
+        if not all([name, email, password]):
+            return jsonify({"message": "Name, email, and password are required"}), 400
+
+        # Split name into first and last name
+        name_parts = name.split(' ', 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ''
+
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        
+        # Check if user already exists
+        cursor.execute("SELECT id FROM login_users WHERE email = %s", (email,))
+        if cursor.fetchone():
+            return jsonify({"message": "User with this email already exists"}), 400
+
+        # Hash password
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        # Convert permissions to JSON
+        import json
+        permissions_json = json.dumps(permissions)
+        
+        # Insert new admin
+        cursor.execute("""
+            INSERT INTO login_users (first_name, last_name, email, hash_password, role, status, permissions)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id, first_name, last_name, email, role, status, permissions, created_at
+        """, (first_name, last_name, email, hashed_password, 'admin', 'active', permissions_json))
+        
+        new_admin = cursor.fetchone()
+        db.commit()
+        
+        # Format response
+        response_admin = {
+            'id': new_admin['id'],
+            'name': f"{new_admin['first_name']} {new_admin['last_name']}",
+            'email': new_admin['email'],
+            'role': new_admin['role'],
+            'status': new_admin['status'],
+            'permissions': permissions,
+            'lastLogin': 'Never',
+            'createdAt': new_admin['created_at'].strftime('%Y-%m-%d') if new_admin['created_at'] else 'N/A'
+        }
+        
+        return jsonify(response_admin), 201
+
+    except Exception as e:
+        if 'db' in locals():
+            db.rollback()
+        return jsonify({"message": f"Error creating admin: {str(e)}"}), 500
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'db' in locals(): db.close()
+
+
+@app.route('/api/admins/<int:admin_id>/toggle', methods=['PATCH'])
+def api_toggle_admin_status(admin_id):
+    """Toggle admin status - SuperAdmin only (API version with cookie auth)"""
+    access_token = request.cookies.get('access_token')
+    if not access_token:
+        return jsonify({"message": "No Token"}), 401
+
+    decoded = decode_token(access_token)
+    if not decoded:
+        return jsonify({"message": "Invalid Token"}), 401
+
+    user_role = decoded.get('role')
+    if user_role != 'superadmin':
+        return jsonify({"message": "Access denied - SuperAdmin only"}), 403
+
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        
+        # Get current status
+        cursor.execute("SELECT status FROM login_users WHERE id = %s AND role IN ('admin', 'superadmin')", (admin_id,))
+        admin = cursor.fetchone()
+        if not admin:
+            return jsonify({"message": "Admin not found"}), 404
+
+        # Toggle status
+        new_status = 'inactive' if admin['status'] == 'active' else 'active'
+        
+        # Update admin status
+        cursor.execute("""
+            UPDATE login_users 
+            SET status = %s
+            WHERE id = %s
+            RETURNING id, first_name, last_name, email, role, status, permissions, last_login, created_at
+        """, (new_status, admin_id))
+        
+        updated_admin = cursor.fetchone()
+        db.commit()
+        
+        # Parse permissions
+        permissions = updated_admin['permissions'] if updated_admin['permissions'] else []
+        if isinstance(permissions, str):
+            import json
+            try:
+                permissions = json.loads(permissions)
+            except:
+                permissions = []
+        
+        # Format response
+        response_admin = {
+            'id': updated_admin['id'],
+            'name': f"{updated_admin['first_name']} {updated_admin['last_name']}",
+            'email': updated_admin['email'],
+            'role': updated_admin['role'],
+            'status': updated_admin['status'],
+            'permissions': permissions,
+            'lastLogin': updated_admin['last_login'].strftime('%Y-%m-%d %H:%M') if updated_admin['last_login'] else 'Never',
+            'createdAt': updated_admin['created_at'].strftime('%Y-%m-%d') if updated_admin['created_at'] else 'N/A'
+        }
+        
+        return jsonify(response_admin), 200
+
+    except Exception as e:
+        if 'db' in locals():
+            db.rollback()
+        return jsonify({"message": f"Error toggling admin status: {str(e)}"}), 500
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'db' in locals(): db.close()
 
 
 @app.route('/admin/flights', methods=['GET'])
@@ -1787,7 +2733,7 @@ def get_all_flights():
         return jsonify(flights), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e), "message": "Failed to load flights"}), 500
 
 
 @app.route('/admin/flights/<flight_id>/status', methods=['PUT'])
@@ -2039,6 +2985,16 @@ def get_audit_logs():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@app.route('/api/admin/audit-logs', methods=['GET'])
+def api_get_audit_logs():
+    """API version of audit logs endpoint"""
+    return get_audit_logs()
+
+
+@app.before_request
+def log_request():
+    print(f"REQUEST - {request.method} {request.path} from {request.remote_addr}")
 
 if __name__ == '__main__':
     app.run(debug=True)
