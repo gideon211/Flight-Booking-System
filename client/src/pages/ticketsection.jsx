@@ -104,12 +104,34 @@ const TicketSection = () => {
     const upcomingFlights = tickets.filter((t) => new Date(t.date) >= today);
     const pastFlights = tickets.filter((t) => new Date(t.date) < today);
 
-    const handleCancelTicket = (ticketId) => {
-        setTickets((prev) =>
-        prev.map((t) =>
-            t.id === ticketId ? { ...t, status: "Cancelled" } : t
-        )
-        );
+    const handleCancelTicket = async (ticketId) => {
+        try {
+            // Make API call to cancel the booking
+            const response = await fetch('/api/cancelbooking', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({ booking_id: ticketId })
+            });
+
+            if (response.ok) {
+                // Update local state only if API call succeeds
+                setTickets((prev) =>
+                    prev.map((t) =>
+                        t.id === ticketId ? { ...t, status: "Cancelled" } : t
+                    )
+                );
+                alert('Booking cancelled successfully!');
+            } else {
+                const errorData = await response.json();
+                alert(`Failed to cancel booking: ${errorData.message || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error cancelling booking:', error);
+            alert('Failed to cancel booking. Please try again.');
+        }
     };
 
 

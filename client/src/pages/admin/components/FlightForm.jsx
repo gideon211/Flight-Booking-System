@@ -40,15 +40,8 @@ const FlightForm = () => {
         setError("");
         setSuccess("");
         
-        // Debug: Check user info
-        const user = JSON.parse(localStorage.getItem("user"));
-        const token = localStorage.getItem("access_token");
-        console.log("DEBUG: User from localStorage:", user);
-        console.log("DEBUG: Token exists:", !!token);
-        
         try {
             const response = await api.post("/admin/flights", formData);
-            console.log("DEBUG: Success response:", response.data);
             setSuccess("Flight created successfully!");
             
             // Reset form after success

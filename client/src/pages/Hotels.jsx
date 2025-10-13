@@ -8,6 +8,7 @@ const Hotels = () => {
     const [hotels, setHotels] = useState([]);
     const [filteredHotels, setFilteredHotels] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [bookingLoading, setBookingLoading] = useState(null);
     const [filters, setFilters] = useState({
         city: "",
         maxPrice: "",
@@ -67,6 +68,33 @@ const Hotels = () => {
 
     const renderStars = (rating) => {
         return "⭐".repeat(rating);
+    };
+
+    const handleBookHotel = async (hotel) => {
+        try {
+            setBookingLoading(hotel.id);
+            
+            // Check if user is logged in
+            const userResponse = await api.get("/me");
+            if (!userResponse.data.user) {
+                navigate("/login");
+                return;
+            }
+
+            // For now, navigate to a booking page or show success message
+            // You can implement a proper booking flow here
+            alert(`Booking ${hotel.name} for GHS ${hotel.price_per_night} per night. Booking functionality coming soon!`);
+            
+        } catch (error) {
+            if (error.response?.status === 401) {
+                navigate("/login");
+            } else {
+                console.error("Error booking hotel:", error);
+                alert("Error booking hotel. Please try again.");
+            }
+        } finally {
+            setBookingLoading(null);
+        }
     };
 
     if (loading) {
@@ -207,9 +235,11 @@ const Hotels = () => {
                                             <p className="text-xs text-gray-500">per night</p>
                                         </div>
                                         <button
-                                            className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg font-medium transition"
+                                            onClick={() => handleBookHotel(hotel)}
+                                            disabled={bookingLoading === hotel.id}
+                                            className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-400 text-black px-4 py-2 rounded-lg font-medium transition"
                                         >
-                                            Book Now
+                                            {bookingLoading === hotel.id ? "Booking..." : "Book Now"}
                                         </button>
                                     </div>
                                     <p className="text-xs text-gray-500 mt-2">

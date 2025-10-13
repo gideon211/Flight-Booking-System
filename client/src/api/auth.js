@@ -3,11 +3,12 @@ import api from "./axios";
 
 export const loginUser = async (credentials) => {
     try {
-        await api.post("/login", credentials);
-        const res = await api.get("/me");
-        return res.data;
+        // Login sets httpOnly cookies automatically
+        const loginRes = await api.post("/login", credentials);
+        // Return user data from login response
+        return loginRes.data;
     } catch (error) {
-    throw error;
+        throw error;
     }
 };
 
@@ -25,11 +26,10 @@ export const signupUser = async (userData) => {
 
 export const logoutUser = async () => {
   try {
+    // Logout clears httpOnly cookies on the backend
     const res = await api.post("/logout");
-    localStorage.removeItem("access_token");
     return res.data;
   } catch (error) {
-    localStorage.removeItem("access_token");
     throw error;
   }
 };

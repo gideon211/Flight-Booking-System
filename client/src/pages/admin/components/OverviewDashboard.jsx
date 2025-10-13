@@ -33,6 +33,14 @@ const OverviewDashboard = () => {
 
   useEffect(() => {
     fetchDashboardStats();
+    
+    // Set up auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchDashboardStats();
+    }, 30000);
+    
+    // Cleanup interval on component unmount
+    return () => clearInterval(interval);
   }, []);
 
   const fetchDashboardStats = async () => {

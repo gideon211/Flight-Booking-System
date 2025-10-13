@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import api from "../../../api/axios";
 
 const TicketTable = () => {
     const [tickets, setTickets] = useState([]);
@@ -12,13 +13,69 @@ const TicketTable = () => {
     const dropdownRef = useRef();
 
     useEffect(() => {
-        setTickets([
-            { id: 1, flight: "Accra → London", date: "2025-09-20", price: 1200, status: "Confirmed", user: { name: "Will Smith", email: "willsmith@gmail.com" } },
-            { id: 2, flight: "Accra → Dubai", date: "2025-10-01", price: 950, status: "Pending", user: { name: "Jaden Smith", email: "syre@gmail.com" } },
-            { id: 3, flight: "Kumasi → Accra", date: "2025-10-05", price: 300, status: "Pending", user: { name: "Willow Smith", email: "willow@gmail.com" } },
-            { id: 4, flight: "Tamale → Accra", date: "2025-10-10", price: 400, status: "Cancel", user: { name: "Jada Smith", email: "jada@gmail.com" } },
-        ]);
+        fetchBookings();
+        
+        // Set up auto-refresh every 30 seconds
+        const interval = setInterval(() => {
+            fetchBookings();
+        }, 30000);
+        
+        // Cleanup interval on component unmount
+        return () => clearInterval(interval);
     }, []);
+
+    const fetchBookings = async () => {
+        try {
+            console.log('TicketTable: Fetching bookings from /admin/bookings');
+            const response = await api.get('/admin/bookings');
+            
+            console.log('TicketTable: Response received:', response);
+            console.log('TicketTable: Raw data received:', response.data);
+            console.log('TicketTable: Number of bookings:', response.data.bookings ? response.data.bookings.length : 0);
+            
+            // Check if bookings data exists and is an array
+            if (!response.data.bookings || !Array.isArray(response.data.bookings)) {
+                console.warn('TicketTable: No bookings array found in response');
+                setTickets([]);
+                return;
+            }
+            
+            // Transform the data to match the expected format
+            const transformedBookings = response.data.bookings.map(booking => {
+                // Safe data extraction with fallbacks
+                const departureCity = booking.departure_city_code || 'Unknown';
+                const arrivalCity = booking.arrival_city_code || 'Unknown';
+                const userName = booking.user_name || (booking.user_email ? booking.user_email.split('@')[0] : 'Unknown User');
+                const userEmail = booking.user_email || 'unknown@email.com';
+                const bookingStatus = booking.status || 'pending';
+                const departureDate = booking.departure_datetime ? new Date(booking.departure_datetime).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+                
+                return {
+                    id: booking.booking_id,
+                    flight: `${departureCity} → ${arrivalCity}`,
+                    date: departureDate,
+                    price: booking.payment_amount || booking.price || 0,
+                    status: bookingStatus.charAt(0).toUpperCase() + bookingStatus.slice(1),
+                    user: { 
+                        name: userName,
+                        email: userEmail 
+                    },
+                    airline: booking.airline || 'Unknown Airline',
+                    booking_date: booking.booking_date,
+                    payment_method: booking.payment_method || 'N/A',
+                    payment_status: booking.payment_status || 'N/A'
+                };
+            });
+            console.log('TicketTable: Transformed bookings:', transformedBookings);
+            console.log('TicketTable: Cancelled bookings:', transformedBookings.filter(b => b.status === 'Cancelled'));
+            setTickets(transformedBookings);
+        } catch (error) {
+            console.error('TicketTable: Error fetching bookings:', error);
+            console.error('TicketTable: Error details:', error.response?.data);
+            // Fallback to empty array if fetch fails
+            setTickets([]);
+        }
+    };
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -41,9 +98,39 @@ const TicketTable = () => {
 
     const handleDelete = id => setTickets(tickets.filter(t => t.id !== id));
     const handleStatusChange = (id, newStatus) => setConfirmAction({ id, newStatus });
-    const confirmStatusChange = () => {
+    const confirmStatusChange = async () => {
         const { id, newStatus } = confirmAction;
-        setTickets(tickets.map(t => t.id === id ? {...t, status: newStatus} : t));
+        
+        try {
+            if (newStatus === "Cancelled") {
+                console.log(`TicketTable: Attempting to cancel booking ${id}`);
+                // Make API call to cancel the booking
+                const response = await api.post('/cancelbooking', { booking_id: id });
+                console.log(`TicketTable: Cancel response:`, response);
+                
+                if (response.status === 200) {
+                    console.log(`TicketTable: Booking ${id} cancelled successfully`);
+                    // Update local state and refresh data
+                    setTickets(tickets.map(t => t.id === id ? {...t, status: newStatus} : t));
+                    // Refresh the bookings data from server
+                    console.log(`TicketTable: Refreshing bookings data...`);
+                    await fetchBookings();
+                    alert('Booking cancelled successfully!');
+                } else {
+                    console.log(`TicketTable: Cancel failed with status:`, response.status);
+                    alert('Failed to cancel booking. Please try again.');
+                }
+            } else {
+                // For other status changes, just update locally for now
+                // TODO: Add API endpoints for other status changes
+                setTickets(tickets.map(t => t.id === id ? {...t, status: newStatus} : t));
+            }
+        } catch (error) {
+            console.error('TicketTable: Error updating booking status:', error);
+            console.error('TicketTable: Error details:', error.response?.data);
+            alert('Failed to update booking status. Please try again.');
+        }
+        
         setConfirmAction(null);
     };
     const saveEdit = () => {
@@ -65,9 +152,16 @@ const TicketTable = () => {
         return actions;
     };
 
+    console.log(`TicketTable: Rendering ${tickets.length} total tickets, ${filteredTickets.length} filtered tickets, ${currentRows.length} current page tickets`);
+    
     return (
         <div className="p-4 space-y-4">
-    
+            {tickets.length === 0 && (
+                <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+                    No bookings found. Create some test bookings first to see the dropdown actions.
+                </div>
+            )}
+            
             <div className="flex flex-wrap gap-2">
                 <input type="text" placeholder="Search flight/date/user" value={search} onChange={e => setSearch(e.target.value)} className="border-2 border-red-200 rounded px-3 py-2 outline-none placeholder:text-sm" />
                 <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="border-2 border-red-200 outline-none text-center py-1">
@@ -97,12 +191,32 @@ const TicketTable = () => {
                                 <td className="border px-2 py-1 text-center">${t.price.toLocaleString()}</td>
                                 <td className={`border px-2 py-1 font-medium text-center ${t.status === "Confirmed" ? "text-green-600" : t.status === "Pending" ? "text-yellow-600" : "text-red-600"}`}>{t.status}</td>
                                 <td className="border px-2 py-1 text-center">{t.user.name}</td>
-                                <td className="border px-2 py-1 text-center relative" ref={dropdownRef}>
-                                    <button onClick={e => { e.stopPropagation(); setDropdownOpen(dropdownOpen === t.id ? null : t.id); }} className="bg-blue-500 text-white px-3 py-1 rounded">Action</button>
+                                <td className="border px-2 py-1 text-center relative">
+                                    <button 
+                                        onClick={e => { 
+                                            e.stopPropagation(); 
+                                            console.log(`TicketTable: Dropdown clicked for booking ${t.id}`);
+                                            setDropdownOpen(dropdownOpen === t.id ? null : t.id); 
+                                        }} 
+                                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                                    >
+                                        Action
+                                    </button>
                                     {dropdownOpen === t.id && (
                                         <div className="absolute right-0 mt-1 w-40 bg-white border rounded shadow-lg z-20">
                                             {getActions(t).map((act, idx) => (
-                                                <button key={idx} onClick={e => { e.stopPropagation(); act.action(); setDropdownOpen(null); }} className="block w-full text-left px-3 py-1 hover:bg-gray-200">{act.label}</button>
+                                                <button 
+                                                    key={idx} 
+                                                    onClick={e => { 
+                                                        e.stopPropagation(); 
+                                                        console.log(`TicketTable: Action clicked: ${act.label} for booking ${t.id}`);
+                                                        act.action(); 
+                                                        setDropdownOpen(null); 
+                                                    }} 
+                                                    className="block w-full text-left px-3 py-1 hover:bg-gray-200"
+                                                >
+                                                    {act.label}
+                                                </button>
                                             ))}
                                         </div>
                                     )}

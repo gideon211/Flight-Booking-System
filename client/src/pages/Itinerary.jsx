@@ -34,7 +34,10 @@ const ItineraryPage = () => {
     return (
         <div>
             <nav className="flex justify-between px-8 items-center h-[5rem] bg-blue-200 shadow-md">
-                <div className="flex items-center gap-2">
+                <div 
+                    className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => navigate("/")}
+                >
                     <h1 className="text-3xl font-bold leading-2 text-blue-500">NextTrip.</h1>
                 </div>
             </nav>

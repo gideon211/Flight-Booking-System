@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../../context/AuthContext";
 import OverviewDashboard from "../components/OverviewDashboard";
 import UserManagement from "../components/UserManagement";
 import AdminManagement from "../components/AdminManagement";
@@ -9,11 +10,10 @@ import AuditLogs from "../components/AuditLogs";
 const SuperAdminDashboard = () => {
     const [activeTab, setActiveTab] = useState("overview");
     const navigate = useNavigate();
+    const { logout } = useContext(AuthContext);
 
     const handleLogout = () => {
-        localStorage.removeItem('user');
-        sessionStorage.clear();
-        navigate('/');
+        logout();
     };
 
     return (

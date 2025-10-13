@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import api from "../../../api/axios";
 
 const HistoryTable = () => {
     const [history, setHistory] = useState([]);
@@ -10,11 +11,67 @@ const HistoryTable = () => {
     const rowsPerPage = 13;
 
     useEffect(() => {
-        fetch("/bookings.json")
-        .then(res => res.json())
-        .then(data => setHistory(data))
-        .catch(err => console.error(err));
+        fetchBookingHistory();
+        
+        // Set up auto-refresh every 30 seconds
+        const interval = setInterval(() => {
+            fetchBookingHistory();
+        }, 30000);
+        
+        // Cleanup interval on component unmount
+        return () => clearInterval(interval);
     }, []);
+
+    const fetchBookingHistory = async () => {
+        try {
+            console.log('HistoryTable: Fetching booking history from /admin/bookings');
+            const response = await api.get('/admin/bookings');
+            
+            console.log('HistoryTable: Response received:', response);
+            console.log('HistoryTable: Raw data received:', response.data);
+            console.log('HistoryTable: Number of bookings:', response.data.bookings ? response.data.bookings.length : 0);
+            
+            // Check if bookings data exists and is an array
+            if (!response.data.bookings || !Array.isArray(response.data.bookings)) {
+                console.warn('HistoryTable: No bookings array found in response');
+                setHistory([]);
+                return;
+            }
+            
+            // Transform the data to match the expected format for history
+            const transformedHistory = response.data.bookings.map(booking => {
+                // Safe data extraction with fallbacks
+                const departureCity = booking.departure_city_code || 'Unknown';
+                const arrivalCity = booking.arrival_city_code || 'Unknown';
+                const userName = booking.user_name || (booking.user_email ? booking.user_email.split('@')[0] : 'Unknown User');
+                const bookingStatus = booking.status || 'pending';
+                const amount = booking.payment_amount ? `$${booking.payment_amount}` : (booking.price ? `$${booking.price}` : "$0");
+                const timestamp = booking.booking_date ? new Date(booking.booking_date).toLocaleString() : new Date().toLocaleString();
+                
+                return {
+                    id: booking.booking_id,
+                    flight: `${departureCity} → ${arrivalCity}`,
+                    user: userName,
+                    status: bookingStatus.charAt(0).toUpperCase() + bookingStatus.slice(1),
+                    amount: amount,
+                    timestamp: timestamp,
+                    origin: departureCity,
+                    destination: arrivalCity,
+                    meals: [], // Meals data not available in current schema
+                    airline: booking.airline || 'Unknown Airline',
+                    departure_datetime: booking.departure_datetime,
+                    payment_method: booking.payment_method || 'N/A',
+                    payment_status: booking.payment_status || 'N/A'
+                };
+            });
+            console.log('HistoryTable: Transformed history:', transformedHistory);
+            setHistory(transformedHistory);
+        } catch (error) {
+            console.error('HistoryTable: Error fetching booking history:', error);
+            console.error('HistoryTable: Error details:', error.response?.data);
+            setHistory([]);
+        }
+    };
 
     const filteredHistory = history.filter((item) => {
         const matchFilter = filter === "All" || item.status === filter;

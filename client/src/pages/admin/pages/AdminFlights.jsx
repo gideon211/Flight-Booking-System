@@ -1,19 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../../context/AuthContext";
 import FlightForm from "../components/FlightForm";
 import FlightsListTable from "../components/FlightsListTable";
 import TicketTable from "../components/TicketTable";
 import HistoryTable from "../components/HistoryTable";
-import OverviewDashboard from "../components/OverviewDashboard"
+import OverviewDashboard from "../components/OverviewDashboard";
 
 const AdminFlights = () => {
     const [activeTab, setActiveTab] = useState("overview");
     const navigate = useNavigate();
+    const { logout } = useContext(AuthContext);
 
     const handleLogout = () => {
-        localStorage.removeItem('user');
-        sessionStorage.clear();
-        navigate('/');
+        logout();
     };
 
     return (

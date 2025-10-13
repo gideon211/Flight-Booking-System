@@ -1,11 +1,17 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Navigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const token = localStorage.getItem("access_token");
-  const user = JSON.parse(localStorage.getItem("user"));
+  const { user, loading } = useContext(AuthContext);
 
-  if (!token || !user) {
+  // Show nothing while checking authentication
+  if (loading) {
+    return null;
+  }
+
+  // If no user, redirect to login
+  if (!user) {
     // Redirect to appropriate login page based on required role
     if (allowedRoles && (allowedRoles.includes("admin") || allowedRoles.includes("superadmin"))) {
       return <Navigate to="/superadmin-login" replace />;
@@ -13,6 +19,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" replace />; 
   }
 
+  // Check if user has the required role
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to="/" replace />; // redirect to home if wrong role
   }

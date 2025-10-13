@@ -6,6 +6,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import UserDashboard from "./pages/UserDashboard";
 import FlightsDashboard from "./pages/FlightsDashboard";
+import AvailableFlights from "./pages/Availableflights";
 import AdminFlights from "./pages/admin/pages/AdminFlights";
 import SuperAdminDashboard from "./pages/admin/pages/SuperAdminDashboard";
 import Login from "./pages/Login";
@@ -17,6 +18,8 @@ import TravelerPage from "./pages/traveler";
 import PaymentPage from "./pages/payment";
 import TicketSection from "./pages/Ticketsection";
 import Hotels from "./pages/Hotels";
+import Packages from "./pages/Packages";
+import CarRentals from "./pages/CarRentals";
 
 const App = () => {
   return (
@@ -28,7 +31,14 @@ const App = () => {
       <Route path="/superadmin-login" element={<SuperAdminLogin />} />
       <Route path="/ticketsection" element={<TicketSection />} />
       <Route path="/hotels" element={<Hotels />} />
+      <Route path="/packages" element={<Packages />} />
+      <Route path="/car-rentals" element={<CarRentals />} />
       <Route path="/flights" element={<FlightsDashboard />} />
+      <Route path="/availableflights" element={
+        <ProtectedRoute allowedRoles={["user"]}>
+          <AvailableFlights />
+        </ProtectedRoute>
+      } />
 
       {/* Normal User Dashboard */}
       <Route

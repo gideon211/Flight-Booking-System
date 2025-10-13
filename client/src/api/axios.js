@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://127.0.0.1:5000";
+const API_URL = "/api";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -9,18 +9,6 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 });
-
-// ✅ Request interceptor to attach token automatically
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 
 // ✅ Response interceptor to refresh expired token
 api.interceptors.response.use(
@@ -33,21 +21,33 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Handle expired token (401)
+    // Handle expired token (401) - try to refresh using httpOnly cookie
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+      
+      // Only try to refresh for protected endpoints, not public ones
+      const publicEndpoints = ['/signup', '/login', '/hotels', '/flights/search', '/'];
+      const isPublicEndpoint = publicEndpoints.some(endpoint => 
+        originalRequest.url.includes(endpoint)
+      );
+      
+      if (isPublicEndpoint) {
+        return Promise.reject(error);
+      }
+      
       try {
-        const res = await api.post("/refresh");
-        const newAccessToken = res.data.access_token;
-
-        // Save new token
-        localStorage.setItem("access_token", newAccessToken);
-
-        // Retry original request with new token
-        originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
+        // Refresh token is automatically sent via httpOnly cookie
+        await api.post("/refresh");
+        
+        // Retry original request - new access_token cookie is set automatically
         return api(originalRequest);
       } catch (refreshError) {
-        console.error("Session expired, please log in again.");
+        // Only redirect to login if this was a user-initiated request
+        // Don't redirect for automatic background requests
+        if (!originalRequest.url.includes("/me")) {
+          console.error("Session expired, please log in again.");
+          window.location.href = "/login";
+        }
         return Promise.reject(refreshError);
       }
     }

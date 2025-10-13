@@ -13,8 +13,10 @@ export const AuthProvider = ({ children }) => {
             try {
                 const res = await api.get("/me");
                 setUser(res.data.user);
-            } catch {
-            setUser(null);
+            } catch (error) {
+                // Silently handle auth errors on initial load
+                // This is expected behavior for non-authenticated users
+                setUser(null);
             } finally {
                 setLoading(false);
             }
@@ -37,17 +39,20 @@ export const AuthProvider = ({ children }) => {
 
     const logout = async () => {
         try {
+            // Backend clears httpOnly cookies
             await api.post("/logout");
         } catch (error) {
             console.error("Logout error:", error);
         }
         
-        // Clear all stored data
+        // Clear user state
         setUser(null);
-        localStorage.clear();  // Clear ALL localStorage
-        sessionStorage.clear(); // Clear ALL sessionStorage
         
-        // Force complete page reload to clear all React state
+        // Clear any other stored data (if any exists)
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Redirect to home page
         window.location.replace("/");
     };
 

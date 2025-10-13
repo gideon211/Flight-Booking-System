@@ -11,7 +11,6 @@ import api from "../api/axios";
 
 
 const Home = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [flights, setFlights] = useState([]);
     const [formData, setFormData] = useState({
         tripType: "oneway", // match radio values
@@ -32,12 +31,6 @@ const Home = () => {
     const destinationRef = useRef(null);
     const navigate = useNavigate();
 
-    
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        setIsLoggedIn(!!token);
-    }, []);
-
     // Close dropdowns when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -56,17 +49,19 @@ const Home = () => {
     }, []);
 
    useEffect(() => {
-  const fetchFlights = async () => {
-    try {
-      const res = await api.get("/flights");  // Flask backend endpoint
-      setFlights(res.data);
-    } catch (error) {
-      console.error("Error fetching flights:", error);
-    }
-  };
+   const fetchFlights = async () => {
+     try {
+       console.log("DEBUG: Fetching all flights from backend");
+       const res = await api.get("/flights");  // Flask backend endpoint
+       console.log("DEBUG: Flights fetched successfully", res.data.length, "flights");
+       setFlights(res.data);
+     } catch (error) {
+       console.error("Error fetching flights:", error);
+     }
+   };
 
-  fetchFlights();
-}, []);
+   fetchFlights();
+ }, []);
 
   // Fetch city suggestions based on user input
   const fetchCitySuggestions = async (query, isOrigin) => {
@@ -137,13 +132,12 @@ const Home = () => {
             const response = await api.get(`/flights/search?${params.toString()}`);
             
             // Navigate to available flights with results
-            navigate("/Availableflights", {
-                state: { results: response.data, ...formData },
-            });
+             navigate("/availableflights", {
+                 state: { results: response.data, ...formData },
+             });
         } catch (error) {
-            console.error("Error searching flights:", error);
             // Navigate with empty results on error
-            navigate("/Availableflights", {
+            navigate("/availableflights", {
                 state: { results: [], ...formData },
             });
         } finally {

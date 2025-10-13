@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 import api from "../api/axios";
 
 const AdminPortalLogin = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { setUser } = useContext(AuthContext);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -14,13 +17,15 @@ const AdminPortalLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
+    
     try {
-      const res = await api.post("/login", formData); // Flask login route
-      const { user, access_token } = res.data;
+      // Login sets httpOnly cookies automatically
+      const res = await api.post("/login", formData);
+      const { user } = res.data;
 
-      // store auth
-      localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("access_token", access_token);
+      // Update user state in context
+      setUser(user);
 
       // role-based redirects
       if (user.role === "superadmin") {
@@ -31,7 +36,9 @@ const AdminPortalLogin = () => {
         setError("Not authorized for admin portal");
       }
     } catch (err) {
-      setError("Login failed. Check your credentials.");
+      setError(err.response?.data?.message || "Login failed. Check your credentials.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,9 +76,14 @@ const AdminPortalLogin = () => {
 
         <button
           type="submit"
-          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg font-semibold"
+          disabled={loading}
+          className={`w-full py-3 rounded-lg font-semibold text-white ${
+            loading 
+              ? "bg-gray-400 cursor-not-allowed" 
+              : "bg-indigo-600 hover:bg-indigo-700"
+          }`}
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>

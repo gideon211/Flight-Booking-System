@@ -22,8 +22,8 @@ const login = () => {
 
         try {
             const data = await loginUser({email, password});
-            localStorage.setItem("access_token", data.token);
-            localStorage.setItem("user", JSON.stringify(data.user));
+            // Tokens are stored in httpOnly cookies by the backend
+            // Just update the user state
             setUser(data.user);
             
             // Redirect based on user role
@@ -45,7 +45,14 @@ const login = () => {
     return (
         <div className='w-full h-screen bg-gray-100 flex justify-center items-center bg-[url("https://images.unsplash.com/photo-1549897411-b06572cdf806?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")] bg-cover bg-center'>
             <div className='lg:w-1/3 2xl:w-1/4 p-10 bg-white'>
-                <h1 className='text-center text-3xl font-bold py-5'>Welcome to <span className='text-yellow-500'>NextTrip.</span></h1>
+                <h1 className='text-center text-3xl font-bold py-5'>
+                    Welcome to <span 
+                        className='text-yellow-500 cursor-pointer hover:opacity-80 transition-opacity'
+                        onClick={() => navigate("/")}
+                    >
+                        NextTrip.
+                    </span>
+                </h1>
                 <div className='space-y-5'>
 
                     <h1 className='text-xl font-semibold text-center'>

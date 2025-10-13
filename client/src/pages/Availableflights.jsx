@@ -4,12 +4,13 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const AvailableFlights = () => {
-  const location = useLocation();
-  const results = location.state?.results || [];
-  const navigate = useNavigate();
+   const location = useLocation();
+   const results = location.state?.results || [];
+   const navigate = useNavigate();
 
-  const from = location.state?.from ?? "";
-  const to = location.state?.to ?? "";
+   const from = location.state?.from ?? "";
+   const to = location.state?.to ?? "";
+
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 

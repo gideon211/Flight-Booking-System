@@ -11,6 +11,8 @@ import TicketSection from "../pages/Ticketsection";
 import AdminFlights from "../pages/admin/pages/AdminFlights";
 import SuperAdminLogin from "../pages/AdminLogin";
 import Hotels from "../pages/Hotels";
+import Packages from "../pages/Packages";
+import CarRentals from "../pages/CarRentals";
 
 export default function AppRoutes() {
     return (
@@ -18,15 +20,16 @@ export default function AppRoutes() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/home" element={<Home />} />
             <Route path="/hotels" element={<Hotels />} />
-            <Route path="/Availableflights" element={<Availableflights />} />
+            <Route path="/packages" element={<Packages />} />
+            <Route path="/car-rentals" element={<CarRentals />} />
+            <Route path="/availableflights" element={<Availableflights />} />
             <Route path="/itinerary/:flightId" element={<ItineraryPage />} />
             <Route path="/email" element={<EmailPage />} />
             <Route path="/traveler" element={<TravelerPage />} />
             <Route path="/payment" element={<PaymentPage />} />
             <Route path="/ticketsection" element={<TicketSection />} />
-            <Route path="/AdminFlights" element={<AdminFlights />} />
+            <Route path="/admin-flights" element={<AdminFlights />} />
             <Route path="/superadmin-login" element={<SuperAdminLogin />} />
         </Routes>
     );

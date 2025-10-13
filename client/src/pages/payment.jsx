@@ -39,6 +39,19 @@ const PaymentPage = () => {
         setLoading(true);
         setError("");
 
+        // Validate required data
+        if (!flight || !flight.flight_id) {
+            setError("Flight information is missing. Please go back and select a flight.");
+            setLoading(false);
+            return;
+        }
+
+        if (!email) {
+            setError("Email is required for booking. Please go back and enter your email.");
+            setLoading(false);
+            return;
+        }
+
         try {
             // Get booking details from location state
             const bookingDetails = location.state?.bookingDetails || {};
@@ -47,10 +60,10 @@ const PaymentPage = () => {
             // Call booking API with payment information
             const bookingData = {
                 flight_id: flight.flight_id,
-                first_name: traveler?.firstName || "",
-                last_name: traveler?.lastName || "",
+                first_name: traveler?.firstName || "Guest",
+                last_name: traveler?.lastName || "User",
                 email: email,
-                phone: formData.phone || "",
+                phone: formData.phone || "000-000-0000",
                 num_seats: bookingDetails.numSeats || 1,
                 cabin_class: bookingDetails.selectedClass || flight.cabin_class,
                 extra_baggage: bookingDetails.extraBaggage || 0,

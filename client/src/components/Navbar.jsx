@@ -48,7 +48,10 @@ const Navbar = () => {
   return (
     <nav className="flex justify-between items-center px-6 md:px-8 h-[4.5rem] bg-gradient-to-r from-blue-400 to-indigo-500 text-white shadow-lg">
       {/* Logo */}
-      <div className="flex items-center gap-2">
+      <div 
+        className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+        onClick={() => navigate("/")}
+      >
         <FontAwesomeIcon icon={faPlane} style={{ color: "#1b69ee", fontSize: "34px" }} />
         <h1 className="text-2xl font-bold">NextTrip.</h1>
       </div>
@@ -59,8 +62,8 @@ const Navbar = () => {
           Flights
         </li>
         <li onClick={() => navigate("/hotels")} className="hover:text-yellow-300 cursor-pointer transition">{t("Hotels")}</li>
-        <li className="hover:text-yellow-300 cursor-pointer transition">{t("Packages")}</li>
-        <li className="hover:text-yellow-300 cursor-pointer transition">{t("Car Rentals")}</li>
+        <li onClick={() => navigate("/packages")} className="hover:text-yellow-300 cursor-pointer transition">{t("Packages")}</li>
+        <li onClick={() => navigate("/car-rentals")} className="hover:text-yellow-300 cursor-pointer transition">{t("Car Rentals")}</li>
       </ul>
 
         
