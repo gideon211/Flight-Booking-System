@@ -624,7 +624,22 @@ def me():
 
 
 
-@app.route("/api/admin/flights", methods=["POST"])
+@app.route("/api/admin/flights", methods=["GET", "POST"])
+def admin_flights_api():
+    if request.method == "GET":
+        # Handle GET request - fetch all flights
+        return get_all_flights()
+    elif request.method == "POST":
+        # Handle POST request - create new flight
+        return create_flight()
+
+
+@app.route('/api/admin/flights/<flight_id>/status', methods=['PUT'])
+def api_update_flight_status(flight_id):
+    """API version of update flight status endpoint"""
+    return update_flight_status(flight_id)
+
+
 def create_flight():
     access_token = request.cookies.get('access_token')
     if not access_token:
@@ -1187,6 +1202,13 @@ def all_bookings():
             ORDER BY b.booking_date DESC
         """)
         bookings = cursor.fetchall()
+        
+        print(f"ADMIN BOOKINGS - Total bookings found: {len(bookings)}")
+        for booking in bookings:
+            print(f"ADMIN BOOKINGS - Booking {booking['booking_id']}: status={booking['status']}, user={booking['user_email']}")
+        
+        cancelled_bookings = [b for b in bookings if b['status'] == 'cancelled']
+        print(f"ADMIN BOOKINGS - Cancelled bookings: {len(cancelled_bookings)}")
 
         return jsonify({"bookings": bookings}), 200
 
@@ -1204,19 +1226,55 @@ def api_all_bookings():
     return all_bookings()
 
 
+@app.route('/api/debug/bookings', methods=['GET'])
+def debug_bookings():
+    """Debug endpoint to check bookings in database"""
+    try:
+        db = database_connection()
+        cursor = db.cursor(cursor_factory=RealDictCursor)
+        
+        # Get all bookings with their status
+        cursor.execute("SELECT booking_id, user_email, status, booking_date FROM bookings ORDER BY booking_date DESC")
+        bookings = cursor.fetchall()
+        
+        # Count by status
+        status_counts = {}
+        for booking in bookings:
+            status = booking['status']
+            status_counts[status] = status_counts.get(status, 0) + 1
+        
+        return jsonify({
+            "total_bookings": len(bookings),
+            "status_counts": status_counts,
+            "bookings": [dict(b) for b in bookings]
+        }), 200
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'db' in locals(): db.close()
+
+
 @app.route('/cancelbooking', methods=['POST'])
 def cancel_booking():
+    print(f"CANCEL BOOKING - Request received")
     access_token = request.cookies.get('access_token')
     if not access_token:
+        print(f"CANCEL BOOKING - No access token")
         return jsonify({"message": "No Token"}), 401
 
     decoded = decode_token(access_token)
     if not decoded:
+        print(f"CANCEL BOOKING - Invalid token")
         return jsonify({"message": "Invalid or expired token"}), 401
 
     user_email = decoded.get('email')
+    user_role = decoded.get('role')
     data = request.get_json()
     booking_id = data.get("booking_id")
+    
+    print(f"CANCEL BOOKING - User: {user_email}, Role: {user_role}, Booking ID: {booking_id}")
 
     if not booking_id:
         return jsonify({"message": "Booking ID is required"}), 400
@@ -1225,11 +1283,18 @@ def cancel_booking():
         db = database_connection()
         cursor = db.cursor(cursor_factory=RealDictCursor)
 
-        cursor.execute("SELECT * FROM bookings WHERE booking_id = %s AND user_email = %s", 
-                       (booking_id, user_email))
+        # Check if user is admin/superadmin or if it's their own booking
+        if user_role in ['admin', 'superadmin']:
+            # Admins can cancel any booking
+            cursor.execute("SELECT * FROM bookings WHERE booking_id = %s", (booking_id,))
+        else:
+            # Regular users can only cancel their own bookings
+            cursor.execute("SELECT * FROM bookings WHERE booking_id = %s AND user_email = %s", 
+                           (booking_id, user_email))
+        
         booking = cursor.fetchone()
         if not booking:
-            return jsonify({"message": "Booking not found or not yours"}), 404
+            return jsonify({"message": "Booking not found"}), 404
 
         cursor.execute("UPDATE bookings SET status = %s WHERE booking_id = %s RETURNING *",
                         ("cancelled", booking_id))
@@ -2059,17 +2124,22 @@ def update_admin_permissions(admin_id):
 @app.route('/admin/dashboard/stats', methods=['GET'])
 def admin_dashboard_stats():
     """Get dashboard statistics for admin"""
+    print(f"DASHBOARD STATS - Request received")
     access_token = request.cookies.get('access_token')
     if not access_token:
+        print(f"DASHBOARD STATS - No access token")
         return jsonify({"message": "No Token"}), 401
 
     decoded = decode_token(access_token)
     if not decoded:
+        print(f"DASHBOARD STATS - Invalid token")
         return jsonify({"message": "Invalid or expired token"}), 401
 
     if decoded.get("role") not in ["admin", "superadmin"]:
+        print(f"DASHBOARD STATS - Forbidden role: {decoded.get('role')}")
         return jsonify({"message": "Forbidden: Admins only"}), 403
 
+    print(f"DASHBOARD STATS - Starting database queries")
     try:
         db = database_connection()
         cursor = db.cursor(cursor_factory=RealDictCursor)
