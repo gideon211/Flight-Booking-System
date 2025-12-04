@@ -164,7 +164,7 @@ def database_connection():
         print(f"Attempting to connect to: host={os.getenv('DB_HOST')}, user={os.getenv('DB_USER')}, db={os.getenv('DB_NAME')}")
         raise
 
-# Try to initialize database tables, but don't fail if database is not available
+
 try:
     ensure_admin_columns()
     ensure_audit_logs_table()
@@ -196,8 +196,8 @@ def health_check():
 def get_cookie_settings():
     is_local = ("localhost" in request.host) or ("127.0.0.1" in request.host)
     secure_cookie = False if is_local else True
-    samesite_cookie = "Lax" if is_local else "None"  # Lax for local since same-origin now, None for production
-    domain_cookie = None  # No domain for same-origin
+    samesite_cookie = "Lax" if is_local else "None"  
+    domain_cookie = None  
     return secure_cookie, samesite_cookie, domain_cookie
 
 
@@ -475,7 +475,7 @@ def api_get_packages():
 def api_get_car_rentals():
     """API endpoint for car rentals"""
     try:
-        # Dummy car rental data for now
+        # Dummy car rental data 
         car_rentals = [
             {
                 "id": 1,
@@ -535,12 +535,12 @@ def api_get_car_rentals():
             }
         ]
         
-        # Filter by location if provided
+        # Filter by location 
         location = request.args.get('location')
         if location:
             car_rentals = [car for car in car_rentals if car['location'].lower() == location.lower()]
             
-        # Filter by type if provided
+        # Filter by type 
         car_type = request.args.get('type')
         if car_type:
             car_rentals = [car for car in car_rentals if car['type'].lower() == car_type.lower()]
@@ -627,10 +627,10 @@ def me():
 @app.route("/api/admin/flights", methods=["GET", "POST"])
 def admin_flights_api():
     if request.method == "GET":
-        # Handle GET request - fetch all flights
+    
         return get_all_flights()
     elif request.method == "POST":
-        # Handle POST request - create new flight
+        
         return create_flight()
 
 
@@ -708,9 +708,8 @@ def create_flight():
         airline_id = airline["airline_id"]
 
         
-        # Calculate flight distance and duration
         if API_KEY and API_KEY != "YOUR_OPENROUTESERVICE_API_KEY_HERE":
-            # Use OpenRouteService API if key is configured
+            
             headers = {
                 'Authorization': API_KEY,
                 'Content-Type': 'application/json'
@@ -733,9 +732,9 @@ def create_flight():
 
                 api_data = api_response.json()
                 
-                # Check if API call was successful
+                
                 if 'routes' not in api_data or not api_data['routes']:
-                    # Handle different error response formats
+            
                     if isinstance(api_data.get('error'), dict):
                         error_msg = api_data['error'].get('message', 'Failed to calculate route')
                     elif isinstance(api_data.get('error'), str):
@@ -743,7 +742,7 @@ def create_flight():
                     else:
                         error_msg = str(api_data)
                     print(f"OpenRouteService API Error: {api_data}")
-                    # Fall back to estimated values
+                    
                     flight_distance = 1000.0
                     flight_duration = 2.0
                 else:
@@ -753,11 +752,11 @@ def create_flight():
                     flight_duration = round(duration_seconds/3600,2)
             except Exception as e:
                 print(f"Error calling OpenRouteService API: {e}")
-                # Use estimated values as fallback
+                
                 flight_distance = 1000.0
                 flight_duration = 2.0
         else:
-            # Use estimated values when API key is not configured
+            
             print("API_KEY not configured, using estimated distance/duration")
             flight_distance = 1000.0
             flight_duration = 2.0
@@ -767,7 +766,7 @@ def create_flight():
         if cursor.fetchone():
             return jsonify({"message": "Flight ID already exists"}), 409
 
-        # Sanitize optional fields - convert empty strings to None
+        
         return_datetime = data.get("return_datetime") or None
         gate = data.get("gate") or None
         terminal = data.get("terminal") or None
@@ -1040,7 +1039,7 @@ def book_flight():
             return jsonify({"message": "Flight not found"}), 404
 
 
-        # Create booking
+    
         cursor.execute("""
             INSERT INTO bookings (user_name, user_email, flight_id, city_origin, city_destination, price, booking_date, status)
             VALUES (%s, %s, %s, %s, %s, %s, NOW(), %s)
@@ -1058,7 +1057,7 @@ def book_flight():
         booking = cursor.fetchone()
         booking_id = booking['booking_id']
 
-        # Create new payments table if it doesn't exist with simpler structure
+        
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS flight_payments (
                 payment_id SERIAL PRIMARY KEY,
@@ -1071,7 +1070,7 @@ def book_flight():
             )
         """)
         
-        # Create payment record in new table
+
         cursor.execute("""
             INSERT INTO flight_payments (booking_id, user_email, amount, payment_method, payment_status, payment_date)
             VALUES (%s, %s, %s, %s, %s, NOW())
@@ -1081,12 +1080,12 @@ def book_flight():
             user_email,
             payment_amount,
             payment_method,
-            'completed'  # Mark as completed for now
+            'completed'  
         ))
 
         payment = cursor.fetchone()
         
-        # Decrement available seats
+        
         cursor.execute("""
             UPDATE flights 
             SET seats_available = seats_available - %s 
@@ -1100,7 +1099,7 @@ def book_flight():
         db.commit()
 
 
-        # Log audit
+        
         log_audit(
             user_email, 
             "CREATE_BOOKING", 
