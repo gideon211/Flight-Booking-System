@@ -1282,12 +1282,12 @@ def cancel_booking():
         db = database_connection()
         cursor = db.cursor(cursor_factory=RealDictCursor)
 
-        # Check if user is admin/superadmin or if it's their own booking
+        
         if user_role in ['admin', 'superadmin']:
-            # Admins can cancel any booking
+            
             cursor.execute("SELECT * FROM bookings WHERE booking_id = %s", (booking_id,))
         else:
-            # Regular users can only cancel their own bookings
+            
             cursor.execute("SELECT * FROM bookings WHERE booking_id = %s AND user_email = %s", 
                            (booking_id, user_email))
         
@@ -1301,7 +1301,7 @@ def cancel_booking():
         db.commit()
 
 
-        # Log audit
+    
         log_audit(
             user_email, 
             "CANCEL_BOOKING", 
@@ -1504,13 +1504,13 @@ def search_flights():
     params = []
 
     if origin:
-        # Search by departure city name using cities table relationship
+        
         query += " AND (f.departure_city_code ILIKE %s OR dc.city_name ILIKE %s)"
         params.append(f"%{origin}%")
         params.append(f"%{origin}%")
 
     if destination:
-        # Search by arrival city name using cities table relationship
+        
         query += " AND (f.arrival_city_code ILIKE %s OR ac.city_name ILIKE %s)"
         params.append(f"%{destination}%")
         params.append(f"%{destination}%")
@@ -1537,7 +1537,7 @@ def search_flights():
         db = database_connection()
         cursor = db.cursor(cursor_factory=RealDictCursor)
 
-        # Debug: print the query and parameters
+        
         print(f"DEBUG SEARCH - Query: {query}")
         print(f"DEBUG SEARCH - Params: {params}")
         
@@ -1546,7 +1546,7 @@ def search_flights():
 
         print(f"DEBUG SEARCH - Found {len(flights)} flights")
 
-        # Return empty array instead of 404 for better frontend handling
+    
         if not flights:
             return jsonify([]), 200
         
